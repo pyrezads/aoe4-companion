@@ -40,6 +40,8 @@ REGIONS = {
     "sel_cards":  (388, 1208, 1200, 1236),  # unit/building cards, count at top-left
 }
 
+MAX_POP = 300          # no count on the HUD (villagers, idle, population) goes above this
+MAX_BANK = 9_999_999   # a resource bank never shows more digits than this
 CARD_X0, CARD_STEP, CARD_W = 392, 53, 50   # unit/building card grid in the selection panel
 
 
@@ -227,16 +229,17 @@ class HudReader:
             sims.append(sim)
         return "".join(chars), min(sims)
 
-    def read_int(self, rgb, box, bright=165, max_aspect=None) -> Optional[int]:
+    def read_int(self, rgb, box, bright=165, max_aspect=None, most: int = 999999) -> Optional[int]:
         text, sim = self.read_text(rgb, box, bright, allowed="0123456789", max_aspect=max_aspect)
         digits = re.sub(r"[^0-9]", "", text)
         if not digits or "?" in text:
             return None
-        return int(digits)
+        n = int(digits)
+        return n if n <= most else None          # impossible values are "not read", never wrong numbers
 
     def read_count(self, rgb, box) -> Optional[int]:
         """Villager / idle counts: white digits when > 0, a grey outline when 0."""
-        n = self.read_int(rgb, box, 165)
+        n = self.read_int(rgb, box, 165, most=MAX_POP)
         if n is not None:
             return n
         h, w = rgb.shape[:2]
@@ -309,7 +312,7 @@ class HudReader:
         pop_text, _ = self.read_text(rgb, REGIONS["pop"], 120, allowed="0123456789/")
         total += 1
         m = re.fullmatch(r"(\d+)/(\d+)", pop_text)
-        if m:
+        if m and int(m.group(1)) <= MAX_POP and int(m.group(2)) <= MAX_POP:
             s.pop, s.pop_cap = int(m.group(1)), int(m.group(2))
             ok += 1
         else:
@@ -323,7 +326,7 @@ class HudReader:
 
         for r in ("food", "wood", "gold", "stone"):
             total += 2
-            s.resources[r] = self.read_int(rgb, REGIONS[r])
+            s.resources[r] = self.read_int(rgb, REGIONS[r], most=MAX_BANK)
             ok += s.resources[r] is not None
             if s.resources[r] is None:
                 s.missed.append(f"{r} bank")

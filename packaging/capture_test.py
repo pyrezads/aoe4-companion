@@ -57,7 +57,7 @@ note(f"runner screen {mon['width']}x{mon['height']}")
 game = subprocess.Popen([sys.executable, "-c", f"""
 import tkinter as tk
 r = tk.Tk(); r.title('Age of Empires IV'); r.wm_maxsize(4000, 4000)   # normal window: title bar + borders, like windowed mode
-r.geometry('{W}x{H}+0+0')
+r.geometry('{W}x{H}+-8+-31')        # picture at the screen's corner, title bar just above it
 img = tk.PhotoImage(file=r'{img}')
 tk.Label(r, image=img, borderwidth=0).pack()
 r.mainloop()
@@ -102,6 +102,13 @@ try:
     note(f"covered: window capture read {s2.confidence:.0%}; old monitor grab read {s_old.confidence:.0%}")
     if got2 != want:
         fail(f"a covering window changed the reading: {got2}")
+
+    # 2b. a HUD that's half off-screen (black) is "not read", never a wrong number
+    half = r.read(np.concatenate([frame[:1040], np.zeros_like(frame[1040:])]))
+    bad = {k: v for k, v in half.villagers.items() if v is not None and v != truth.villagers[k]}
+    note(f"half-black HUD: villagers {half.villagers}")
+    if bad:
+        fail(f"wrong numbers from a half-black HUD: {bad}")
 
     # 3. speed
     def timed(f, n=20):
