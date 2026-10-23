@@ -96,8 +96,22 @@ core.py            core mode: no window; messages and commands are documented at
 - Core commands `list_games` / `game_detail`; `game_saved` is sent when one is saved.
 - `python test_review.py` plays a scripted 12-minute game through the recorder.
 
+## Match history (official service)
+- `history.py` talks only to the game's own backend (`aoe-api.worldsedgelink.com/community/leaderboard`,
+  `title=age4`): `getRecentMatchHistory` (about the last 10 games per mode: map, mode, length, result,
+  every player's civ/team/rating change, in-game counters, official replay link), `GetPersonalStat`
+  (rating, rank, W/L per leaderboard; also finds a profile from `/steam/<SteamID64>`).
+- Civ, mode and result numbers are decoded with `data/official_ids.json` (made by `tools/probe_official2.py`).
+  Map names come from the packed `options` blob (base64 + zlib JSON with trailing bytes; use `raw_decode`).
+- Cached at `cache/history_<profile>.json`, refreshed at most every 2 minutes; shown offline from the cache.
+- Core commands `list_matches`, `match_detail`, `save_replay` (official blob links only; unzips into
+  Documents/My Games/Age of Empires IV/playback), `find_steam`. `tools/check_history.py` checks the
+  real service on GitHub (workflow "probe").
+- The page (home.html, "Match history") uses the `.glass`, `.ambient` and `.skel` styles from theme.css.
+  Steam custom `/id/` links can't be resolved without a Steam API key, so the app asks for the numeric link.
+
 ## Tests
-`test_coach.py`, `test_core.py`, `test_review.py`, `test_sizes.py`, `test_live.py`, `test_builds.py`,
+`test_coach.py`, `test_core.py`, `test_review.py`, `test_history.py`, `test_sizes.py`, `test_live.py`, `test_builds.py`,
 `test_production_math.py` (Python), `tests/e2e_app.js` (the whole app, GitHub "Test the app"),
 `packaging/smoke_core.py` and `packaging/pin_test.js` (Windows build), `tools/check_real_builds.py`
 (the coach on real aoe4guides builds, weekly).

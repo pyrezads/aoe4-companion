@@ -71,7 +71,7 @@ def mode_name(mid) -> str:
 
 def map_name(m: dict, options: dict) -> str:
     loc = (options.get("localizedMapName") or "").strip()
-    if loc:
+    if loc and loc.isascii():                      # the host's language: use it only if it's English-like
         return loc
     key = options.get("mapName") or m.get("mapname") or ""
     if key in MAP_NAMES:

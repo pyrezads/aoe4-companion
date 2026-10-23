@@ -1,6 +1,6 @@
 // Clicks through the whole app with the real Python core reading a calibration screenshot:
 // first-time setup, build picker and details, coach windows, overlay settings, voice,
-// reading check, live analyst, game review. Runs on GitHub Actions (Linux, virtual screen).
+// reading check, live analyst, game review, match history. Runs on GitHub Actions (Linux, virtual screen).
 //
 //   AOE4_PYTHON=python3 xvfb-run -a npx electron tests/e2e_app.js
 //
@@ -24,6 +24,19 @@ fs.writeFileSync(path.join(ud, 'games', '2026-01-01-1200-zhu_xis_legacy.json'), 
   events: [{ t: 290, kind: 'age', text: 'You reached Feudal' }],
   summary: { length: '5:00', ages: { Feudal: { you: '4:50', build: '4:20', late: 30 } }, villagers_at: {}, idle_time: 0, housed_time: 0,
     floating_time: 0, longest_no_villager: 20, tips: ['Feudal at 4:50, 30 s after the build\'s 4:20.'], late_steps: [] } }));
+// a saved copy of the official match history (fetched "in the future", so the core doesn't refresh it)
+const pl = (id, name, civ, team, result, rating, diff) => ({ profile_id: id, name, country: 'us', civ, team, result, rating, rating_diff: diff,
+  stats: { unitprod: 150, sqkill: 90, sqlost: 70, bprod: 40, upg: 12 }, apm: 80 });
+const hm = (id, end, mode, result, map, foe) => ({ id, start: end - 1500, end, duration: 1500, map, mode, matchtype_id: 1, automatch: true, result,
+  civ: 'zhu_xis_legacy', team: 0, rating: 1100 + id % 50, rating_diff: result === 'win' ? 9 : -9, allies: [], enemies: [foe],
+  players: [pl(123456, 'Tester', 'zhu_xis_legacy', 0, result, 1100 + id % 50, result === 'win' ? 9 : -9), pl(99, 'Rival', foe, 1, result === 'win' ? 'loss' : 'win', 1150, null)],
+  replay: 'https://rl0aoelivemk2blob.blob.core.windows.net/cardinal/x.gz' });
+const now = Date.now() / 1000;
+fs.writeFileSync(path.join(ud, 'cache', 'history_123456.json'), JSON.stringify({
+  profile: { profile_id: 123456, name: 'Tester', country: 'us', level: 42, steam: '76561199110245053' },
+  matches: [hm(1001, now - 3600, 'rm_1v1', 'win', 'Dry Arabia', 'french'), hm(1002, now - 9000, 'rm_1v1', 'loss', 'Lipany', 'mongols'), hm(1003, now - 20000, 'qm_2v2', 'win', 'Altai', 'rus')],
+  leaderboards: [{ leaderboard_id: 17, mode: 'rm_1v1', rating: 1101, highest: 1150, wins: 30, losses: 25, rank: 9000 }],
+  fetched_at: now + 3600 }));
 process.env.AOE4_CORE_ARGS = `--offline --replay ${path.join(ROOT, 'calib', 's07.png')}`;
 require(path.join(ROOT, 'electron', 'main.js'));
 
@@ -78,6 +91,17 @@ app.whenReady().then(async () => {
     await js("document.querySelector('.nav[data-go=review]').click()");
     check(await until(() => js("document.getElementById('rvDetail').innerText.includes('Fix next game')")), 'game review: saved game opens');
     check(await js("document.querySelectorAll('#rvChart path').length === 2"), 'game review: chart drawn');
+
+    await js("document.querySelector('.nav[data-go=history]').click()");
+    check(await until(() => js("document.querySelectorAll('#hxList .hx-row').length === 3")), 'match history: games from the official history');
+    check(await js("document.querySelector('.hx-id h2').textContent === 'Tester' && document.querySelectorAll('.hx-lb').length === 1"), 'match history: profile and leaderboard');
+    check(await until(() => js("document.querySelectorAll('#hxChart .ln').length === 1")), 'match history: rating chart');
+    await js("document.querySelector('[data-hxo=\"1001\"]').click()");
+    check(await until(() => js("document.getElementById('hxd-1001').innerText.includes('Rival')")), 'match history: game details open');
+    await js("document.querySelector('[data-hxf=qm]').click()");
+    check(await js("document.querySelectorAll('#hxList .hx-row').length === 1"), 'match history: filters');
+    await js("document.querySelector('.nav[data-go=settings]').click(); document.getElementById('steam').value = 'https://steamcommunity.com/id/someone'; document.getElementById('steamFind').click()");
+    check(await until(() => js("document.getElementById('steamHint').textContent.includes('custom Steam link')")), 'settings: custom Steam links explained');
   } catch (e) {
     check(false, 'crashed: ' + (e && e.stack || e));
   }

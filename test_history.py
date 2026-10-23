@@ -64,6 +64,8 @@ check(me["apm"] == 120 and me["stats"]["units made" if False else "unitprod"] ==
 check(m["replay"].endswith("M_3.gz"), "official replay link")
 m2 = parse_match(RAW["matchHistoryStats"][1], ME, profiles)
 check(m2["map"] == "Danube River", "empty map name falls back to a known name")
+cn = parse_match(dict(RAW["matchHistoryStats"][0], options=packed({"mapName": "dry_arabia", "localizedMapName": "\u5e72\u71e5\u963f\u62c9\u4f2f"})), ME, profiles)
+check(cn["map"] == "Dry Arabia", f"map named in another language uses the map key ({cn['map']})")
 m3 = parse_match(RAW["matchHistoryStats"][2], ME, profiles)
 check(m3["mode"] == "qm_3v3" and m3["rating_diff"] is None, "quick match without rating change")
 check("players" in slim(m) and "stats" not in slim(m)["players"][0], "list version leaves out per-player stats")

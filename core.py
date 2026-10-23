@@ -295,9 +295,15 @@ class Commands:
             self.emit.send("steam_profile", data={"ok": False, "message": "Paste the link from your Steam profile page "
                                                   "(steamcommunity.com/profiles/7656…). Custom /id/ links don't carry the number."})
             return
-        p = profile_for_steam(sid)
-        self.emit.send("steam_profile", data={"ok": bool(p), "steam": sid, **(p or {}),
-                                              "message": None if p else "No Age of Empires IV profile on that Steam account."})
+        def work():
+            try:
+                p = profile_for_steam(sid)
+                self.emit.send("steam_profile", data={"ok": bool(p), "steam": sid, **(p or {}),
+                                                      "message": None if p else "No Age of Empires IV profile on that Steam account."})
+            except Exception as e:
+                self.emit.send("steam_profile", data={"ok": False, "steam": sid,
+                                                      "message": f"Couldn't reach the official service ({type(e).__name__}). Try again in a minute."})
+        threading.Thread(target=work, daemon=True).start()
 
     def do_auto_build(self, msg):
         self.state.set(build_locked=False, build_repick=True)
