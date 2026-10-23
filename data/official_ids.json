@@ -1,5 +1,5 @@
 {
- "_about": "Official World's Edge API ids for AoE4, decoded by tools/probe_official2.py (lining up matches with their known details). Unknown ids show as 'Civ <id>' in the app; re-run the probe after a patch adds civs.",
+ "_about": "Official World's Edge API ids for AoE4, decoded by tools/probe_official2.py (lining up matches with their known details). Unknown ids show as 'Civ <id>' in the app; re-run the probe after a patch adds civs. leaderboard_id: names seen on the real service (others are named by matching your latest rating in each mode).",
  "civilization_id": {
   "131384": "french",
   "106553": "english",
@@ -41,6 +41,12 @@
   "1": "win"
  },
  "leaderboard_id": {
-  "17": "rm_1v1"
+  "0": "custom",
+  "2": "rm_2v2",
+  "3": "rm_3v3",
+  "4": "rm_4v4",
+  "18": "qm_2v2",
+  "19": "qm_3v3",
+  "20": "qm_4v4"
  }
 }

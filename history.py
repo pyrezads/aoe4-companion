@@ -53,7 +53,10 @@ def _unpack(s: Optional[str]) -> dict:
                 continue
         text = raw.decode("utf-8", "replace")
         start = text.find("{")
-        return json.loads(text[start:]) if start >= 0 else {}
+        if start < 0:
+            return {}
+        obj, _ = json.JSONDecoder().raw_decode(text[start:])   # bytes may follow the JSON
+        return obj if isinstance(obj, dict) else {}
     except (ValueError, TypeError):
         return {}
 
@@ -141,7 +144,7 @@ def personal_stats(profile_id: int, recent: Optional[List[dict]] = None) -> List
     rows = []
     for s in data.get("leaderboardStats") or []:
         lb = str(s.get("leaderboard_id"))
-        mode = IDS.get("leaderboard_id", {}).get(lb) or next((k for k, v in latest.items() if v == s.get("rating")), None)
+        mode = next((k for k, v in latest.items() if v == s.get("rating")), None) or IDS.get("leaderboard_id", {}).get(lb)
         rows.append({"leaderboard_id": s.get("leaderboard_id"), "mode": mode or f"leaderboard {lb}",
                      "rating": s.get("rating"), "highest": s.get("highestrating"), "wins": s.get("wins"),
                      "losses": s.get("losses"), "streak": s.get("streak"), "rank": s.get("rank"),

@@ -20,7 +20,8 @@ def check(cond, msg):
 
 
 def packed(d):
-    return base64.b64encode(zlib.compress(json.dumps(d).encode())).decode()
+    # like the real service: a few bytes after the JSON
+    return base64.b64encode(zlib.compress(json.dumps(d).encode() + b"\x00\x01junk")).decode()
 
 
 ME = 6979980
