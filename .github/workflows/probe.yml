@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["tools/probe_aoe4world.py"]
+    paths: ["tools/probe_aoe4world.py", "tools/probe_official.py"]
 
 jobs:
   probe:
@@ -15,4 +15,4 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - run: python tools/probe_aoe4world.py
+      - run: python tools/probe_official.py
