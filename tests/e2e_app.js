@@ -77,6 +77,22 @@ app.whenReady().then(async () => {
     check(await until(() => panel.webContents.executeJavaScript("!document.body.classList.contains('waiting') && document.getElementById('wordTxt').textContent.length > 2")), 'coach panel shows a live call');
     check(find('mode=strip'), 'game strip opens');
 
+    if (process.platform === 'win32') {          // the strip pinned to the game window shows live calls
+      const { spawn } = require('child_process');
+      const game = spawn('powershell', ['-NoProfile', '-Command', `Add-Type -AssemblyName System.Windows.Forms;
+        $f = New-Object Windows.Forms.Form; $f.Text = 'Age of Empires IV'; $f.StartPosition = 'Manual';
+        $f.Left = 100; $f.Top = 80; $f.Width = 1000; $f.Height = 600; $f.Add_Shown({ $f.Activate() });
+        [Windows.Forms.Application]::Run($f)`], { stdio: 'ignore' });
+      try {
+        const pinned = await until(() => find('pinned=1'), 30000);
+        check(pinned, 'strip pinned to the game window');
+        check(await until(() => !find('mode=strip&') && !BrowserWindow.getAllWindows().some((w) => /mode=strip$/.test(w.webContents.getURL())), 15000), 'floating strip replaced by the pinned one');
+        const shown = pinned && await until(() => pinned.webContents.executeJavaScript(
+          "!document.body.classList.contains('waiting') && getComputedStyle(document.getElementById('strip')).visibility === 'visible' && /^\\d+$/.test(document.getElementById('sv').textContent) && document.getElementById('sv').textContent !== '7'"), 15000);
+        check(shown, 'pinned strip shows the live villager call');
+      } finally { game.kill(); }
+    }
+
     await js("stripPos.value='off'; saveOverlay()");
     check(await until(() => !find('mode=strip')), 'strip turns off from settings');
 

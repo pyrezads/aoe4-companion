@@ -78,6 +78,14 @@ jobs:
           npx electron packaging/pin_test.js || true
           grep -qx OK pin_result.txt
 
+      - name: Check the whole app on Windows (coach strip pinned to a stand-in game)
+        shell: bash
+        env:
+          AOE4_PYTHON: python
+        run: |
+          timeout 300 npx electron tests/e2e_app.js 2>&1 | grep -E "PASS|FAIL|crashed" || true
+          grep -qx OK e2e_result.txt
+
       - name: Build installer
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: npx electron-builder --win nsis --publish never

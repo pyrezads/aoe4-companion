@@ -102,9 +102,11 @@ function tellCoreMonitor() {
 
 // ── messages ──────────────────────────────────────────────────────────
 const toOverlay = new Set(['build', 'status', 'coach']);   // build first: it resets the overlay's coach view
+// every coach window: the panel, the floating strip, and the strip pinned to the game
+const coachWindows = () => [panel, strip, pinned].filter((w) => w && !w.isDestroyed());
 function broadcast(type, data) {
   if (home && !home.isDestroyed()) home.webContents.send('core:msg', type, data);
-  if (toOverlay.has(type)) for (const w of [panel, strip]) if (w && !w.isDestroyed()) w.webContents.send('core:msg', type, data);
+  if (toOverlay.has(type)) for (const w of coachWindows()) w.webContents.send('core:msg', type, data);
 }
 function coreState() {
   return { running: !!core?.running, error: FORCE_DEMO ? 'Demo mode' : core?.error || null, demo: FORCE_DEMO || !core?.running };
@@ -303,7 +305,7 @@ function overlaySettingsFor() {
 }
 function sendOverlaySettings() {
   const o = overlaySettingsFor();
-  for (const w of [panel, strip, pinned]) if (w && !w.isDestroyed()) w.webContents.send('overlay:settings', o);
+  for (const w of coachWindows()) w.webContents.send('overlay:settings', o);
 }
 
 function openStrip() {
@@ -329,6 +331,14 @@ function openCoach() {
     const w = 460, h = Math.min(760, wa.height - 48);
     panel = overlayWindow({ x: wa.x + wa.width - w - 24, y: wa.y + 24, width: w, height: h,
       alwaysOnTop: cd.id === gameDisplay().id }, 'panel');
+    // On the game's monitor (opened or dragged there) it stays above the game; elsewhere it's a normal window.
+    const keepOnTop = () => {
+      if (!panel || panel.isDestroyed()) return;
+      const onGame = screen.getDisplayMatching(panel.getBounds()).id === gameDisplay().id;
+      panel.setAlwaysOnTop(onGame, 'screen-saver');
+    };
+    keepOnTop();
+    panel.on('moved', keepOnTop);
     panel.on('closed', () => { panel = null; if (coachOpen) closeCoach(); });
   }
   openStrip();
