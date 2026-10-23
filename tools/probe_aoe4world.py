@@ -62,6 +62,13 @@ for path in (f"/api/v0/players/{PID}/games/{gid}", f"/api/v0/games/{gid}",
         try:
             data = json.loads(body)
             note(f"{path} shape: " + json.dumps(shape(data))[:3500])
+            if len(body) > 20000:          # something big inside: show what the players carry
+                p0 = (data.get("teams") or [[{}]])[0][0]
+                p0 = p0.get("player", p0)
+                note(f"{path} player keys: " + ", ".join(p0.keys()))
+                for k, v in p0.items():
+                    if isinstance(v, (dict, list)) and len(json.dumps(v)) > 500:
+                        note(f"{path} player.{k}: " + json.dumps(v)[:2500])
         except ValueError:
             pass
     elif st and st != 404:
