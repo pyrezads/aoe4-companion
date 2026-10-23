@@ -6,7 +6,8 @@
   "main": "electron/main.js",
   "private": true,
   "scripts": {
-    "start": "electron . --demo",
+    "start": "electron .",
+    "demo": "electron . --demo",
     "dist:win": "electron-builder --win nsis"
   },
   "devDependencies": {
@@ -16,9 +17,22 @@
   "build": {
     "appId": "com.pyrezads.aoe4coach",
     "productName": "AoE4 Coach",
-    "files": ["electron/**", "app/**", "package.json"],
-    "directories": { "output": "dist", "buildResources": "build" },
-    "win": { "target": "nsis", "icon": "build/icon.ico" },
-    "nsis": { "oneClick": true, "perMachine": false }
+    "files": [
+      "electron/**",
+      "app/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    }
   }
 }

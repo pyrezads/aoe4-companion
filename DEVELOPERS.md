@@ -40,13 +40,22 @@ Threads: reader_loop (screen), match_loop (network), Tk main thread (UI). They o
 - `python main.py --test calib/s02.png` shows what it reads from one screenshot.
 
 ## Electron app
-`npm install` then `npm start` (Node.js LTS). Runs on Mac or Windows, in demo mode for now.
-- `electron/main.js` opens the launcher (app/renderer/home.html), and on **Start coach** the coach
-  panel on the second monitor plus a transparent, click-through strip at the top of the game screen
-  (both app/renderer/overlay.html, `?mode=panel` / `?mode=strip`). Monitors come from Electron in real pixels.
-- `app/renderer/theme.css` holds the colours (sampled from the reference design) and the bundled fonts.
-- Next: `python main.py --core` + a local websocket so the overlay shows the live coach messages
-  from coach.py instead of the simulated game. Plan: OVERLAY_PLAN.md.
+`npm install`, then `npm start` (Node.js LTS). `npm run demo` skips Python and plays a simulated game.
+```
+electron/main.js   windows, settings (userData/settings.json), monitors, routes core messages
+electron/core.js   starts `python main.py --core --config userData/config.json`, JSON lines both ways
+electron/preload.js  what the pages may call: window.app (launcher), window.coach (overlays)
+app/renderer/      home.html (launcher, build picker, settings, first-time setup), overlay.html, theme.css
+core.py            core mode: no window; messages and commands are documented at the top
+```
+- The app starts the core itself. If Python is missing or crashes, the launcher says why and the
+  overlay plays the demo game.
+- Settings live in the app's userData folder (`%APPDATA%/AoE4 Coach` on Windows): profile, game
+  monitor, chosen build, follow-by. The app writes `config.json` there for the core; the build list
+  cache is in `cache/` next to it (6 h, used offline).
+- Test without the game: `AOE4_CORE_ARGS="--offline --replay calib/s07.png" npm start`
+  (or `python main.py --core --offline --replay calib/s07.png` to see the raw messages).
+- `python test_core.py` drives the core like the app does, replaying calib screenshots.
 
 ## Known limits / ideas
 - mss uses GDI BitBlt: fine in Borderless Windowed, can be black in exclusive fullscreen.

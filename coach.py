@@ -25,6 +25,7 @@ from buildorder import BuildOrder, Step
 
 RES = ("food", "wood", "gold", "stone")
 AGE_NAME = {2: "Feudal", 3: "Castle", 4: "Imperial"}
+AGE_KEYS = {"feudal": 2, "castle": 3, "imperial": 4}
 
 
 def _clock(s: Optional[int]) -> str:
@@ -245,7 +246,11 @@ class Coach:
 
     def _age(self, seconds: int, step: CoachStep, my_age: Optional[int]) -> Optional[dict]:
         age_now = max(my_age or 1, step.age)
-        times = {int(k): _age_seconds(v) for k, v in self.build.age_times.items() if str(k).isdigit()}
+        times = {}
+        for k, v in self.build.age_times.items():       # keys are "2" or "feudal"; values seconds or "m:ss"
+            a = int(k) if str(k).isdigit() else AGE_KEYS.get(str(k).lower())
+            if a:
+                times[a] = _age_seconds(v)
         nxt = min((a for a in times if a > age_now and times[a]), default=None)
         if not nxt:
             return None

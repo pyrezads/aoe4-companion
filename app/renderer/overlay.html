@@ -81,6 +81,14 @@ body.mode-strip .panel{display:none}
 .alert{display:flex;gap:10px;align-items:center;margin:0 12px 12px;padding:10px 14px;border-radius:14px;background:var(--card-plum);color:var(--pink);font-size:14px;font-weight:600}
 .alert[hidden]{display:none}
 
+/* nothing to coach yet: no game on screen, or no build picked */
+.waiting{display:none;margin:0 12px 14px;padding:22px 18px;border-radius:20px;background:var(--base);border:1px dashed #2c3438}
+.waiting .wt{font:600 22px/1.2 var(--display);margin-bottom:6px}
+.waiting p{margin:0;color:var(--muted);font-size:14px}
+body.waiting .waiting{display:block}
+body.waiting .hero,body.waiting .split,body.waiting .alert,body.waiting .steps,body.waiting .agewrap,body.waiting .ph>div:last-child{display:none}
+body.waiting .strip{visibility:hidden}
+
 /* ── strip (game screen) ────────────────────────────── */
 .strip{display:inline-flex;align-items:center;gap:12px;background:rgba(5,9,9,.86);border:1px solid rgba(255,255,255,.08);
   border-radius:999px;padding:6px 16px 6px 6px;backdrop-filter:blur(6px);white-space:nowrap}
@@ -105,9 +113,13 @@ body.preview .strip{display:inline-flex}
   <div class="cap">Second monitor: coach panel</div>
   <section class="panel" aria-live="polite">
     <header class="ph">
-      <div><div class="t" id="title">Zhuge Nu-Timing-Attack(10-14)</div><div class="c">Zhu Xi's Legacy</div></div>
+      <div><div class="t" id="title">Zhuge Nu-Timing-Attack(10-14)</div><div class="c" id="civ">Zhu Xi's Legacy</div></div>
       <div><div class="clock" id="clock">0:00</div><div class="pace on" id="pace">On pace</div></div>
     </header>
+    <div class="waiting" id="waiting">
+      <div class="wt" id="waitTitle">Waiting for the game</div>
+      <p id="waitText">Start a match in Borderless Windowed. The coach starts as soon as it can read your villagers.</p>
+    </div>
     <div class="hero">
       <div class="lead">Villager <b id="vnum">7</b> goes to</div>
       <div class="word" id="word"><span class="badge"><svg class="i"><use id="wordIcon" href="#r-wood"/></svg></span><span class="big" id="wordTxt">Wood</span></div>
@@ -174,14 +186,15 @@ function render(m){
   $('split').innerHTML = RES.map(k => {
     const h = m.have[k], w = m.want[k], n = Math.max(h, w);
     const pips = Array.from({length:n}, (_, i) => `<i class="${i < h ? 'f' : ''}"></i>`).join('');
-    return `<div class="res ${h < w ? 'short' : ''}" style="color:var(--${k})">
+    const short = m.short ? m.short[k] : h < w;
+    return `<div class="res ${short ? 'short' : ''}" style="color:var(--${k})">
       <div class="n">${NAME[k]}</div>
       <div class="v" style="color:var(--ink)">${h}<small> / ${w}</small></div>
       <div class="pips">${pips}</div></div>`;
   }).join('');
 
   $('nowX').textContent = m.step.text;
-  $('nextW').textContent = m.upcoming ? m.upcoming.at : '';
+  $('nextW').textContent = !m.upcoming ? '' : m.upcoming.at !== '--:--' ? m.upcoming.at : `${m.upcoming.villagers} vil`;
   $('nextX').textContent = m.upcoming ? m.upcoming.text : 'End of the build. Keep villagers coming.';
   $('af').style.setProperty('--p', m.age ? Math.min(1, m.age.progress) : 1);
   $('ageTarget').textContent = $('sb').textContent = m.age ? `${m.age.target} at ${m.age.at}` : 'Build complete';
@@ -191,8 +204,39 @@ function render(m){
   a.textContent = m.idle ? `${m.idle} idle villager${m.idle > 1 ? 's' : ''}. Send ${m.idle > 1 ? 'them' : 'it'} to ${to}.` : '';
 }
 
+const CIVS = {ABB:"Abbasid Dynasty",AYY:"Ayyubids",BYZ:"Byzantines",CHI:"Chinese",DEL:"Delhi Sultanate",ENG:"English",
+  FRE:"French",GOH:"Golden Horde",HRE:"Holy Roman Empire",HOL:"House of Lancaster",JAP:"Japanese",JIN:"Jin Dynasty",
+  JDA:"Jeanne d'Arc",KTE:"Knights Templar",MAC:"Macedonian Dynasty",MAL:"Malians",MON:"Mongols",DRA:"Order of the Dragon",
+  OTT:"Ottomans",RUS:"Rus",SCO:"Scots",SEN:"Sengoku Daimyo",TUG:"Tughlaq Dynasty",VIK:"Vikings",ZXL:"Zhu Xi's Legacy"};
+
 if (inElectron) {
-  window.coach.onUpdate(render);
+  // Live: messages from the Python core, forwarded by the app.
+  let live = false, build = null, coach = null;
+  function update(){
+    // a coach message belongs to the build it was made for; ignore leftovers from the previous one
+    const fresh = coach && build && coach.build && coach.build.title === build.title;
+    const waiting = !build || !live || !fresh;
+    document.body.classList.toggle('waiting', waiting);
+    if (!build) {
+      $('title').textContent = 'No build picked';
+      $('civ').textContent = '';
+      $('waitTitle').textContent = 'Pick a build first';
+      $('waitText').textContent = 'Choose one in the app under Build coach, or turn on automatic picks.';
+    } else {
+      $('title').textContent = build.title;
+      $('civ').textContent = CIVS[build.civ] || build.civ || '';
+      $('waitTitle').textContent = 'Waiting for the game';
+      $('waitText').textContent = 'Start a match in Borderless Windowed. The coach starts as soon as it can read your villagers.';
+    }
+    if (!waiting) render(coach);
+  }
+  window.coach.onMessage((type, data) => {
+    if (type === 'status') live = !!(data && data.live);
+    else if (type === 'build') build = data;
+    else if (type === 'coach') coach = data;
+    update();
+  });
+  update();
 } else {
   /* ── preview simulation: a sample build, villagers arriving every 20 game seconds ── */
   const BUILD = [

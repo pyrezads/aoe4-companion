@@ -2,26 +2,13 @@
 
 Run:  python test_coach.py
 """
+import json
+
 from buildorder import BuildOrder
 from coach import Coach, coach_steps
 
 # A build in aoe4guides' JSON shape: steps grouped by age, numbers as strings, "+" = no fixed number.
-BUILD_JSON = {
-    "title": "Test timing attack", "civ": "ZXL",
-    "ageTimings": {"2": {"t": "4:20"}, "3": {"t": "11:00"}},
-    "steps": [
-        {"age": 1, "steps": [
-            {"time": "0:00", "villagers": "6",  "food": "6", "description": "All six on sheep."},
-            {"time": "0:45", "villagers": "9",  "food": "6", "wood": "3", "description": "Three to wood, build a house."},
-            {"time": "1:30", "villagers": "12", "food": "6", "wood": "3", "gold": "3", "description": "Three to gold."},
-            {"time": "2:20", "villagers": "15", "food": "9", "wood": "3", "gold": "3", "description": "Three to berries."},
-            {"time": "3:15", "villagers": "18", "food": "9", "wood": "6", "gold": "3", "description": "Age up."},
-        ]},
-        {"age": 2, "steps": [
-            {"time": "4:20", "villagers": "22", "food": "9", "wood": "7", "gold": "6", "description": "Two archery ranges."},
-        ]},
-    ],
-}
+BUILD_JSON = json.load(open("data/test_build.json", encoding="utf-8"))
 # The same build without villager counts, like many older builds.
 NO_COUNTS = {**BUILD_JSON, "steps": [{**sec, "steps": [{k: v for k, v in st.items() if k != "villagers"}
                                                         for st in sec["steps"]]} for sec in BUILD_JSON["steps"]]}
@@ -53,6 +40,11 @@ print("Steps")
 st = coach_steps(build)
 check([s.villagers for s in st] == [6, 9, 12, 15, 18, 22], "villager totals read from the build")
 check(coach_steps(BuildOrder.from_json(NO_COUNTS))[2].villagers == 12, "totals added up when the build has no counts")
+
+print("Age timings as aoe4guides names them")
+named = BuildOrder.from_json({**BUILD_JSON, "ageTimings": {"feudal": {"e": False, "t": 280}}})
+m = feed(Coach(named), 0, V(6))
+check(m["age"] and m["age"]["at"] == "4:40", "\"feudal\": {t: 280} → Feudal at 4:40")
 
 print("Game start")
 c = Coach(build)

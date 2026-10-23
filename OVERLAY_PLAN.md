@@ -17,7 +17,7 @@ AoE4 Companion (one installer, Windows)
 │                                        transparent, always on top, clicks pass through
 │    · detects monitors with screen.getAllDisplays() and tells the core which is the game
 │
-│        ▲ ws://127.0.0.1:47614  (JSON messages, only on this PC)
+│        ▲ JSON lines over the core's stdin/stdout (no network port)
 │        ▼
 └─ analyst-core.exe  (your Python, packaged with PyInstaller)
      · screen reader, trackers, aoe4world, build orders: what exists today
@@ -115,10 +115,10 @@ No game needed, same style as test_builds.py.
 
 | Phase | What | Done when |
 |---|---|---|
-| 1 | `coach.py` + `test_coach.py` | Scripted games give the right "next villager" every time |
+| 1 ✓ | `coach.py` + `test_coach.py` | Scripted games give the right "next villager" every time |
 | 2 | Show the coach in the existing Tkinter dashboard | You've played 5 games with it and it felt right |
-| 3 | `server.py` (websocket) + `python main.py --core` (no Tkinter) | A test page shows live messages |
-| 4 | Electron shell: home.html, overlay panel + strip, build picker | Plays a full game with only the Electron windows open |
+| 3 ✓ | `python main.py --core` (no Tkinter), JSON lines over stdin/stdout instead of a websocket | test_core.py |
+| 4 ✓ | Electron shell: home.html, overlay panel + strip, build picker, first-time setup | Live with replayed screenshots; next: a full real game |
 | 5 | Layout table, 1080p calibration, reading check | A friend on 1080p reads ≥ 95% |
 | 6 | PyInstaller + electron-builder + GitHub Actions + auto-update | A friend installs from a link and gets an update |
 

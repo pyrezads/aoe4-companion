@@ -11,7 +11,9 @@ from __future__ import annotations
 import html
 import json
 import math
+import pathlib
 import re
+import time
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
@@ -243,12 +245,18 @@ def rank_builds(builds: List[dict], kind: Optional[str], map_name: Optional[str]
 
 
 class BuildLibrary:
-    """Fetches and caches the builds per civ for this session (nothing written to disk)."""
+    """Fetches the builds per civ. Kept in memory, and on disk when cache_dir is set,
+    so the picker still works offline and aoe4guides gets at most one request per civ
+    every few hours."""
 
-    def __init__(self, api_base: str, timeout: float = 10):
+    CACHE_HOURS = 6
+
+    def __init__(self, api_base: str, timeout: float = 10, cache_dir: Optional[str] = None):
         self.api = api_base.rstrip("/")
         self.timeout = timeout
         self.cache: Dict[str, List[dict]] = {}
+        self.cache_dir = pathlib.Path(cache_dir) if cache_dir else None
+        self.last_source = None          # "memory", "network", "cache" (offline) or None
 
     def _get(self, code: str, order: str) -> List[dict]:
         req = urllib.request.Request(f"{self.api}/builds?civ={code}&orderBy={order}", headers={"User-Agent": USER_AGENT})
@@ -256,12 +264,26 @@ class BuildLibrary:
             data = json.loads(r.read().decode("utf-8"))
         return data if isinstance(data, list) else (data.get("builds") or data.get("data") or [])
 
+    def _disk(self, code: str) -> Optional[pathlib.Path]:
+        return self.cache_dir / f"builds_{code}.json" if self.cache_dir else None
+
     def builds_for(self, civ_slug: str) -> List[dict]:
         code = GUIDES_CIV.get(civ_slug)
         if not code:
             return []
-        if code not in self.cache:
-            seen, merged = set(), []
+        if code in self.cache:
+            self.last_source = "memory"
+            return self.cache[code]
+        disk = self._disk(code)
+        if disk and disk.exists() and time.time() - disk.stat().st_mtime < self.CACHE_HOURS * 3600:
+            try:
+                self.cache[code] = json.loads(disk.read_text(encoding="utf-8"))
+                self.last_source = "cache"
+                return self.cache[code]
+            except ValueError:
+                pass
+        seen, merged = set(), []
+        if self.api:
             for order in ("score", "views", "likes", "timeCreated"):
                 try:
                     for b in self._get(code, order):
@@ -271,10 +293,33 @@ class BuildLibrary:
                             merged.append(b)
                 except Exception as e:
                     print(f"  [builds] {code} {order}: {e}")
-            if not merged:
-                return []          # don't remember a failure; try again next time
+        if merged:
             self.cache[code] = merged
-        return self.cache[code]
+            self.last_source = "network"
+            if disk:
+                try:
+                    disk.parent.mkdir(parents=True, exist_ok=True)
+                    disk.write_text(json.dumps(merged), encoding="utf-8")
+                except OSError as e:
+                    print(f"  [builds] couldn't save the cache: {e}")
+            return merged
+        if disk and disk.exists():               # offline: an old list beats nothing
+            try:
+                self.cache[code] = json.loads(disk.read_text(encoding="utf-8"))
+                self.last_source = "cache"
+                return self.cache[code]
+            except ValueError:
+                pass
+        self.last_source = None
+        return []                                # don't remember a failure; try again next time
+
+    def find(self, build_id) -> Optional[dict]:
+        """A build from any list fetched so far, by id (or title for builds without one)."""
+        for builds in self.cache.values():
+            for b in builds:
+                if (b.get("id") or b.get("title")) == build_id:
+                    return b
+        return None
 
     def choose(self, civ_slug: str, kind: Optional[str], map_name: Optional[str],
                enemy_civs: List[str]) -> List[BuildChoice]:

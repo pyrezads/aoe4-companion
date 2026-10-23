@@ -41,8 +41,11 @@ DEFAULT_CONFIG = {
 }
 
 
-def load_config() -> dict:
+def load_config(path: pathlib.Path = None) -> dict:
+    global CONFIG_PATH
+    CONFIG_PATH = pathlib.Path(path) if path else CONFIG_PATH
     if not CONFIG_PATH.exists():
+        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
         CONFIG_PATH.write_text(json.dumps(DEFAULT_CONFIG, indent=2))
         return copy.deepcopy(DEFAULT_CONFIG)
     cfg = copy.deepcopy(DEFAULT_CONFIG)
@@ -71,11 +74,12 @@ class AppState:
 
 # ── workers ───────────────────────────────────────────────────────────
 
-def reader_loop(state: AppState, cfg: dict, monitor: dict, stop: threading.Event):
+def reader_loop(state: AppState, cfg: dict, monitor: dict, stop: threading.Event, make_screen=None):
     from screen import GameScreen
     from analyst import Analyst
 
-    screen = GameScreen(monitor)      # mss must be created in the thread that uses it
+    make_screen = make_screen or GameScreen
+    screen = make_screen(monitor)     # mss must be created in the thread that uses it
     an = Analyst(state, cfg)
     state.set(analyst=an)
     interval = float(cfg.get("read_every_seconds", 1.0))
@@ -85,9 +89,22 @@ def reader_loop(state: AppState, cfg: dict, monitor: dict, stop: threading.Event
     last_alert_keys = set()
     while not stop.is_set():
         t0 = time.time()
+        want = state.get("game_monitor")
+        if want and want != monitor:                 # the app picked another monitor for the game
+            monitor, screen = want, make_screen(want)
         try:
             frame = screen.grab()
             an.on_frame(frame, t0)
+            if state.get("check_request"):           # Settings > Run a reading check
+                state.set(check_request=False)
+                h = an.hud.read(frame)
+                emit = state.get("emit")
+                if emit:
+                    emit.send("reading_check", data={
+                        "confidence": h.confidence, "missed": h.missed, "clock": h.clock,
+                        "pop": h.pop, "pop_cap": h.pop_cap, "idle": h.idle,
+                        "villagers": h.villagers, "resources": h.resources,
+                        "width": frame.shape[1], "height": frame.shape[0]})
             an.refresh_advice_if_needed(t0)
             alerts = state.get("alerts") or []
             keys = {re.sub(r"\d+", "#", t.split(":")[0]) for _, t in alerts}
@@ -127,9 +144,11 @@ def match_loop(state: AppState, cfg: dict, stop: threading.Event):
     from aoe4world import Aoe4WorldClient, civ_name
     from buildorder import BuildLibrary, BuildOrder, choice_state
 
-    client = Aoe4WorldClient(int(cfg["aoe4world_profile_id"]))
-    prof = client.load_profile()
-    if prof:
+    client = Aoe4WorldClient(int(cfg.get("aoe4world_profile_id") or 0))
+    prof = client.load_profile() if client.profile_id else None
+    if not client.profile_id:
+        state.set(match_note="Add your aoe4world profile in Settings to scout ranked opponents.")
+    elif prof:
         team = client.mode_stats("rm_team")
         state.set(match_note=f"{prof.get('name')} · team ranked {team.get('rating', '?')} "
                              f"({(team.get('rank_level') or '').replace('_', ' ')}). Waiting for a ranked match…")
@@ -154,7 +173,7 @@ def match_loop(state: AppState, cfg: dict, stop: threading.Event):
     team_sig = None
     loaded_for = None
     build_ctx = None
-    library = None
+    library = state.get("build_library")
 
     def show_choice(choices, i):
         fields = choice_state(choices, i)
@@ -163,7 +182,7 @@ def match_loop(state: AppState, cfg: dict, stop: threading.Event):
         print(f"  Build picked: {bo.title} — {fields['build_why']}")
     while not stop.is_set():
         try:
-            m = client.current_match()
+            m = client.current_match() if client.profile_id else None
             if m and m.game_id != current_id:
                 current_id = m.game_id
                 b = client.briefing(m)
@@ -191,7 +210,12 @@ def match_loop(state: AppState, cfg: dict, stop: threading.Event):
                     lines = team_briefing(client, sig[0], sig[1], list(sig[2]), list(sig[3]))
                     state.set(briefing_lines=lines)
                     print("  Teams read from the player list:", " | ".join(lines))
-            # build order: your link from config.json, else picked for this civ, game size, map and enemies
+            # build order: a build chosen in the app wins; then your link from config.json;
+            # else picked for this civ, game size, map and enemies
+            if state.get("build_repick"):
+                state.set(build_repick=False)
+                build_ctx = loaded_for = None
+            locked = state.get("build_locked")
             enemies = [p.civ for p in m.enemies()] if m else [e["civ"] for e in (teams or {}).get("enemies", []) if e["civ"]]
             kind = m.kind if m else (teams or {}).get("mode")
             map_name = m.map if m else None
@@ -199,14 +223,17 @@ def match_loop(state: AppState, cfg: dict, stop: threading.Event):
             early = not snap or snap.seconds is None or snap.seconds < 150
             ctx = (my_civ, kind, map_name, tuple(sorted(enemies)))
             url = (cfg.get("builds") or {}).get(my_civ) if my_civ else None
-            if my_civ and url and my_civ != loaded_for:
+            if locked:
+                pass
+            elif my_civ and url and my_civ != loaded_for:
                 loaded_for = my_civ
                 load_build(url, civ_name(my_civ))
             elif my_civ and not url and api and ctx != build_ctx and (early or my_civ != loaded_for):
                 build_ctx, loaded_for = ctx, my_civ
                 try:
                     if library is None:
-                        library = BuildLibrary(api)
+                        library = BuildLibrary(api, cache_dir=cfg.get("cache_dir"))
+                        state.set(build_library=library)
                     choices = library.choose(my_civ, kind, map_name, enemies)
                     if choices:
                         state.set(build_choices=choices)
@@ -258,9 +285,19 @@ def test_files(paths):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--test", nargs="+", help="read screenshots instead of the live screen")
+    ap.add_argument("--core", action="store_true", help="no window: talk JSON over stdin/stdout (the Electron app)")
+    ap.add_argument("--config", help="config.json to use (the app keeps its own)")
+    ap.add_argument("--replay", help="with --core: comma-separated screenshots to read instead of the screen")
+    ap.add_argument("--offline", action="store_true", help="with --core: no aoe4world/aoe4guides requests")
     args = ap.parse_args()
     if args.test:
         test_files(args.test)
+        return
+    if args.core:
+        from core import run_core
+        cfg = load_config(args.config)
+        cfg.setdefault("cache_dir", str(CONFIG_PATH.parent / "cache"))
+        run_core(cfg, replay=args.replay.split(",") if args.replay else None, network=not args.offline)
         return
 
     from screen import make_dpi_aware, pick_monitors

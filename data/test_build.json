@@ -1,0 +1,69 @@
+{
+ "title": "Test timing attack",
+ "civ": "ZXL",
+ "ageTimings": {
+  "2": {
+   "t": "4:20"
+  },
+  "3": {
+   "t": "11:00"
+  }
+ },
+ "steps": [
+  {
+   "age": 1,
+   "steps": [
+    {
+     "time": "0:00",
+     "villagers": "6",
+     "food": "6",
+     "description": "All six on sheep."
+    },
+    {
+     "time": "0:45",
+     "villagers": "9",
+     "food": "6",
+     "wood": "3",
+     "description": "Three to wood, build a house."
+    },
+    {
+     "time": "1:30",
+     "villagers": "12",
+     "food": "6",
+     "wood": "3",
+     "gold": "3",
+     "description": "Three to gold."
+    },
+    {
+     "time": "2:20",
+     "villagers": "15",
+     "food": "9",
+     "wood": "3",
+     "gold": "3",
+     "description": "Three to berries."
+    },
+    {
+     "time": "3:15",
+     "villagers": "18",
+     "food": "9",
+     "wood": "6",
+     "gold": "3",
+     "description": "Age up."
+    }
+   ]
+  },
+  {
+   "age": 2,
+   "steps": [
+    {
+     "time": "4:20",
+     "villagers": "22",
+     "food": "9",
+     "wood": "7",
+     "gold": "6",
+     "description": "Two archery ranges."
+    }
+   ]
+  }
+ ]
+}

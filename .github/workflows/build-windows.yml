@@ -32,6 +32,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           python test_coach.py
+          python test_core.py
           python test_builds.py
           python test_production_math.py
 

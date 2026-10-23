@@ -1,39 +1,58 @@
 // AoE4 Coach: Electron main process.
 //
-// Windows it opens:
-//   home     launcher: tools, build picker, settings          (app/renderer/home.html)
-//   panel    coach panel on your second monitor               (overlay.html?mode=panel)
-//   strip    small strip on the game screen: transparent,
-//            always on top, clicks pass straight through      (overlay.html?mode=strip)
+// Windows:
+//   home     launcher: tools, build picker, settings, first-time setup  (app/renderer/home.html)
+//   panel    coach panel on your second monitor                        (overlay.html?mode=panel)
+//   strip    small strip on the game screen: transparent, always on top,
+//            clicks pass straight through                              (overlay.html?mode=strip)
 //
-// For now it runs in demo mode: the overlay plays a simulated game. The next step
-// connects it to the Python core (python main.py --core) over a local websocket,
-// which forwards the coach's messages to the overlay with send('coach:update', msg).
+// The Python core (python main.py --core, see core.py) reads the screen and sends
+// messages; core.js runs it. If it can't start (no Python, missing packages), or
+// with `npm run demo`, the overlay plays a simulated game instead.
 
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const { Core } = require('./core');
 
 const ROOT = path.join(__dirname, '..');
 const page = (name) => path.join(ROOT, 'app', 'renderer', name);
 const isMac = process.platform === 'darwin';
-const DEMO = true;
+const FORCE_DEMO = process.argv.includes('--demo');
 
-let home = null, panel = null, strip = null;
-let gameDisplayId = null;   // chosen in Settings; otherwise the largest monitor
+let home = null, panel = null, strip = null, core = null;
+const latest = {};            // last message of each type from the core, for windows that open later
 
-const webPreferences = () => ({
-  preload: path.join(__dirname, 'preload.js'),
-  contextIsolation: true,
-  sandbox: true,
-  additionalArguments: DEMO ? ['--aoe4-demo'] : [],
-});
+// ── settings (kept in the app's own folder, e.g. %APPDATA%/AoE4 Coach) ──
+const userDir = () => app.getPath('userData');
+const settingsPath = () => path.join(userDir(), 'settings.json');
+let settings = { setupDone: false, profileId: null, gameDisplayId: null, build: null, auto: true, followBy: 'villagers' };
+
+function loadSettings() {
+  try { settings = { ...settings, ...JSON.parse(fs.readFileSync(settingsPath(), 'utf8')) }; } catch {}
+}
+function saveSettings() {
+  fs.mkdirSync(userDir(), { recursive: true });
+  fs.writeFileSync(settingsPath(), JSON.stringify(settings, null, 2));
+}
+// The core reads a config.json; the app writes the parts it controls before starting it.
+function writeCoreConfig() {
+  const p = path.join(userDir(), 'config.json');
+  let cfg = {};
+  try { cfg = JSON.parse(fs.readFileSync(p, 'utf8')); } catch {}
+  cfg.aoe4world_profile_id = settings.profileId || 0;
+  cfg.cache_dir = path.join(userDir(), 'cache');
+  cfg.coach_follow_by = settings.followBy || 'villagers';
+  fs.mkdirSync(userDir(), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
+  return p;
+}
 
 // ── monitors ──────────────────────────────────────────────────────────
 const pixels = (d) => d.size.width * d.size.height * d.scaleFactor ** 2;
-
 function gameDisplay() {
   const all = screen.getAllDisplays();
-  return all.find((d) => d.id === gameDisplayId) || all.slice().sort((a, b) => pixels(b) - pixels(a))[0];
+  return all.find((d) => d.id === settings.gameDisplayId) || all.slice().sort((a, b) => pixels(b) - pixels(a))[0];
 }
 function coachDisplay() {
   const g = gameDisplay();
@@ -45,13 +64,56 @@ function displaysInfo() {
     id: d.id,
     width: Math.round(d.size.width * d.scaleFactor),    // real pixels, what the game renders at
     height: Math.round(d.size.height * d.scaleFactor),
-    scale: d.scaleFactor,
-    bounds: d.bounds,
-    game: d.id === g.id,
+    scale: d.scaleFactor, bounds: d.bounds, game: d.id === g.id,
   }));
+}
+function tellCoreMonitor() {
+  const g = gameDisplay();
+  core?.send({ cmd: 'set_monitor', width: Math.round(g.size.width * g.scaleFactor), height: Math.round(g.size.height * g.scaleFactor),
+    x: Math.round(g.bounds.x * g.scaleFactor), y: Math.round(g.bounds.y * g.scaleFactor) });
+}
+
+// ── messages ──────────────────────────────────────────────────────────
+const toOverlay = new Set(['build', 'status', 'coach']);   // build first: it resets the overlay's coach view
+function broadcast(type, data) {
+  if (home && !home.isDestroyed()) home.webContents.send('core:msg', type, data);
+  if (toOverlay.has(type)) for (const w of [panel, strip]) if (w && !w.isDestroyed()) w.webContents.send('core:msg', type, data);
+}
+function coreState() {
+  return { running: !!core?.running, error: FORCE_DEMO ? 'Demo mode' : core?.error || null, demo: FORCE_DEMO || !core?.running };
+}
+function sendCoreState() {
+  if (home && !home.isDestroyed()) home.webContents.send('core:state', coreState());
+}
+
+function startCore() {
+  if (FORCE_DEMO) return;
+  core = new Core({
+    root: ROOT,
+    configPath: writeCoreConfig(),
+    onMessage: (type, data) => {
+      if (type === 'ready') {
+        tellCoreMonitor();
+        const b = settings.build;                 // re-apply the build you chose last time
+        if (b?.url) core.send({ cmd: 'use_build', url: b.url });
+        else if (b?.id) core.send({ cmd: 'use_build', id: b.id, civ: b.civ });
+      }
+      if (!['builds', 'reading_check', 'error'].includes(type)) latest[type] = data;
+      broadcast(type, data);
+    },
+    onState: sendCoreState,
+  });
+  core.start();
 }
 
 // ── windows ───────────────────────────────────────────────────────────
+const webPreferences = (demo) => ({
+  preload: path.join(__dirname, 'preload.js'),
+  contextIsolation: true,
+  sandbox: true,
+  additionalArguments: demo ? ['--aoe4-demo'] : [],
+});
+
 function createHome() {
   home = new BrowserWindow({
     width: 1340, height: 880, minWidth: 980, minHeight: 640,
@@ -61,11 +123,29 @@ function createHome() {
     titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
     titleBarOverlay: isMac ? false : { color: '#050909', symbolColor: '#8b9293', height: 36 },
     show: false,
-    webPreferences: webPreferences(),
+    webPreferences: webPreferences(false),
   });
   home.loadFile(page('home.html'));
   home.once('ready-to-show', () => home.show());
+  home.webContents.on('did-finish-load', () => {
+    sendCoreState();
+    for (const [t, d] of Object.entries(latest)) home.webContents.send('core:msg', t, d);
+  });
   home.on('closed', () => { home = null; closeCoach(); });
+}
+
+function overlayWindow(opts, mode) {
+  const demo = coreState().demo;
+  const w = new BrowserWindow({
+    frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false,
+    resizable: false, maximizable: false, fullscreenable: false, title: 'AoE4 Coach',
+    ...opts, webPreferences: webPreferences(demo),
+  });
+  w.loadFile(page('overlay.html'), { query: { mode } });
+  w.webContents.on('did-finish-load', () => {
+    for (const t of toOverlay) if (latest[t] !== undefined) w.webContents.send('core:msg', t, latest[t]);
+  });
+  return w;
 }
 
 function openCoach() {
@@ -73,31 +153,18 @@ function openCoach() {
   const cd = coachDisplay();
   const wa = cd.workArea;
   const w = 460, h = Math.min(760, wa.height - 48);
-  const sameScreen = cd.id === gameDisplay().id;
-  panel = new BrowserWindow({
-    x: wa.x + wa.width - w - 24, y: wa.y + 24, width: w, height: h,
-    frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false,
-    resizable: false, maximizable: false, fullscreenable: false,
-    alwaysOnTop: sameScreen,
-    title: 'AoE4 Coach',
-    webPreferences: webPreferences(),
-  });
-  panel.loadFile(page('overlay.html'), { query: { mode: 'panel' } });
+  panel = overlayWindow({ x: wa.x + wa.width - w - 24, y: wa.y + 24, width: w, height: h,
+    alwaysOnTop: cd.id === gameDisplay().id }, 'panel');
   panel.on('closed', () => { panel = null; closeCoach(); });
 
   // Strip at the top centre of the game screen. Clicks go through it to the game.
   const gb = gameDisplay().bounds;
   const sw = 600, sh = 64;
-  strip = new BrowserWindow({
-    x: Math.round(gb.x + (gb.width - sw) / 2), y: gb.y + 6, width: sw, height: sh,
-    frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false,
-    resizable: false, movable: false, focusable: false, skipTaskbar: true,
-    webPreferences: webPreferences(),
-  });
+  strip = overlayWindow({ x: Math.round(gb.x + (gb.width - sw) / 2), y: gb.y + 6, width: sw, height: sh,
+    movable: false, focusable: false, skipTaskbar: true }, 'strip');
   strip.setAlwaysOnTop(true, 'screen-saver');
   strip.setIgnoreMouseEvents(true);
   if (isMac) strip.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  strip.loadFile(page('overlay.html'), { query: { mode: 'strip' } });
   strip.on('closed', () => { strip = null; });
 
   home?.webContents.send('coach:state', true);
@@ -109,10 +176,12 @@ function closeCoach() {
   if (home && !home.isDestroyed()) home.webContents.send('coach:state', false);
 }
 
-// ── messages from the pages ───────────────────────────────────────────
+// ── requests from the pages ───────────────────────────────────────────
 ipcMain.handle('displays', () => displaysInfo());
 ipcMain.handle('set-game-display', (_e, id) => {
-  gameDisplayId = id;
+  settings.gameDisplayId = id;
+  saveSettings();
+  tellCoreMonitor();
   if (panel) { closeCoach(); openCoach(); }
   return displaysInfo();
 });
@@ -120,8 +189,38 @@ ipcMain.handle('coach:toggle', () => {
   if (panel) closeCoach(); else openCoach();
   return !!panel;
 });
+ipcMain.handle('core:state', () => coreState());
+ipcMain.handle('core:send', (_e, cmd) => {
+  if (cmd?.cmd === 'use_build') {             // remember it for next time
+    settings.build = { id: cmd.id || null, url: cmd.url || null, civ: cmd.civ || null };
+    settings.auto = false;
+    saveSettings();
+  } else if (cmd?.cmd === 'auto_build') {
+    settings.build = null;
+    settings.auto = true;
+    saveSettings();
+  }
+  return core ? core.send(cmd) : false;
+});
+ipcMain.handle('settings:get', () => ({ ...settings }));
+ipcMain.handle('settings:set', (_e, patch) => {
+  const before = [settings.profileId, settings.followBy];
+  settings = { ...settings, ...patch };
+  saveSettings();
+  if (patch.gameDisplayId !== undefined) tellCoreMonitor();
+  if (patch.openAtLogin !== undefined && app.isPackaged) app.setLoginItemSettings({ openAtLogin: !!patch.openAtLogin });
+  if (core && (settings.profileId !== before[0] || settings.followBy !== before[1])) {   // restart the core with them
+    writeCoreConfig();
+    for (const k of Object.keys(latest)) delete latest[k];
+    core.restart();
+  }
+  return { ...settings };
+});
+ipcMain.handle('core:restart', () => { if (core) { writeCoreConfig(); core.restart(); } else startCore(); });
 
 app.whenReady().then(() => {
+  loadSettings();
+  startCore();
   createHome();
   const refresh = () => home?.webContents.send('displays:changed');
   screen.on('display-added', refresh);
@@ -129,3 +228,4 @@ app.whenReady().then(() => {
   app.on('activate', () => { if (!home) createHome(); });
 });
 app.on('window-all-closed', () => { if (!isMac) app.quit(); });
+app.on('before-quit', () => core?.stop());

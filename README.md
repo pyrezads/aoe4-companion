@@ -23,9 +23,10 @@ npm install
 npm start
 ```
 
-`npm start` opens the launcher in demo mode: **Start coach** opens the coach panel
-and the game-screen strip with a simulated game. Connecting it to the live Python
-reader is the next step (see [OVERLAY_PLAN.md](OVERLAY_PLAN.md)).
+`npm start` opens the launcher and starts the Python screen reader in the background
+(Python 3 with `pip install -r requirements.txt`). Pick a build under **Build coach**,
+press **Start coach**, then start a game in Borderless Windowed.
+`npm run demo` runs without Python and plays a simulated game in the overlay.
 
 ## Layout
 

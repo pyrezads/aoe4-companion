@@ -16,6 +16,7 @@
 .nav{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;border-radius:999px;padding:10px 14px;color:var(--muted);cursor:pointer;font-weight:500;font-size:14.5px;text-align:left}
 .nav:hover{color:var(--ink);background:var(--card)}
 .nav[aria-current="page"]{background:var(--teal);color:#fff}
+.nav:disabled{opacity:.45;cursor:default;background:none}
 .nav .i{width:18px;height:18px}
 .navlist{display:grid;gap:4px;margin-bottom:26px}
 .side .spacer{flex:1}
@@ -138,6 +139,24 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .platform-darwin .side{padding-top:46px}
 .in-app button,.in-app input,.in-app select,.in-app label{-webkit-app-region:no-drag}
 
+/* first-time setup */
+.setup{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:24px;
+  background:radial-gradient(ellipse 760px 520px at 100% 0%,rgba(6,69,87,.62),transparent 75%),rgba(5,9,9,.94)}
+.setup[hidden]{display:none}
+.setup-card{width:min(560px,100%);background:var(--card);border:1px solid var(--edge);border-radius:24px;padding:30px}
+.setup-card img{display:block;margin-bottom:22px}
+.setup-card h2{font:600 24px/1.2 var(--display);margin:0 0 8px}
+.setup-card .sub{margin:0 0 20px}
+.setup-card section[hidden]{display:none}
+.setup-actions{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
+.setup-mons{display:grid;gap:10px}
+.setup-mon{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--base);border:1px solid var(--edge);border-radius:14px;padding:14px 16px;cursor:pointer}
+.setup-mon b{font:600 18px var(--display)}
+.setup-mon span{color:var(--muted);font-size:13px}
+.setup-mon[aria-pressed="true"]{border-color:var(--teal-hi);background:#08161a}
+.setup-mon .i{color:var(--teal-hi)}
+.status.demo .dot{background:var(--orange)}
+
 @media (max-width:1060px){
   .hero,.two,.set{grid-template-columns:1fr}
   .coach{grid-template-columns:1fr}
@@ -167,6 +186,23 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 </svg>
 
 <div class="dragbar"></div>
+<div class="setup" id="setup" hidden>
+  <div class="setup-card" role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+    <img src="img/logo.png" alt="AoE4 Coach" width="180">
+    <section data-step="1">
+      <h2 id="setupTitle">Welcome. Two quick questions.</h2>
+      <p class="sub">Your aoe4world.com profile lets the coach scout ranked opponents and show win rates at your rating. Search your name on aoe4world.com and paste the link from your profile page.</p>
+      <div class="field"><label for="setupPid">aoe4world.com profile</label><input class="inp" id="setupPid" placeholder="https://aoe4world.com/players/…" autocomplete="off"><span class="hint" id="setupPidHint"></span></div>
+      <div class="setup-actions"><button class="btn quiet" id="setupSkip">I don't play ranked</button><button class="btn primary" id="setupNext">Next</button></div>
+    </section>
+    <section data-step="2" hidden>
+      <h2>Which monitor is the game on?</h2>
+      <p class="sub">The coach reads that screen. The coach panel goes on the other one.</p>
+      <div class="setup-mons" id="setupMons"></div>
+      <div class="setup-actions"><button class="btn quiet" id="setupBack">Back</button><button class="btn primary" id="setupDone">Start using AoE4 Coach</button></div>
+    </section>
+  </div>
+</div>
 <div class="app">
   <nav class="side" aria-label="Main">
     <div class="brand"><img src="img/logo.png" alt="AoE4 Coach" width="212" height="86"></div>
@@ -174,16 +210,16 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
     <div class="navlist">
       <button class="nav" data-go="home" aria-current="page"><svg class="i"><use href="#i-home"/></svg>Home</button>
       <button class="nav" data-go="coach"><svg class="i"><use href="#i-scroll"/></svg>Build coach</button>
-      <button class="nav" data-tool="analyst"><svg class="i"><use href="#i-eye"/></svg>Live analyst</button>
-      <button class="nav" data-tool="scout"><svg class="i"><use href="#i-glass"/></svg>Opponent scout</button>
-      <button class="nav" data-tool="army"><svg class="i"><use href="#i-swords"/></svg>Army and counters</button>
+      <button class="nav" data-tool="analyst" disabled title="Coming to the app; in the old dashboard for now"><svg class="i"><use href="#i-eye"/></svg>Live analyst</button>
+      <button class="nav" data-tool="scout" disabled title="Coming to the app; in the old dashboard for now"><svg class="i"><use href="#i-glass"/></svg>Opponent scout</button>
+      <button class="nav" data-tool="army" disabled title="Coming to the app; in the old dashboard for now"><svg class="i"><use href="#i-swords"/></svg>Army and counters</button>
     </div>
     <p class="grp">Setup</p>
     <div class="navlist">
       <button class="nav" data-go="settings"><svg class="i"><use href="#i-sliders"/></svg>Settings</button>
     </div>
     <span class="spacer"></span>
-    <label class="foot"><span><svg class="i" style="width:18px;height:18px"><use href="#i-monitor"/></svg>Start with Windows</span><input type="checkbox" class="sw"></label>
+    <label class="foot"><span><svg class="i" style="width:18px;height:18px"><use href="#i-monitor"/></svg>Start with Windows</span><input type="checkbox" class="sw" id="startWin"></label>
   </nav>
 
   <main>
@@ -213,15 +249,15 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
             </div>
           </div>
           <div class="mini" aria-label="Preview of the coach overlay">
-            <div class="clock"><span>3:42</span><span>17 villagers</span></div>
-            <div class="next"><svg class="i" style="width:28px;height:28px"><use href="#i-log"/></svg><div><small>Next villager</small>Wood</div></div>
+            <div class="clock"><span id="miniClock">3:42</span><span id="miniVils">17 villagers</span></div>
+            <div class="next" id="miniNext"><svg class="i" style="width:28px;height:28px"><use href="#i-log"/></svg><div><small>Next villager</small><span id="miniWord">Wood</span></div></div>
             <div class="pips">
               <div class="row" style="color:var(--food)"><span>Food</span><span class="p" data-have="9" data-want="9"></span></div>
               <div class="row" style="color:var(--wood)"><span>Wood</span><span class="p" data-have="5" data-want="6"></span></div>
               <div class="row" style="color:var(--gold)"><span>Gold</span><span class="p" data-have="3" data-want="3"></span></div>
               <div class="row" style="color:var(--stone)"><span>Stone</span><span class="p" data-have="0" data-want="0"></span></div>
             </div>
-            <div class="bar"><div class="spectrum" style="--p:.82"></div><div class="lab"><span>Dark Age</span><span>Feudal at 4:20</span></div></div>
+            <div class="bar"><div class="spectrum" id="miniBar" style="--p:.82"></div><div class="lab"><span>Dark Age</span><span id="miniAge">Feudal at 4:20</span></div></div>
           </div>
         </article>
 
@@ -239,32 +275,32 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 
       <div class="section-h">
         <h2>Tools</h2>
-        <p>Turn on the ones you want to open by themselves when a game starts.</p>
+        <p>Live analyst, scout and army run in the old dashboard (start.bat) until they move in here.</p>
       </div>
       <div class="tools">
         <div class="tool" style="--tone:var(--teal-hi)">
           <div class="ic"><svg class="i"><use href="#i-scroll"/></svg></div>
           <div><div class="n">Build coach</div><div class="d">Next villager, next building and age-up timing, step by step.</div></div>
-          <label class="auto"><input type="checkbox" class="sw" checked>Open with game</label>
-          <button class="btn quiet open">Open</button>
+          <span></span>
+          <button class="btn quiet open" id="openCoach">Open</button>
         </div>
-        <div class="tool" style="--tone:var(--green)">
+        <div class="tool" style="--tone:var(--green)" aria-disabled="true">
           <div class="ic"><svg class="i"><use href="#i-eye"/></svg></div>
-          <div><div class="n">Live analyst</div><div class="d">Economy, idle villagers, housing and resource alerts every second.</div></div>
-          <label class="auto"><input type="checkbox" class="sw" checked>Open with game</label>
-          <button class="btn quiet open">Open</button>
+          <div><div class="n">Live analyst <span class="tag">Next</span></div><div class="d">Economy, idle villagers, housing and resource alerts every second.</div></div>
+          <span></span>
+          <button class="btn quiet open" disabled title="In the old dashboard (start.bat) for now">Soon</button>
         </div>
-        <div class="tool" style="--tone:var(--pink)">
+        <div class="tool" style="--tone:var(--pink)" aria-disabled="true">
           <div class="ic"><svg class="i"><use href="#i-glass"/></svg></div>
-          <div><div class="n">Opponent scout</div><div class="d">Ranked opponents' rating, civ record, streaks and your head-to-head.</div></div>
-          <label class="auto"><input type="checkbox" class="sw">Open with game</label>
-          <button class="btn quiet open">Open</button>
+          <div><div class="n">Opponent scout <span class="tag">Next</span></div><div class="d">Ranked opponents' rating, civ record, streaks and your head-to-head.</div></div>
+          <span></span>
+          <button class="btn quiet open" disabled title="In the old dashboard (start.bat) for now">Soon</button>
         </div>
-        <div class="tool" style="--tone:var(--yellow)">
+        <div class="tool" style="--tone:var(--yellow)" aria-disabled="true">
           <div class="ic"><svg class="i"><use href="#i-swords"/></svg></div>
-          <div><div class="n">Army and counters</div><div class="d">Your army by unit type, what beats the enemy's, and upgrades worth buying.</div></div>
-          <label class="auto"><input type="checkbox" class="sw">Open with game</label>
-          <button class="btn quiet open">Open</button>
+          <div><div class="n">Army and counters <span class="tag">Next</span></div><div class="d">Your army by unit type, what beats the enemy's, and upgrades worth buying.</div></div>
+          <span></span>
+          <button class="btn quiet open" disabled title="In the old dashboard (start.bat) for now">Soon</button>
         </div>
         <div class="tool" style="--tone:var(--lavender)" aria-disabled="true">
           <div class="ic"><svg class="i"><use href="#i-hourglass"/></svg></div>
@@ -289,19 +325,36 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
             <div class="field">
               <label for="civ">Civilization</label>
               <div class="sel"><select id="civ">
+                <option value="abbasid_dynasty">Abbasid Dynasty</option>
+                <option value="ayyubids">Ayyubids</option>
+                <option value="byzantines">Byzantines</option>
+                <option value="chinese">Chinese</option>
+                <option value="delhi_sultanate">Delhi Sultanate</option>
+                <option value="english">English</option>
+                <option value="french">French</option>
+                <option value="golden_horde">Golden Horde</option>
+                <option value="holy_roman_empire">Holy Roman Empire</option>
+                <option value="house_of_lancaster">House of Lancaster</option>
+                <option value="japanese">Japanese</option>
+                <option value="jeanne_darc">Jeanne d'Arc</option>
+                <option value="jin_dynasty">Jin Dynasty</option>
+                <option value="knights_templar">Knights Templar</option>
+                <option value="macedonian_dynasty">Macedonian Dynasty</option>
+                <option value="malians">Malians</option>
+                <option value="mongols">Mongols</option>
+                <option value="order_of_the_dragon">Order of the Dragon</option>
+                <option value="ottomans">Ottomans</option>
+                <option value="rus">Rus</option>
+                <option value="scots">Scots</option>
+                <option value="sengoku_daimyo">Sengoku Daimyo</option>
+                <option value="tughlaq_dynasty">Tughlaq Dynasty</option>
+                <option value="vikings">Vikings</option>
                 <option value="zhu_xis_legacy" selected>Zhu Xi's Legacy</option>
-                <option>Abbasid Dynasty</option><option>Ayyubids</option><option>Byzantines</option><option>Chinese</option>
-                <option>Delhi Sultanate</option><option>English</option><option>French</option><option>Golden Horde</option>
-                <option>Holy Roman Empire</option><option>House of Lancaster</option><option>Japanese</option>
-                <option>Jeanne d'Arc</option><option>Jin Dynasty</option><option>Knights Templar</option>
-                <option>Macedonian Dynasty</option><option>Malians</option><option>Mongols</option>
-                <option>Order of the Dragon</option><option>Ottomans</option><option>Rus</option>
-                <option>Sengoku Daimyo</option><option>Tughlaq Dynasty</option>
               </select></div>
             </div>
             <div class="field">
               <label for="sort">Sort by</label>
-              <div class="sel"><select id="sort"><option>Best for this patch</option><option>Most viewed</option><option>Newest</option></select></div>
+              <div class="sel"><select id="sort"><option value="best">Best for this game</option><option value="views">Most viewed</option><option value="new">Newest season</option></select></div>
             </div>
           </div>
           <div class="filters" role="group" aria-label="Strategy">
@@ -311,6 +364,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
             <button class="chip" aria-pressed="false" data-f="Fast Castle">Fast castle</button>
             <button class="chip" aria-pressed="false" data-f="Boom">Boom</button>
           </div>
+          <p class="hint" id="buildsNote" style="margin:0 0 10px;color:var(--muted);font-size:13px"></p>
           <div class="builds" id="builds"></div>
           <div class="or">or use your own</div>
           <div class="field" style="margin:0">
@@ -322,19 +376,16 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
         <div class="panel">
           <div class="field">
             <span class="lab">When the game starts</span>
-            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw" checked>Re-pick when the enemy civs and map are known</label>
-            <span class="hint">Only switches builds in the first 2:30, and only if you haven't chosen one here.</span>
+            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw" id="autoPick" checked>Pick a build for me each game</label>
+            <span class="hint">Picks for your civ as soon as the game starts, then re-picks in the first 2:30 once it knows the enemy civs and map. Choosing a build here turns this off.</span>
           </div>
           <div class="field">
             <span class="lab">Follow the build by</span>
-            <div class="sel"><select><option>Villager count (recommended)</option><option>Game clock</option></select></div>
+            <div class="sel"><select id="followBy"><option value="villagers">Villager count (recommended)</option><option value="clock">Game clock</option></select></div>
             <span class="hint">By villager count, the coach stays in step even if you fall behind the build's times.</span>
           </div>
-          <div class="field">
-            <span class="lab">Say it out loud</span>
-            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw">Speak "next villager to wood"</label>
-          </div>
-          <button class="btn primary" style="width:100%;justify-content:center" data-go="home" id="useBuild">Use this build</button>
+          <button class="btn primary" style="width:100%;justify-content:center" id="useBuild">Use this build</button>
+          <p class="hint" id="useNote" style="margin:10px 0 0;color:var(--muted);font-size:13px"></p>
         </div>
       </div>
     </section>
@@ -354,7 +405,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
               <div class="field"><label for="ui">In-game UI scale</label>
                 <div class="sel"><select id="ui"><option>Auto (100%)</option><option>100%</option><option>90%</option><option>80%</option><option>70%</option></select></div></div>
             </div>
-            <button class="btn quiet">Run a reading check</button>
+            <button class="btn quiet" id="readCheck">Run a reading check</button>
+            <p class="why" id="readResult" style="margin-top:10px;color:var(--ink)"></p>
             <p class="why" style="margin-top:8px">Start a skirmish, then run the check. It reads your clock, villagers and resources and says what it couldn't see.</p>
           </div>
         </div>
@@ -372,7 +424,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
         </div>
         <div class="set">
           <div><h3>Your account</h3><p class="why">Used for ranked scouting and win rates at your rating. Nothing is posted anywhere.</p></div>
-          <div class="field" style="margin:0"><label for="pid">aoe4world.com profile</label><input class="inp" id="pid" value="aoe4world.com/players/6979980"><span class="hint">Paste your profile link or your player ID.</span></div>
+          <div class="field" style="margin:0"><label for="pid">aoe4world.com profile</label><div style="display:flex;gap:10px"><input class="inp" id="pid" placeholder="https://aoe4world.com/players/…"><button class="btn quiet" id="pidSave">Save</button></div><span class="hint" id="pidHint">Paste your profile link or your player ID.</span></div>
         </div>
         <div class="set">
           <div><h3>Hotkeys</h3><p class="why">The game still receives these keys. The companion only listens.</p></div>
@@ -462,60 +514,244 @@ loadDisplays();
 
 // ── Start / stop the coach windows
 const startBtn = document.getElementById('startCoach');
-function coachState(open){
-  startBtn.lastChild.textContent = open ? 'Stop coach' : 'Start coach';
-  const dot = document.querySelector('#gameStatus .dot');
-  document.getElementById('gameStatus').lastChild.textContent = open ? 'Coach running (demo game)' : 'Waiting for Age of Empires IV';
-  dot.classList.toggle('live', open);
+let coachOpen = false, core = {running:false, demo:true, error:null}, status = {};
+const civName = s => (document.querySelector(`#civ option[value="${s}"]`) || {}).textContent || s;
+const GUIDES = {ABB:'abbasid_dynasty',AYY:'ayyubids',BYZ:'byzantines',CHI:'chinese',DEL:'delhi_sultanate',ENG:'english',FRE:'french',
+  GOH:'golden_horde',HRE:'holy_roman_empire',HOL:'house_of_lancaster',JAP:'japanese',JIN:'jin_dynasty',JDA:'jeanne_darc',KTE:'knights_templar',
+  MAC:'macedonian_dynasty',MAL:'malians',MON:'mongols',DRA:'order_of_the_dragon',OTT:'ottomans',RUS:'rus',SCO:'scots',SEN:'sengoku_daimyo',
+  TUG:'tughlaq_dynasty',VIK:'vikings',ZXL:'zhu_xis_legacy'};
+
+function renderStatus(){
+  const pill = document.getElementById('gameStatus');
+  let text, cls = '';
+  if (core.demo) { text = coachOpen ? 'Coach running a demo game' : 'Demo mode'; cls = 'demo'; }
+  else if (status.live) text = 'Reading your game';
+  else if (status.game_seen) text = 'Game paused or hidden';
+  else text = 'Waiting for Age of Empires IV';
+  pill.className = 'status ' + cls;
+  pill.lastChild.textContent = text;
+  pill.title = core.demo && core.error ? core.error : '';
+  pill.querySelector('.dot').classList.toggle('live', !core.demo && !!status.live);
+  startBtn.lastChild.textContent = coachOpen ? 'Stop coach' : 'Start coach';
+  startBtn.querySelector('svg').style.display = coachOpen ? 'none' : '';
 }
+function coachState(open){ coachOpen = open; renderStatus(); }
+
 if (inApp) {
   window.app.onCoachState(coachState);
   startBtn.addEventListener('click', () => window.app.toggleCoach());
+  document.getElementById('openCoach').addEventListener('click', () => window.app.toggleCoach());
+  const sw = document.getElementById('startWin');
+  window.app.getSettings().then(s => sw.checked = !!s.openAtLogin);
+  sw.addEventListener('change', () => window.app.setSettings({openAtLogin: sw.checked}));
   document.body.classList.add('in-app', 'platform-' + window.app.platform);
+  window.app.onDisplaysChanged(loadDisplays);
 } else {
   startBtn.addEventListener('click', () => window.open('overlay.html', '_blank'));
 }
 
-// Sample of real Zhu Xi builds from aoe4guides (titles, seasons and views from data/builds_fixture_zxl.txt).
-// In the app this list comes live from aoe4guides when you pick a civ.
-const BUILDS = [
-  {t:"Zhu Xi Legacy Fast Castle [Aussie Drongo]", s:"Fast Castle", season:6, views:18049},
-  {t:"2TC Mass Units and Eco", s:"Boom", season:6, views:9435},
-  {t:"Zhu Xi | Season 09 | Ladder", s:"Rush", season:9, views:5979},
-  {t:"Superfast Castle (2026)", s:"Fast Castle", season:12, views:5691},
-  {t:"Zhu Xi feudal aggression", s:"Rush", season:13, views:1566},
-  {t:"Zhuxi - Zugenu Feudal Rush", s:"Rush", season:13, views:1089},
-  {t:"Zhuge Nu-Timing-Attack(10-14)", s:"Timing Attack", season:13, views:894},
-  {t:"Zhu Xi All in Feudal", s:"Rush", season:13, views:379, map:"Open"},
-  {t:"VortiX Zhu Xi Build Order", s:"Timing Attack", season:13, views:214},
+// ── Builds. In the app the list comes from aoe4guides through the Python core
+//    (cached for offline use). In a browser preview it uses a saved sample.
+const SAMPLE = [
+  {id:'s1', title:"Zhu Xi Legacy Fast Castle [Aussie Drongo]", strategy:"Fast Castle", season:6, views:18049},
+  {id:'s2', title:"2TC Mass Units and Eco", strategy:"Boom", season:6, views:9435},
+  {id:'s3', title:"Zhu Xi | Season 09 | Ladder", strategy:"Rush", season:9, views:5979},
+  {id:'s4', title:"Superfast Castle (2026)", strategy:"Fast Castle", season:12, views:5691},
+  {id:'s5', title:"Zhu Xi feudal aggression", strategy:"Rush", season:13, views:1566},
+  {id:'s6', title:"Zhuxi - Zugenu Feudal Rush", strategy:"Rush", season:13, views:1089},
+  {id:'s7', title:"Zhuge Nu-Timing-Attack(10-14)", strategy:"Timing Attack", season:13, views:894},
+  {id:'s8', title:"Zhu Xi All in Feudal", strategy:"Rush", season:13, views:379, map:"Open"},
+  {id:'s9', title:"VortiX Zhu Xi Build Order", strategy:"Timing Attack", season:13, views:214},
 ];
 const cls = {"Rush":"rush","Fast Castle":"fc","Boom":"boom","Timing Attack":"timing"};
-let filter = 'all', chosen = "Zhuge Nu-Timing-Attack(10-14)";
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let builds = inApp ? [] : SAMPLE, filter = 'all', chosen = null, waitingFor = null;
+const civSel = document.getElementById('civ'), sortSel = document.getElementById('sort');
+const note = t => document.getElementById('buildsNote').textContent = t || '';
+
 function renderBuilds(){
-  const list = BUILDS.filter(b => filter === 'all' || b.s === filter)
-    .sort((a, b) => (b.season - a.season) || (b.views - a.views));
-  document.getElementById('builds').innerHTML = list.map(b => `
-    <label class="b"><input type="radio" name="build" value="${b.t}" ${b.t === chosen ? 'checked' : ''}>
-      <div><div class="t">${b.t}</div><div class="m">Season ${b.season}${b.season === 13 ? ', current patch' : ''}, ${b.views.toLocaleString()} views${b.map ? ', ' + b.map.toLowerCase() + ' maps' : ''}</div></div>
-      <span class="strat ${cls[b.s]}">${b.s.charAt(0) + b.s.slice(1).toLowerCase()}</span></label>`).join('');
+  const newest = Math.max(0, ...builds.map(b => b.season || 0));
+  let list = builds.filter(b => filter === 'all' || b.strategy === filter);
+  if (sortSel.value === 'views') list = [...list].sort((a, b) => b.views - a.views);
+  else if (sortSel.value === 'new') list = [...list].sort((a, b) => (b.season - a.season) || (b.views - a.views));
+  else if (!inApp) list = [...list].sort((a, b) => (b.season - a.season) || (b.views - a.views));
+  document.getElementById('builds').innerHTML = list.length ? list.map(b => `
+    <label class="b"><input type="radio" name="build" value="${esc(b.id)}" ${b.id === chosen ? 'checked' : ''}>
+      <div><div class="t">${esc(b.title)}</div><div class="m">${b.season ? 'Season ' + b.season : 'Season ?'}${b.season === newest ? ', current patch' : ''}, ${(b.views || 0).toLocaleString()} views${b.map ? ', ' + esc(b.map.toLowerCase()) + ' maps' : ''}${b.author ? ', by ' + esc(b.author) : ''}</div></div>
+      ${b.strategy ? `<span class="strat ${cls[b.strategy] || ''}">${esc(b.strategy.charAt(0) + b.strategy.slice(1).toLowerCase())}</span>` : '<span></span>'}</label>`).join('')
+    : `<p style="color:var(--muted);margin:6px 2px">${filter === 'all' ? 'No builds for this civ yet.' : 'None of this kind. Try another filter.'}</p>`;
 }
-renderBuilds();
+function listBuilds(){
+  if (!inApp) return renderBuilds();
+  if (core.demo) { note('Builds load from aoe4guides once the Python part is running.'); builds = []; return renderBuilds(); }
+  waitingFor = civSel.value;
+  note('Loading builds from aoe4guides…');
+  window.app.send({cmd: 'list_builds', civ: civSel.value});
+}
+civSel.addEventListener('change', listBuilds);
+sortSel.addEventListener('change', renderBuilds);
 document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
   filter = c.dataset.f;
   document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === c));
   renderBuilds();
 }));
 document.getElementById('builds').addEventListener('change', e => { chosen = e.target.value; });
-document.getElementById('useBuild').addEventListener('click', () => {
-  const b = BUILDS.find(x => x.t === chosen);
-  document.getElementById('pickedTitle').textContent = b.t;
-  document.getElementById('pickedMeta').textContent = `Zhu Xi's Legacy, ${b.s.toLowerCase()}, season ${b.season}`;
+
+const autoPick = document.getElementById('autoPick');
+document.getElementById('useBuild').addEventListener('click', async () => {
+  const link = document.getElementById('link').value.trim();
+  const useNote = document.getElementById('useNote');
+  if (!inApp) {
+    const b = builds.find(x => x.id === chosen);
+    if (b) showPicked({title: b.title, civ: 'ZXL', why: 'your pick'});
+    return go('home');
+  }
+  if (link && !/aoe4guides\.com\/builds\/\w+/.test(link)) { useNote.textContent = 'That link should look like https://aoe4guides.com/builds/…'; return; }
+  if (!link && !chosen) { useNote.textContent = 'Pick a build from the list or paste a link first.'; return; }
+  const ok = await window.app.send(link ? {cmd: 'use_build', url: link} : {cmd: 'use_build', id: chosen, civ: civSel.value});
+  if (!ok) { useNote.textContent = "The Python part isn't running, so builds can't load yet."; return; }
+  autoPick.checked = false;
+  useNote.textContent = '';
+  go('home');
+});
+autoPick.addEventListener('change', () => {
+  if (!inApp) return;
+  if (autoPick.checked) window.app.send({cmd: 'auto_build'});
+});
+document.getElementById('followBy').addEventListener('change', e => inApp && window.app.setSettings({followBy: e.target.value}));
+
+function showPicked(b){
+  document.getElementById('pickedTitle').textContent = b ? b.title : 'No build yet';
+  const civ = b && (GUIDES[b.civ] ? civName(GUIDES[b.civ]) : b.civ);
+  document.getElementById('pickedMeta').textContent = !b
+    ? (autoPick.checked ? 'One is picked for your civ when the game starts.' : 'Choose one under Build coach.')
+    : [civ, b.why === 'your pick' ? 'your pick' : b.why ? 'picked for you: ' + b.why : null, b.steps ? b.steps.length + ' steps' : null].filter(Boolean).join(', ');
+}
+
+// ── Messages from the Python core
+if (inApp) {
+  window.app.onCoreState(s => {
+    const was = core.running;
+    core = s;
+    renderStatus();
+    if (s.running && !was) listBuilds();
+    if (!s.running) note(s.error ? "The Python part isn't running: " + s.error : '');
+  });
+  window.app.onMessage((type, data) => {
+    if (type === 'status') { status = data || {}; renderStatus(); renderAccount(); }
+    else if (type === 'coach' && data) renderMini(data);
+    else if (type === 'build') showPicked(data);
+    else if (type === 'builds' && data.civ === waitingFor) {
+      builds = data.builds;
+      note(data.offline ? 'Offline: showing the list saved last time.' : builds.length ? `${builds.length} builds, best for this game first.` : '');
+      renderBuilds();
+    }
+    else if (type === 'teams' && data && data.me && data.me.civ && !chosen && civSel.value !== data.me.civ) {
+      civSel.value = data.me.civ; listBuilds();      // your civ, read from the player list
+    }
+    else if (type === 'reading_check') showReadingCheck(data);
+    else if (type === 'error') {
+      if (data.cmd === 'use_build') document.getElementById('useNote').textContent = data.message;
+      else if (data.cmd === 'list_builds') note("Couldn't load builds: " + data.message);
+    }
+  });
+  window.app.coreState().then(s => { core = s; renderStatus(); listBuilds(); });
+}
+showPicked(inApp ? null : {title: "Zhuge Nu-Timing-Attack(10-14)", civ: 'ZXL', why: 'your pick'});
+renderBuilds();
+
+// The small preview on the home card follows the live coach once there is one.
+function renderMini(c){
+  const r = c.next.resource, NAME = {food:'Food', wood:'Wood', gold:'Gold', stone:'Stone'};
+  document.getElementById('miniClock').textContent = c.clock;
+  document.getElementById('miniVils').textContent = `${c.villagers} villagers`;
+  document.getElementById('miniWord').textContent = NAME[r];
+  document.getElementById('miniNext').style.color = `var(--${r})`;
+  document.querySelectorAll('.pips .p').forEach((el, i) => {
+    const k = ['food','wood','gold','stone'][i], have = c.have[k], want = c.want[k], n = Math.max(have, want);
+    el.innerHTML = n ? Array.from({length:n}, (_, j) => `<i class="${j < have ? 'f' : ''}"></i>`).join('') : '<span style="color:var(--dim)">none</span>';
+  });
+  document.getElementById('miniBar').style.setProperty('--p', c.age ? c.age.progress : 1);
+  document.getElementById('miniAge').textContent = c.age ? `${c.age.target} at ${c.age.at}` : 'Build complete';
+}
+
+// ── Settings: reading check and profile
+document.getElementById('readCheck').addEventListener('click', async () => {
+  const out = document.getElementById('readResult');
+  if (!inApp || core.demo) { out.textContent = 'The reading check needs the Python part running on the PC with the game.'; return; }
+  out.textContent = 'Reading your screen…';
+  window.app.send({cmd: 'reading_check'});
+});
+function showReadingCheck(r){
+  const out = document.getElementById('readResult');
+  const pct = Math.round((r.confidence || 0) * 100);
+  const v = r.villagers || {}, res = r.resources || {};
+  out.innerHTML = pct >= 90
+    ? `Read ${pct}% of the HUD at ${r.width} × ${r.height}. Clock ${esc(r.clock || '?')}, villagers food ${v.food ?? '?'}, wood ${v.wood ?? '?'}, gold ${v.gold ?? '?'}, stone ${v.stone ?? '?'}. All good.`
+    : pct > 0
+      ? `Read ${pct}% at ${r.width} × ${r.height}. Missed: ${esc((r.missed || []).join(', '))}. If you're in a game, this screen size or UI scale needs calibrating.`
+      : `Couldn't read the HUD at ${r.width} × ${r.height}. Start a skirmish, make sure the game is on the monitor marked Game, then try again.`;
+}
+
+const pidInput = document.getElementById('pid');
+const parsePid = s => { const m = String(s).match(/players\/(\d+)/) || String(s).trim().match(/^(\d{3,})$/); return m ? +m[1] : null; };
+function renderAccount(){
+  const hint = document.getElementById('pidHint');
+  if (status.match_note && pidInput.value) hint.textContent = status.match_note;
+}
+document.getElementById('pidSave').addEventListener('click', async () => {
+  const id = parsePid(pidInput.value), hint = document.getElementById('pidHint');
+  if (!id) { hint.textContent = "That doesn't look like a profile link. It should contain /players/ and a number."; return; }
+  if (inApp) await window.app.setSettings({profileId: id});
+  pidInput.value = `https://aoe4world.com/players/${id}`;
+  hint.textContent = 'Saved. Checking aoe4world…';
 });
 
+// ── First-time setup (only in the app, or in a browser with ?setup)
+const setup = document.getElementById('setup');
+let setupPid = null, setupGame = null;
+function setupStep(n){
+  setup.querySelectorAll('section').forEach(s => s.hidden = +s.dataset.step !== n);
+  if (n === 2) renderSetupMons();
+}
+function renderSetupMons(){
+  setupGame = setupGame ?? (displays.find(d => d.game) || displays[0] || {}).id;
+  document.getElementById('setupMons').innerHTML = displays.map((d, i) => `
+    <button class="setup-mon" data-id="${d.id}" aria-pressed="${d.id === setupGame}">
+      <svg class="i"><use href="#i-monitor"/></svg><div><b>${d.width} × ${d.height}</b><br><span>Monitor ${i + 1}${d.id === setupGame ? ', the game goes here' : ''}</span></div></button>`).join('');
+}
+document.getElementById('setupMons').addEventListener('click', e => {
+  const b = e.target.closest('.setup-mon');
+  if (b) { setupGame = +b.dataset.id; renderSetupMons(); }
+});
+document.getElementById('setupNext').addEventListener('click', () => {
+  const v = document.getElementById('setupPid').value;
+  setupPid = parsePid(v);
+  if (v.trim() && !setupPid) { document.getElementById('setupPidHint').textContent = "That doesn't look like a profile link. It should contain /players/ and a number."; return; }
+  setupStep(2);
+});
+document.getElementById('setupSkip').addEventListener('click', () => { setupPid = null; setupStep(2); });
+document.getElementById('setupBack').addEventListener('click', () => setupStep(1));
+document.getElementById('setupDone').addEventListener('click', async () => {
+  if (inApp) {
+    await window.app.setSettings({profileId: setupPid, setupDone: true});
+    if (setupGame != null) displays = await window.app.setGameDisplay(setupGame);
+  }
+  if (setupPid) pidInput.value = `https://aoe4world.com/players/${setupPid}`;
+  renderScreens();
+  setup.hidden = true;
+});
+(async () => {
+  const s = inApp ? await window.app.getSettings() : {setupDone: !new URLSearchParams(location.search).has('setup')};
+  if (s.profileId) pidInput.value = `https://aoe4world.com/players/${s.profileId}`;
+  if (s.followBy) document.getElementById('followBy').value = s.followBy;
+  if (s.auto === false) autoPick.checked = false;
+  if (s.build && s.build.civ) civSel.value = s.build.civ;
+  if (!s.setupDone) { await loadDisplays(); setup.hidden = false; setupStep(1); document.getElementById('setupPid').focus(); }
+})();
 
 const hr = new Date().getHours();
 document.getElementById('hello').textContent = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
-document.getElementById('pickedTitle').textContent = chosen;
 </script>
 </body>
 </html>

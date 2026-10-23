@@ -19,3 +19,4 @@ Thumbs.db
 
 # leftovers from file transfers
 .stage_tmp/
+cache/
