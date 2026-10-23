@@ -113,6 +113,7 @@ function startCore() {
     logPath: path.join(userDir(), 'core.log'),
     onMessage: (type, data) => {
       if (type === 'ready') {
+        if (!startup.core) { startup.core = true; splashProgress(85, 'Screen reader running', 'Loading your builds'); startupStep(); }
         tellCoreMonitor();
         const b = settings.build;                 // re-apply the build you chose last time
         if (b?.url) core.send({ cmd: 'use_build', url: b.url });
@@ -121,9 +122,62 @@ function startCore() {
       if (!['builds', 'reading_check', 'error'].includes(type)) latest[type] = data;
       broadcast(type, data);
     },
-    onState: sendCoreState,
+    onState: (s) => { sendCoreState(); if (s?.error) startupStep(); },
   });
   core.start();
+}
+
+// ── startup splash ────────────────────────────────────────────────────
+// Shows app/renderer/loading.html while the launcher loads and the screen reader
+// starts. The bar follows those real steps, then the splash fades into the launcher.
+let splash = null, splashShownAt = 0, splashDone = false;
+const startup = { home: false, core: false };
+
+function openSplash() {
+  const wa = screen.getPrimaryDisplay().workArea;
+  const w = Math.min(1120, Math.round(wa.width * 0.62)), h = Math.round(w * 941 / 1672);
+  splash = new BrowserWindow({
+    width: w, height: h, x: Math.round(wa.x + (wa.width - w) / 2), y: Math.round(wa.y + (wa.height - h) / 2),
+    frame: false, resizable: false, movable: true, show: false, skipTaskbar: false,
+    backgroundColor: '#0b1420', title: 'AoE4 Coach', icon: path.join(ROOT, 'build', 'icon.png'),
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true,
+      additionalArguments: ['--aoe4-splash'] },
+  });
+  splash.loadFile(page('loading.html'));
+  splash.webContents.on('did-finish-load', () => {    // steps that happened while the page was loading
+    splashLoaded = true;
+    const last = splashLast;
+    splashProgress(18, 'Opening AoE4 Coach', 'Loading your settings');
+    if (last && last[0] > 18) setTimeout(() => splashProgress(...last), 350);
+  });
+  splash.once('ready-to-show', () => { splash.show(); splashShownAt = Date.now(); });
+  splash.on('closed', () => { splash = null; });
+  setTimeout(() => finishStartup('Ready'), 15000);          // never keep anyone waiting longer
+}
+
+let splashLast = null, splashLoaded = false;
+function splashProgress(p, message, detail) {
+  splashLast = [p, message, detail];
+  if (splash && !splash.isDestroyed() && splashLoaded) splash.webContents.send('splash:progress', p, message, detail);
+}
+
+function startupStep() {
+  if (startup.home && (startup.core || FORCE_DEMO || core?.error)) finishStartup('Ready');
+}
+
+function finishStartup(message) {
+  if (splashDone) return;
+  splashDone = true;
+  splashProgress(100, message, core?.running ? 'Screen reader running' : FORCE_DEMO ? 'Demo mode' : 'Opening without the screen reader');
+  const shown = splashShownAt ? Date.now() - splashShownAt : 0;
+  const wait = Math.max(500, 2600 - shown);                    // long enough to actually see it
+  setTimeout(() => {
+    if (home && !home.isDestroyed()) home.show();
+    if (splash && !splash.isDestroyed()) {
+      splash.webContents.send('splash:done');
+      setTimeout(() => splash && !splash.isDestroyed() && splash.close(), 850);
+    }
+  }, wait);
 }
 
 // ── windows ───────────────────────────────────────────────────────────
@@ -134,9 +188,29 @@ const webPreferences = (demo) => ({
   additionalArguments: demo ? ['--aoe4-demo'] : [],
 });
 
+// Where the launcher opens: where you left it, if that monitor is still there;
+// otherwise a comfortable size centred on the main monitor (not full screen).
+function homeBounds() {
+  const saved = settings.window;
+  if (saved && screen.getAllDisplays().some((d) => {
+    const a = d.workArea;
+    return saved.x < a.x + a.width - 100 && saved.x + saved.width > a.x + 100 && saved.y >= a.y - 10 && saved.y < a.y + a.height - 100;
+  })) return saved;
+  const a = screen.getPrimaryDisplay().workArea;
+  const width = Math.max(980, Math.min(1380, Math.round(a.width * 0.72)));
+  const height = Math.max(640, Math.min(900, Math.round(a.height * 0.82)));
+  return { width, height, x: Math.round(a.x + (a.width - width) / 2), y: Math.round(a.y + (a.height - height) / 2) };
+}
+function rememberHome() {
+  if (!home || home.isDestroyed() || home.isMinimized()) return;
+  settings.window = { ...(home.isMaximized() ? (settings.window || home.getNormalBounds()) : home.getBounds()), maximized: home.isMaximized() };
+  saveSettings();
+}
+
 function createHome() {
+  const b = homeBounds();
   home = new BrowserWindow({
-    width: 1340, height: 880, minWidth: 980, minHeight: 640,
+    ...b, minWidth: 980, minHeight: 640,
     title: 'AoE4 Coach',
     backgroundColor: '#050909',
     icon: path.join(ROOT, 'build', 'icon.png'),
@@ -146,7 +220,18 @@ function createHome() {
     webPreferences: webPreferences(false),
   });
   home.loadFile(page('home.html'));
-  home.once('ready-to-show', () => home.show());
+  if (b.maximized) home.maximize();
+  let t = null;
+  const later = () => { clearTimeout(t); t = setTimeout(rememberHome, 600); };
+  home.on('resize', later);
+  home.on('move', later);
+  home.on('close', rememberHome);
+  home.once('ready-to-show', () => {
+    startup.home = true;
+    splashProgress(55, 'Starting the screen reader', 'Looking for Age of Empires IV');
+    if (splashDone || !splash) home.show();
+    startupStep();
+  });
   home.webContents.on('did-finish-load', () => {
     sendCoreState();
     if (update) home.webContents.send('app:update', update);
@@ -243,6 +328,7 @@ ipcMain.handle('core:restart', () => { if (core) { writeCoreConfig(); core.resta
 
 app.whenReady().then(() => {
   loadSettings();
+  openSplash();
   startCore();
   createHome();
   setupUpdates();

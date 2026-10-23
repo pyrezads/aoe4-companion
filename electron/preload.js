@@ -28,6 +28,14 @@ contextBridge.exposeInMainWorld('app', {
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),
 });
 
+// Startup splash (loading.html): progress from the real startup steps.
+if (process.argv.includes('--aoe4-splash')) {
+  contextBridge.exposeInMainWorld('splash', {
+    onProgress: (cb) => ipcRenderer.on('splash:progress', (_e, p, message, detail) => cb(p, message, detail)),
+    onDone: (cb) => ipcRenderer.on('splash:done', () => cb()),
+  });
+}
+
 // Overlay windows (overlay.html). In demo mode the overlay plays its own simulated game.
 contextBridge.exposeInMainWorld('coach', {
   demo,

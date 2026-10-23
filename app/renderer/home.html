@@ -199,7 +199,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 
 /* first-time setup */
 .setup{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:24px;
-  background:radial-gradient(ellipse 760px 520px at 100% 0%,rgba(6,69,87,.62),transparent 75%),rgba(5,9,9,.94)}
+  background:linear-gradient(rgba(5,9,9,.72),rgba(5,9,9,.86)),url("img/loading.jpg") center / cover no-repeat,var(--base)}
+.setup-card{backdrop-filter:blur(18px) saturate(120%);background:rgba(23,27,31,.82)!important}
 .setup[hidden]{display:none}
 .setup-card{width:min(560px,100%);background:var(--card);border:1px solid var(--edge);border-radius:24px;padding:30px}
 .setup-card img{display:block;margin-bottom:22px}

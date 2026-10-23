@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<!-- Startup splash. Shown while the app starts the screen reader; see openSplash() in electron/main.js. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AoE4 Coach</title>
+  <style>
+    :root { color-scheme: dark; --mist: #8ca6ba; --cyan: #48d7ff; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; overflow: hidden; background: #0b1420; }
+    body { font-family: 'Trebuchet MS', 'Segoe UI', Arial, sans-serif; }
+    #loading-screen { position: fixed; inset: 0; isolation: isolate; overflow: hidden; background: #0b1420; }
+    #artwork {
+      position: absolute; inset: -1.8%;
+      background: url('img/loading.jpg') center center / cover no-repeat;
+      will-change: transform;
+      transform: translate3d(var(--px,0px), var(--py,0px), 0) scale(1.01);
+      animation: breathe 22s ease-in-out infinite alternate;
+    }
+    @keyframes breathe {
+      from { scale: 1; }
+      to { scale: 1.018; }
+    }
+    .ambient-light { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+      background: radial-gradient(ellipse 14% 22% at 50% 42%, rgba(37,196,255,.09), transparent 83%),
+                  radial-gradient(ellipse 46% 27% at 51% 95%, rgba(255,110,42,.038), transparent 78%);
+      animation: light-pulse 4.4s ease-in-out infinite alternate;
+    }
+    @keyframes light-pulse { from { opacity: .44; } to { opacity: 1; } }
+    #atmosphere { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .cinematic-vignette { position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 74% 74% at 50% 45%, transparent 39%, rgba(3,8,16,.09) 67%, rgba(2,7,13,.49) 115%),
+                  linear-gradient(to top, rgba(3,9,17,.28), transparent 23%);
+    }
+    #logo-bloom { position: absolute; pointer-events: none; transform: translate(-50%,-50%);
+      border-radius: 50%; aspect-ratio: 1; width: min(25vw, 260px);
+      background: radial-gradient(circle, rgba(34,195,255,.095) 0%, rgba(31,167,255,.05) 38%, transparent 73%);
+      filter: blur(9px); mix-blend-mode: screen;
+      animation: bloom-pulse 3.7s ease-in-out infinite alternate;
+    }
+    @keyframes bloom-pulse { from { opacity: .28; scale: .88; } to { opacity: .82; scale: 1.07; } }
+    /* AI assistant-style loader: quiet typography, frosted surface, thin progress. */
+    .ui {
+      position: absolute;
+      z-index: 5;
+      width: min(392px, 88vw);
+      max-width: 392px;
+      left: 50%;
+      transform: translate(-50%, 0);
+      pointer-events: none;
+      user-select: none;
+      padding: 18px 20px 17px;
+      background: rgba(7, 16, 27, .66);
+      border: 1px solid rgba(216, 237, 248, .15);
+      border-radius: 16px;
+      -webkit-backdrop-filter: blur(20px) saturate(120%);
+      backdrop-filter: blur(20px) saturate(120%);
+      box-shadow: 0 14px 40px rgba(0, 5, 14, .2);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Arial, sans-serif;
+    }
+    .status-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .status-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .status-orb { position: relative; flex: 0 0 9px; width: 9px; height: 9px;
+      border-radius: 50%; background: #83dfff; box-shadow: 0 0 12px rgba(108, 220, 255, .29);
+    }
+    .status-orb::after { content: ''; position: absolute; inset: -5px; border: 1px solid rgba(124, 220, 248, .3);
+      border-radius: 50%; animation: quiet-pulse 2.8s ease-in-out infinite;
+    }
+    @keyframes quiet-pulse { 0%, 100% { opacity: .3; transform: scale(.7); } 55% { opacity: .9; transform: scale(1.08); } }
+    .status-label { color: #ecf5f9; font-size: 13px; line-height: 1.35; font-weight: 500;
+      letter-spacing: -.005em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .progress-percent { font-size: 11px; font-variant-numeric: tabular-nums;
+      font-weight: 500; color: rgba(215, 232, 243, .7); letter-spacing: .02em;
+    }
+    .bar-track { position: relative; width: 100%; height: 4px; margin-top: 15px; overflow: hidden;
+      border-radius: 999px; background: rgba(213, 239, 250, .16);
+    }
+    .bar-fill { position: absolute; inset: 0 auto 0 0; width: 0%; border-radius: inherit;
+      background: linear-gradient(90deg, #70c8e8, #b3edff);
+      transition: none;
+      will-change: width;
+    }
+    .status-detail { margin-top: 11px; color: rgba(220, 231, 241, .62); font-size: 11px;
+      line-height: 1.4; letter-spacing: .005em; font-weight: 400;
+    }
+    .bottom-fade { position:absolute; height:3vh; left:0; right:0; bottom:0; pointer-events:none;
+      background:linear-gradient(0deg,rgba(3,10,18,.14),transparent); }
+    #loading-screen.hide { animation: disappear .8s ease-in-out forwards; pointer-events:none; }
+    @keyframes disappear { to { opacity:0; visibility:hidden; } }
+    @media(max-width:650px) {
+      .ui { width: min(348px, 88vw); padding: 16px 17px 15px; border-radius: 14px; }
+      .status-label { font-size: 12px; }
+      .status-detail { font-size: 10px; }
+      #logo-bloom { width: 30vw; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #artwork, .ambient-light, #logo-bloom, .status-orb::after { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-screen" role="status" aria-label="Starting AoE4 Coach">
+    <div id="artwork" aria-hidden="true"></div>
+    <div class="ambient-light" aria-hidden="true"></div>
+    <div id="logo-bloom" aria-hidden="true"></div>
+    <canvas id="atmosphere" aria-hidden="true"></canvas>
+    <div class="cinematic-vignette" aria-hidden="true"></div>
+    <div class="ui" id="loading-ui">
+      <div class="status-top">
+        <div class="status-main">
+          <span class="status-orb" aria-hidden="true"></span>
+          <span id="loading-message" class="status-label">Starting AoE4 Coach</span>
+        </div>
+        <span id="loading-percent" class="progress-percent">0%</span>
+      </div>
+      <div class="bar-track" role="progressbar" aria-label="Loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track">
+        <div id="loading-fill" class="bar-fill"></div>
+      </div>
+      <div class="status-detail" id="loading-detail">Getting the coach ready</div>
+    </div>
+    <div class="bottom-fade" aria-hidden="true"></div>
+  </div>
+  <script>
+  (() => {
+    'use strict';
+    // ==========================================================
+    // EASY INTEGRATION:
+    //   window.setLoadingProgress(45);                 // 0 - 100
+    //   window.setLoadingProgress(72, 'LOADING MAP');  // optional text
+    //   window.dismissLoadingScreen();                 // fade out
+    // Until the first call, a looping preview animation is shown.
+    // ==========================================================
+    const stage = document.getElementById('loading-screen');
+    const artwork = document.getElementById('artwork');
+    const glow = document.getElementById('logo-bloom');
+    const panel = document.getElementById('loading-ui');
+    const fill = document.getElementById('loading-fill');
+    const pct = document.getElementById('loading-percent');
+    const progressTrack = document.getElementById('progress-track');
+    const label = document.getElementById('loading-message');
+    const canvas = document.getElementById('atmosphere');
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const SOURCE_W = 1672, SOURCE_H = 941;
+    let w=0, h=0, dpr=1, animProgress=0, targetProgress=0, isControlled=false;
+    let mouseX=0, mouseY=0, frameTime=0, startTime=performance.now(), prev=0;
+    let smokes=[], ashes=[], sparks=[];
+    const sprites=[];
+    const rand=(a,b)=> a + Math.random()*(b-a);
+    const clamp=(n,lo,hi)=> Math.max(lo,Math.min(hi,n));
+    const smooth=t=>t*t*(3-2*t);
+
+    function resize() {
+      w=window.innerWidth; h=window.innerHeight;
+      dpr=Math.min(window.devicePixelRatio||1,1.5);
+      canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
+      canvas.style.width=w+'px'; canvas.style.height=h+'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      // Pin the progress bar under the emblem in the ORIGINAL image,
+      // even if its background image is cropped by the browser.
+      // The artwork div has an extra 1.8% bleed for gentle parallax.
+      const bleedW=w*1.036, bleedH=h*1.036;
+      const scale=Math.max(bleedW/SOURCE_W, bleedH/SOURCE_H);
+      const imgTop=(h-SOURCE_H*scale)/2;
+      const barY=imgTop+581*scale;
+      panel.style.top=clamp(barY,h*.49,h*.82)+'px';
+      glow.style.left='50%';
+      glow.style.top=(imgTop+412*scale)+'px';
+      const emblemSize=220*scale;
+      glow.style.width=clamp(emblemSize,130,330)+'px';
+      initParticles();
+    }
+
+    // Small fractal-noise cloud textures, baked at startup. Unlike a CSS blur,
+    // wispy filaments and turbulent density make the moving smoke feel organic.
+    function hash(x,y,seed) {
+      let n=Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(seed,1442695041);
+      n=Math.imul(n^(n>>>13),1274126177);
+      return ((n^(n>>>16))>>>0)/4294967295;
+    }
+    function noise(x,y,seed) {
+      const xi=Math.floor(x), yi=Math.floor(y);
+      const u=smooth(x-xi), v=smooth(y-yi);
+      const a=hash(xi,yi,seed), b=hash(xi+1,yi,seed);
+      const c=hash(xi,yi+1,seed), d=hash(xi+1,yi+1,seed);
+      return (a+(b-a)*u)*(1-v)+(c+(d-c)*u)*v;
+    }
+    function fbm(x,y,seed) {
+      return .52*noise(x,y,seed)+.27*noise(2.17*x,2.17*y,seed+7)
+        +.14*noise(4.6*x,4.6*y,seed+17)+.07*noise(9.3*x,9.3*y,seed+31);
+    }
+    function buildCloud(seed, tone) {
+      const c=document.createElement('canvas'); c.width=c.height=256;
+      const g=c.getContext('2d'), image=g.createImageData(256,256), v=image.data;
+      for(let y=0;y<256;y++) for(let x=0;x<256;x++) {
+        const u=x/256, t=y/256, xx=(u-.5)*2, yy=(t-.5)*2;
+        const warpX=(fbm(u*4.4+5,t*4.4+3,seed+100)-.5)*.43;
+        const warpY=(fbm(u*3.8+2,t*3.8+8,seed+200)-.5)*.43;
+        const radius=Math.sqrt((xx+warpX)**2+(yy+warpY)**2);
+        const envelope=Math.pow(clamp(1-radius,0,1),.64);
+        const large=fbm(u*5.8+seed*.015,t*5.8,seed);
+        const fine=fbm(u*16,t*16,seed+43);
+        const wisps=Math.pow(clamp((large-.31)*2.05+(fine-.5)*.8,0,1),1.2);
+        const density=envelope*wisps;
+        const k=(y*256+x)*4;
+        const shade=.78+large*.39;
+        v[k]=tone[0]*shade; v[k+1]=tone[1]*shade; v[k+2]=tone[2]*shade;
+        v[k+3]=Math.round(clamp(density*172,0,150));
+      }
+      g.putImageData(image,0,0); return c;
+    }
+    [
+      [126,143,159],[111,129,147],[135,135,142],
+      [110,121,140],[154,146,143],[116,137,151]
+    ].forEach((tone,i)=>sprites.push(buildCloud(19+i*91,tone)));
+
+    function makeSmoke(region, initial=false) {
+      let x,y,dx,dy,sz;
+      if(region==='bottom') {
+        x=rand(-.12,1.12); y=initial?rand(.72,1.15):rand(1.01,1.13);
+        dx=rand(-.006,.006); dy=rand(-.026,-.009); sz=rand(.24,.5);
+      } else if(region==='left') {
+        x=initial?rand(-.22,.11):rand(-.22,-.1); y=rand(-.05,1.05);
+        dx=rand(.009,.024); dy=rand(-.01,.005); sz=rand(.23,.47);
+      } else if(region==='right') {
+        x=initial?rand(.91,1.22):rand(1.11,1.22); y=rand(-.05,1.05);
+        dx=rand(-.024,-.009); dy=rand(-.01,.005); sz=rand(.23,.49);
+      } else {
+        x=rand(-.12,1.12); y=initial?rand(-.17,.16):rand(-.21,-.1);
+        dx=rand(-.007,.007); dy=rand(.005,.016); sz=rand(.18,.37);
+      }
+      return {region,x,y,dx,dy,size:sz,age: initial?rand(0,24):0,life:rand(14,30),
+        opacity:rand(.48,.96), sprite:Math.floor(rand(0,sprites.length)),
+        spin:rand(-.05,.05),rotation:rand(0,6.28),squeeze:rand(.55,1.28)};
+    }
+    function makeAsh() { return {x:rand(0,1),y:rand(0,1),vx:rand(-.001,.001),vy:rand(-.004,-.0008),
+      size:rand(.5,1.6),age:rand(0,9),life:rand(6,13),alpha:rand(.08,.37)}; }
+    function makeSpark(initial=false) {
+      // Orange flying embers drifting away from the center sword impact.
+      const theta=rand(-Math.PI,Math.PI), speed=rand(.01,.065);
+      return {x:rand(.44,.56), y:rand(.31,.57), vx:Math.cos(theta)*speed*.3,
+        vy:Math.sin(theta)*speed*.24-.012, life:rand(.9,3.3), age:initial?rand(0,3):0,
+        len:rand(1.5,5.5), bright:rand(.2,.85), size:rand(.5,1.8)};
+    }
+    function initParticles() {
+      const multiplier=clamp((w*h)/(1440*850),.55,1.65);
+      smokes=[];
+      const n=Math.round(128*multiplier);
+      for(let i=0;i<n;i++) {
+        const region=i%9<4?'bottom':i%9<6?'left':i%9<8?'right':'top';
+        smokes.push(makeSmoke(region,true));
+      }
+      ashes=Array.from({length:Math.round(100*multiplier)},()=>makeAsh());
+      sparks=Array.from({length:Math.round(48*multiplier)},()=>makeSpark(true));
+    }
+    function renderSmoke(dt,elapsed) {
+      for(let i=0;i<smokes.length;i++) {
+        let p=smokes[i]; p.age+=dt;
+        if(p.age>p.life) smokes[i]=p=makeSmoke(p.region);
+        p.x+=p.dx*dt; p.y+=p.dy*dt; p.rotation+=p.spin*dt;
+        const t=p.age/p.life;
+        const visibility=Math.min(1,t*8)*Math.min(1,(1-t)*4.5);
+        const centerDist=Math.abs(p.x-.5);
+        // Protect the central logo and fighters' faces from excessive fog.
+        const safe=clamp((centerDist-.1)*1.9+.56, .28,1);
+        const alpha=p.opacity*visibility*safe*(reducedMotion?.62:1)*1.18;
+        if(alpha<.006) continue;
+        const scale=Math.min(w,h);
+        const rw=scale*p.size*(1+.52*t), rh=rw*p.squeeze;
+        ctx.save(); ctx.translate(p.x*w,p.y*h); ctx.rotate(p.rotation);
+        ctx.globalAlpha=alpha;
+        ctx.drawImage(sprites[p.sprite],-rw/2,-rh/2,rw,rh);
+        ctx.restore();
+      }
+    }
+    function renderAsh(dt) {
+      ctx.globalCompositeOperation='screen';
+      for(let i=0;i<ashes.length;i++) {
+        let p=ashes[i]; p.age+=dt;
+        if(p.age>p.life) ashes[i]=p=makeAsh();
+        p.x+=p.vx*dt; p.y+=p.vy*dt;
+        if(p.y<-.02) p.y=1.02;
+        let alpha=p.alpha*Math.min(1,p.age)*Math.min(1,(p.life-p.age)*1.5);
+        ctx.fillStyle=`rgba(170,187,203,${Math.max(0,alpha)})`;
+        ctx.beginPath(); ctx.arc(p.x*w,p.y*h,p.size,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalCompositeOperation='source-over';
+    }
+    function renderSparks(dt) {
+      ctx.globalCompositeOperation='screen';
+      for(let i=0;i<sparks.length;i++) {
+        let p=sparks[i]; p.age+=dt;
+        if(p.age>p.life) sparks[i]=p=makeSpark();
+        p.x+=p.vx*dt; p.y+=p.vy*dt;
+        const t=p.age/p.life;
+        const opacity=p.bright*clamp(1-t,0,1)*Math.min(1,p.age*5);
+        if(opacity<.01) continue;
+        const x=p.x*w,y=p.y*h;
+        ctx.lineWidth=p.size; ctx.lineCap='round';
+        ctx.strokeStyle=`rgba(255,166,84,${opacity})`;
+        ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-p.vx*w*p.len*.026,y-p.vy*h*p.len*.026); ctx.stroke();
+        if(p.size>1.2) {
+          ctx.fillStyle=`rgba(255,213,151,${opacity*.56})`;
+          ctx.beginPath(); ctx.arc(x,y,p.size*1.1,0,6.283); ctx.fill();
+        }
+      }
+      ctx.globalCompositeOperation='source-over';
+    }
+
+    // Called by your real application's loader; disables the preview loop.
+    window.setLoadingProgress=function(percentage,message) {
+      isControlled=true;
+      const v=Number(percentage);
+      if(Number.isFinite(v)) targetProgress=clamp(v,0,100);
+      if(typeof message==='string' && message.trim()) label.textContent=message;
+    };
+    window.dismissLoadingScreen=function() {
+      stage.classList.add('hide');
+      stage.addEventListener('animationend',()=>stage.remove(),{once:true});
+    };
+    function animate(time) {
+      requestAnimationFrame(animate);
+      if(!w||!h)return;
+      if(time-prev<28) return; // ~30 fps: easier on laptops
+      const dt=clamp((time-(prev||time))/1000,0,.075);
+      prev=time;
+      const elapsed=(time-startTime)/1000;
+      if(!isControlled) {
+        // Automatic cinematic preview. Switch to actual loading progress
+        // by calling window.setLoadingProgress(progress) from your app.
+        const cycle=elapsed%18;
+        let p;
+        if(cycle<13) p=5+88*(1-Math.pow(1-cycle/13,1.62));
+        else if(cycle<15.8) p=93+(cycle-13)*2.5;
+        else p=100;
+        if(cycle<.25) animProgress=p;
+        targetProgress=clamp(p,0,100);
+      }
+      animProgress += (targetProgress-animProgress)*Math.min(1,dt*3.1);
+      fill.style.width=animProgress.toFixed(2)+'%';
+      pct.textContent=Math.round(animProgress)+'%';
+      progressTrack.setAttribute('aria-valuenow', String(Math.round(animProgress))); 
+      if(!reducedMotion) {
+        ctx.clearRect(0,0,w,h);
+        renderSmoke(dt,elapsed);
+        renderAsh(dt);
+        renderSparks(dt);
+      }
+      // Tiny and slow mouse parallax, so the art retains its composition.
+      if(!reducedMotion) {
+        artwork.style.setProperty('--px',(-mouseX*.6).toFixed(1)+'px');
+        artwork.style.setProperty('--py',(-mouseY*.6).toFixed(1)+'px');
+      }
+    }
+    // In the app: progress comes from the real startup steps (electron/main.js).
+    if (window.splash) {
+      window.setLoadingProgress(4);
+      window.splash.onProgress((p, message, detail) => {
+        window.setLoadingProgress(p, message);
+        if (detail) document.getElementById('loading-detail').textContent = detail;
+      });
+      window.splash.onDone(() => window.dismissLoadingScreen());
+    }
+    window.addEventListener('pointermove', e=>{
+      mouseX=(e.clientX/window.innerWidth-.5)*9;
+      mouseY=(e.clientY/window.innerHeight-.5)*6;
+    },{passive:true});
+    window.addEventListener('resize',resize,{passive:true});
+    resize();
+    requestAnimationFrame(animate);
+  })();
+  </script>
+</body>
+</html>
