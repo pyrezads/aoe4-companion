@@ -25,6 +25,18 @@ def find_game_window() -> Optional[dict]:
         return None
 
     user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
+    # Declare the calls so 64-bit window handles pass through intact.
+    EnumProc = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    user32.EnumWindows.argtypes = [EnumProc, wintypes.LPARAM]
+    user32.IsWindowVisible.argtypes = [wintypes.HWND]
+    user32.GetWindowTextLengthW.argtypes = [wintypes.HWND]
+    user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+    user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+    user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
+    kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel32.OpenProcess.restype = wintypes.HANDLE
+    kernel32.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
     PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
     found = []
 
@@ -43,23 +55,26 @@ def find_game_window() -> Optional[dict]:
         finally:
             kernel32.CloseHandle(h)
 
-    @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    @EnumProc
     def visit(hwnd, _):
-        if not user32.IsWindowVisible(hwnd):
-            return True
-        n = user32.GetWindowTextLengthW(hwnd)
-        if n == 0:
-            return True
-        buf = ctypes.create_unicode_buffer(n + 1)
-        user32.GetWindowTextW(hwnd, buf, n + 1)
-        title = buf.value
-        exe = exe_of(hwnd)
-        if exe in GAME_EXES or title.startswith(TITLE_PREFIX):
-            r = wintypes.RECT()
-            user32.GetWindowRect(hwnd, ctypes.byref(r))
-            found.append({"title": title, "exe": exe, "left": r.left, "top": r.top,
-                          "width": r.right - r.left, "height": r.bottom - r.top,
-                          "by_exe": exe in GAME_EXES})
+        try:                                   # an error here must not stop the search
+            if not user32.IsWindowVisible(hwnd):
+                return True
+            n = user32.GetWindowTextLengthW(hwnd)
+            if n == 0:
+                return True
+            buf = ctypes.create_unicode_buffer(n + 1)
+            user32.GetWindowTextW(hwnd, buf, n + 1)
+            title = buf.value
+            exe = exe_of(hwnd)
+            if exe in GAME_EXES or title.startswith(TITLE_PREFIX):
+                r = wintypes.RECT()
+                user32.GetWindowRect(hwnd, ctypes.byref(r))
+                found.append({"title": title, "exe": exe, "left": r.left, "top": r.top,
+                              "width": r.right - r.left, "height": r.bottom - r.top,
+                              "by_exe": exe in GAME_EXES})
+        except Exception:
+            pass
         return True
 
     try:
