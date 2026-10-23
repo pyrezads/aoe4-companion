@@ -51,6 +51,7 @@ class CoachStep:
     seconds: Optional[int]
     age: int
     text: str
+    icons: list = None         # the build step's in-game icons
 
 
 def coach_steps(build: BuildOrder) -> List[CoachStep]:
@@ -80,7 +81,7 @@ def coach_steps(build: BuildOrder) -> List[CoachStep]:
         total = max(total, last_total)
         if total == 0:                       # a note with no numbers at all
             continue
-        out.append(CoachStep(i, total, t, s.seconds, s.age, s.text))
+        out.append(CoachStep(i, total, t, s.seconds, s.age, s.text, getattr(s, 'icons', None) or []))
         prev, last_total = t, total
     return out
 
@@ -183,8 +184,10 @@ class Coach:
             "idle_to": idle_to,
             "next": {"resource": nxt, "then": then},
             "short": short,
-            "step": {"text": step.text, "at": _clock(step.seconds), "villagers": step.villagers, "index": step.index},
-            "upcoming": ({"text": upcoming.text, "at": _clock(upcoming.seconds), "villagers": upcoming.villagers}
+            "step": {"text": step.text, "at": _clock(step.seconds), "villagers": step.villagers, "index": step.index,
+                     "icons": step.icons or []},
+            "upcoming": ({"text": upcoming.text, "at": _clock(upcoming.seconds), "villagers": upcoming.villagers,
+                          "icons": upcoming.icons or []}
                          if upcoming else None),
             "pace_seconds": self._pace(seconds, step, upcoming),
             "age": self._age(seconds, step, my_age),

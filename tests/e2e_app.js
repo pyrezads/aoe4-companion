@@ -92,6 +92,8 @@ app.whenReady().then(async () => {
     check(await until(() => js("document.getElementById('rvDetail').innerText.includes('Fix next game')")), 'game review: saved game opens');
     check(await js("document.querySelectorAll('#rvChart path').length === 2"), 'game review: chart drawn');
 
+    check(await js("GameIcons.ready.then(() => !!GameIcons.byName('Wheelbarrow') && GameIcons.find('Build a house and a mill').length === 2)"), 'game icons load and match names');
+    await js("document.querySelector('.nav[data-go=army]').click()");
     await js("document.querySelector('.nav[data-go=history]').click()");
     check(await until(() => js("document.querySelectorAll('#hxList .hx-row').length === 3")), 'match history: games from the official history');
     check(await js("document.querySelector('.hx-id h2').textContent === 'Tester' && document.querySelectorAll('.hx-lb').length === 1"), 'match history: profile and leaderboard');

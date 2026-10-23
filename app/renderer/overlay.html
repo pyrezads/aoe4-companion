@@ -11,6 +11,7 @@
   Opened in a normal browser it shows both on a preview backdrop with a simulated game.
 -->
 <link rel="stylesheet" href="theme.css">
+<script src="icons.js"></script>
 <style>
 body{background:transparent;overflow:visible;height:auto}
 body:not(.preview){min-height:0}
@@ -135,6 +136,22 @@ body.preview .strip{display:inline-flex}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(255,255,255,.04),0 6px 18px -8px rgba(0,0,0,.7);
   -webkit-backdrop-filter:blur(8px) saturate(160%);backdrop-filter:blur(8px) saturate(160%)}
 .strip .badge{box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+
+/* game icons in the coach */
+.st{grid-template-columns:54px 1fr auto}
+.st .key{align-self:start}
+.sti{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.sti:empty{display:none}
+.st.later .sti{opacity:.6}
+.st.later .key{display:none}
+.agewrap .lab{align-items:center}
+.ag{display:inline-flex;align-items:center;gap:8px}
+.strip .k{display:inline-flex;align-items:center;gap:8px;font:700 15px var(--display);border-left:1px solid rgba(255,255,255,.12);padding-left:12px}
+.strip .k[hidden]{display:none}
+.strip .k.slide{animation:kslide .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes kslide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.strip .b{display:inline-flex;align-items:center;gap:8px}
+@media (prefers-reduced-motion:reduce){.strip .k.slide{animation:none}}
 </style>
 </head>
 <body>
@@ -164,12 +181,12 @@ body.preview .strip{display:inline-flex}
     <div class="split" id="split"></div>
     <div class="alert" id="alert" hidden></div>
     <div class="steps">
-      <div class="st now"><div class="w" id="nowW">Now</div><div class="x" id="nowX"></div></div>
-      <div class="st later"><div class="w" id="nextW"></div><div class="x" id="nextX"></div></div>
+      <div class="st now"><div class="w" id="nowW">Now</div><div class="x"><span id="nowX"></span><div class="sti" id="nowI"></div></div><div class="key" id="nowK"></div></div>
+      <div class="st later"><div class="w" id="nextW"></div><div class="x"><span id="nextX"></span><div class="sti" id="nextI"></div></div><div class="key"></div></div>
     </div>
     <div class="agewrap">
       <div class="spectrum" id="af"></div>
-      <div class="lab"><span>Dark Age</span><span id="ageTarget">Feudal at 4:20</span></div>
+      <div class="lab"><span class="ag" id="ageFrom"></span><span class="ag"><span id="ageTarget">Feudal at 4:20</span><span id="ageTo"></span></span></div>
     </div>
   </section>
 </div>
@@ -180,7 +197,8 @@ body.preview .strip{display:inline-flex}
     <div class="strip" id="strip">
       <span class="badge"><svg class="i"><use id="stripIcon" href="#r-wood"/></svg></span>
       <span class="a">Villager <span id="sv">7</span> to <span id="sr">wood</span></span>
-      <span class="b" id="sb">Feudal at 4:20</span>
+      <span class="k" id="sk" hidden></span>
+      <span class="b"><span id="sa"></span><span id="sb">Feudal at 4:20</span></span>
     </div>
   </div>
 </div>
@@ -209,7 +227,18 @@ if (window.coach && window.coach.onSettings) window.coach.onSettings(s => {
 });
 if (!mode) document.body.classList.add('preview');
 
-let lastWord = null;
+let lastWord = null, lastStep = null, lastAge = null;
+const AGE_N = {Dark: 1, Feudal: 2, Castle: 3, Imperial: 4};
+GameIcons.ready.then(() => { lastStep = lastAge = null; });
+// a step's icons: the build's own in-game icons, else the units/buildings/techs its text names
+function stepIcons(st){
+  if (!st) return {all: [], key: null};
+  const tags = (st.icons || []).map(ic => GameIcons.step(ic, 'sm')).filter(Boolean);
+  const named = tags.length ? [] : GameIcons.find(st.text, 4);
+  const key = GameIcons.key(st.icons) || named.find(it => !/^(villager|scout)$/i.test(it.n)) || null;
+  return {all: tags.length ? tags : named.map(it => GameIcons.html(it, 'sm')), key};
+}
+function pops(el, list){ el.innerHTML = list.join(''); el.querySelectorAll('.gi').forEach((g, i) => { g.classList.add('pop'); g.style.setProperty('--d', i); }); }
 function render(m){
   const r = m.next.resource;
   document.documentElement.style.setProperty('--tone', `var(--${r})`);
@@ -237,14 +266,34 @@ function render(m){
   }).join('');
 
   $('nowX').textContent = m.step.text;
+  const stepKey = m.step.text + '|' + (m.upcoming ? m.upcoming.text : '');
+  if (stepKey !== lastStep) {                  // new step: icons pop in, the strip's key icon slides in
+    lastStep = stepKey;
+    const now = stepIcons(m.step), nxt = stepIcons(m.upcoming);
+    pops($('nowI'), now.all.filter(h => !now.key || !h.includes(now.key.src)));
+    pops($('nowK'), now.key ? [GameIcons.html(now.key, 'lg', 'glow')] : []);
+    $('nextI').innerHTML = nxt.all.join('');
+    const sk = $('sk');
+    sk.hidden = !now.key;
+    if (now.key) { sk.innerHTML = GameIcons.html(now.key, 'sm') + `<span>${now.key.n}</span>`; sk.classList.remove('slide'); void sk.offsetWidth; sk.classList.add('slide'); }
+  }
   $('nextW').textContent = !m.upcoming ? '' : m.upcoming.at !== '--:--' ? m.upcoming.at : `${m.upcoming.villagers} vil`;
   $('nextX').textContent = m.upcoming ? m.upcoming.text : 'End of the build. Keep villagers coming.';
   $('af').style.setProperty('--p', m.age ? Math.min(1, m.age.progress) : 1);
   $('ageTarget').textContent = $('sb').textContent = m.age ? `${m.age.target} at ${m.age.at}` : 'Build complete';
+  const to = m.age ? AGE_N[m.age.target] || 2 : null, soon = m.age && m.age.progress >= .9;
+  const ageKey = to + '|' + soon;
+  if (ageKey !== lastAge) {
+    lastAge = ageKey;
+    const from = to ? to - 1 : 4;
+    $('ageFrom').innerHTML = GameIcons.age(from, 18) + ['', 'Dark Age', 'Feudal Age', 'Castle Age', 'Imperial Age'][from];
+    $('ageTo').innerHTML = to ? GameIcons.age(to, 20, 'pop' + (soon ? ' soon' : '')) : '';
+    $('sa').innerHTML = to ? GameIcons.age(to, 16, soon ? 'soon' : '') : '';
+  }
   const a = $('alert');
   a.hidden = !m.idle;
-  const to = [...new Set(m.idle_to && m.idle_to.length ? m.idle_to : [m.next.resource])].join(' and ');
-  a.textContent = m.idle ? `${m.idle} idle villager${m.idle > 1 ? 's' : ''}. Send ${m.idle > 1 ? 'them' : 'it'} to ${to}.` : '';
+  const sendTo = [...new Set(m.idle_to && m.idle_to.length ? m.idle_to : [m.next.resource])].join(' and ');
+  a.textContent = m.idle ? `${m.idle} idle villager${m.idle > 1 ? 's' : ''}. Send ${m.idle > 1 ? 'them' : 'it'} to ${sendTo}.` : '';
 }
 
 const CIVS = {ABB:"Abbasid Dynasty",AYY:"Ayyubids",BYZ:"Byzantines",CHI:"Chinese",DEL:"Delhi Sultanate",ENG:"English",

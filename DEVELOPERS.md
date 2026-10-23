@@ -110,6 +110,17 @@ core.py            core mode: no window; messages and commands are documented at
 - The page (home.html, "Match history") uses the `.glass`, `.ambient` and `.skel` styles from theme.css.
   Steam custom `/id/` links can't be resolved without a Steam API key, so the app asks for the numeric link.
 
+## Game icons
+- `tools/make_icons.py <aoe4world/data clone>` bundles ~970 unit, technology, building and upgrade icons
+  (extracted from the game by aoe4world/data) as 96 px WebP in `app/renderer/img/game/` with `index.json`.
+  Re-run after a game patch.
+- `app/renderer/icons.js` (`GameIcons`): `byName`, `find(text)` (names in a sentence), `fromGuides` (maps
+  aoe4guides step icons to ours), `html(item, size)`, `age(n)` (drawn age shields; the game's own age icons
+  aren't in the extracted set). Styles `.gi` / `.age-shield` in theme.css; `.pop` animates them in.
+- The coach sends each step's aoe4guides icons (`step.icons`), so the panel and strip show what to build.
+- Licence: Age of Empires IV © Microsoft, used under Microsoft's Game Content Usage Rules. The app must stay
+  free, and the credit line in Settings > Help must stay.
+
 ## Tests
 `test_coach.py`, `test_core.py`, `test_review.py`, `test_history.py`, `test_sizes.py`, `test_live.py`, `test_builds.py`,
 `test_production_math.py` (Python), `tests/e2e_app.js` (the whole app, GitHub "Test the app"),

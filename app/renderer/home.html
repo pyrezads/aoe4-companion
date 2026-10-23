@@ -6,6 +6,7 @@
 <title>AoE4 Coach</title>
 <link rel="icon" href="img/icon.png">
 <link rel="stylesheet" href="theme.css">
+<script src="icons.js"></script>
 <style>
 /* ── window ─────────────────────────────────────────── */
 .app{display:grid;grid-template-columns:252px 1fr;height:100vh}
@@ -466,6 +467,25 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .view.on > *{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
 .view.on > *:nth-child(2){animation-delay:.05s} .view.on > *:nth-child(3){animation-delay:.1s} .view.on > *:nth-child(4){animation-delay:.15s} .view.on > *:nth-child(n+5){animation-delay:.2s}
 @media (prefers-reduced-motion:reduce){.view.on > *{animation:none}}
+
+/* game icons in the app */
+.lines li.wi .gi{margin:0 6px 0 2px;vertical-align:-6px}
+.lines li.up-row{display:flex;align-items:center;gap:12px}
+.fl.xs{width:18px;height:18px;border-radius:5px;margin-left:-2px}
+.civ{padding-left:5px}
+.lines.tl li{display:grid;grid-template-columns:44px 22px 1fr;gap:8px;align-items:center}
+.lines.tl .t{color:var(--muted);font-variant-numeric:tabular-nums}
+.dotx{width:6px;height:6px;border-radius:50%;background:var(--dim);justify-self:center}
+.st-txt .gi{vertical-align:-6px}
+.lines li.chips-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:6px 0}
+.chips-lab{font-weight:700;color:var(--muted);font-size:13px;margin-right:2px}
+.uchip{display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s}
+.uchip:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.2)}
+.uchip b{display:block;font:600 19px/1.1 var(--display)}
+.uchip small{display:block;color:var(--muted);font-size:12.5px;font-weight:600}
+.uchip.enemy{border-color:rgba(200,110,214,.35);background:rgba(200,110,214,.07)}
+.uchip.enemy b{font:700 14px var(--body)}
 </style>
 </head>
 <body>
@@ -820,7 +840,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
         </div>
         <div class="set">
           <div><h3>Help</h3><p class="why">If something doesn't work, send core.log and the logs folder from here. Screens the reading check couldn't read are in calibration.</p></div>
-          <div><button class="btn quiet" id="openLogs">Open the log folder</button></div>
+          <div><button class="btn quiet" id="openLogs">Open the log folder</button>
+            <p class="why" style="margin-top:14px;font-size:12.5px">Game icons and civ flags: Age of Empires IV © Microsoft Corporation. AoE4 Coach was made under Microsoft's Game Content Usage Rules using assets from Age of Empires IV, and it is not endorsed by or affiliated with Microsoft. Icons extracted by aoe4world/data. Match data from the official Age of Empires service.</p></div>
         </div>
         <div class="set">
           <div><h3>Hotkeys</h3><p class="why">The game still receives these keys. The companion only listens.</p></div>
@@ -1011,7 +1032,8 @@ const RCOL = {food: 'var(--food)', wood: 'var(--wood)', gold: 'var(--gold)', sto
 const AGE_LABEL = {1: 'Dark Age', 2: 'Feudal Age', 3: 'Castle Age', 4: 'Imperial Age'};
 const AGE_KEY = {feudal: 'Feudal', castle: 'Castle', imperial: 'Imperial', 2: 'Feudal', 3: 'Castle', 4: 'Imperial'};
 const parts = ps => (ps || []).map(p => p.icon
-  ? `<img src="${esc(p.icon)}" alt="${esc(p.title)}" title="${esc(p.title)}" loading="lazy" onerror="this.replaceWith(document.createTextNode(this.alt))">`
+  ? (GameIcons.fromGuides(p) && !/resource_/.test(p.icon) ? GameIcons.html(GameIcons.fromGuides(p), 'xs')
+     : `<img src="${esc(p.icon)}" alt="${esc(p.title)}" title="${esc(p.title)}" loading="lazy" onerror="this.replaceWith(document.createTextNode(this.alt))">`)
   : p.br ? '<br>' : esc(p.t)).join('');
 function detailHtml(d){
   if (!d) return '<p class="loading-row">Loading the full build…</p>';
@@ -1186,6 +1208,32 @@ const RESN = {food:'Food', wood:'Wood', gold:'Gold', stone:'Stone'}, AGE = {1:'I
 const li = (rows, empty) => rows && rows.length
   ? rows.map(([t, c]) => `<li class="${c || ''}">${esc(t)}</li>`).join('')
   : `<li class="empty">${esc(empty)}</li>`;
+// "18 Spearman · 12 Zhuge Nu" -> each name gets its game icon in front
+function withIcons(text, size = 'xs'){
+  let out = esc(text);
+  for (const it of GameIcons.find(text, 8)) {
+    const re = new RegExp('(^|[^A-Za-z>"])(' + it.n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'i');
+    out = out.replace(re, (m, pre, name) => pre + GameIcons.html(it, size) + name);
+  }
+  return out;
+}
+// "18 Spearman · 12 Zhuge Nu · 4 Horseman" -> unit cards with icon, count and name
+function unitChips(text){
+  const parts = String(text).split(/\s*·\s*/).map(p => /^(\d+)\s+(.+)$/.exec(p)).filter(Boolean);
+  if (!parts.length) return '';
+  const items = parts.map(([, n, name]) => [n, name, GameIcons.byName(name) || GameIcons.find(name, 1)[0]]);
+  if (!items.every(x => x[2])) return '';
+  return items.map(([n, name, it]) => `<span class="uchip">${GameIcons.html(it, 'md')}<span><b>${n}</b><small>${esc(name)}</small></span></span>`).join('');
+}
+const liIcons = (rows, empty) => rows && rows.length
+  ? rows.map(([t, c]) => `<li class="${c || ''} wi">${withIcons(t)}</li>`).join('')
+  : `<li class="empty">${esc(empty)}</li>`;
+function setPop(el, html){
+  if (el._h === html) return;
+  el._h = html; el.innerHTML = html;
+  el.querySelectorAll('.gi').forEach((g, i) => { g.classList.add('pop'); g.style.setProperty('--d', Math.min(i, 10)); });
+}
+GameIcons.ready.then(() => { document.querySelectorAll('[id^=ar]').forEach(el => el._h = null); renderArmy(); if (gameOpen && gameCache[gameOpen]) renderGame(gameCache[gameOpen]); });
 function tools(type, data){
   if (!(type in T)) return;
   T[type] = data;
@@ -1216,7 +1264,7 @@ function renderAnalyst(){
   document.getElementById('anAlerts').innerHTML = live ? li((s.alerts || []).map(a => [a.text, a.level]), 'All good.')
     : li([], 'Waiting for the game. Start a match in Borderless Windowed.');
   const t = T.teams;
-  const civ = p => `<span class="civ"><span class="age">${AGE[p.age] || '?'}</span>${esc(p.civ ? civName(p.civ) : 'Unknown')}</span>`;
+  const civ = p => `<span class="civ">${p.civ ? `<img class="fl xs" src="img/flags/${esc(p.civ)}.png" alt="" onerror="this.remove()">` : ''}<span class="age">${AGE[p.age] || '?'}</span>${esc(p.civ ? civName(p.civ) : 'Unknown')}</span>`;
   document.getElementById('anTeams').innerHTML = t && t.me ? `
     <div class="team"><span class="who">You</span>${civ(t.me)}</div>
     ${t.allies.length ? `<div class="team"><span class="who">Allies</span>${t.allies.map(civ).join('')}</div>` : ''}
@@ -1250,12 +1298,18 @@ function renderScout(){
 }
 function renderArmy(){
   const a = T.army && T.army.lines, ad = T.advice || {};
-  document.getElementById('arArmy').innerHTML = a && a.length
-    ? li(a.map((t, i) => [t, i < 2 ? (i ? '' : 'head') : t.startsWith('Lost') ? 'bad' : 'muted']))
-    : li([], 'Press Ctrl+C (select all military) in game to read your army.');
-  document.getElementById('arEnemy').innerHTML = li((ad.enemy || []).map(t => [t, 'head']), 'Waiting for the player list or an enemy unit.');
-  document.getElementById('arAdvice').innerHTML = (ad.advice || []).map(([k, t]) => `<li class="${k}">${esc(t)}</li>`).join('');
-  document.getElementById('arUps').innerHTML = li((ad.upgrades || []).map(t => [t]), 'Shown after your first Ctrl+C.');
+  setPop(document.getElementById('arArmy'), a && a.length
+    ? a.map((t, i) => i === 1 && unitChips(t) ? `<li class="chips-row">${unitChips(t)}</li>` : liIcons([[t, i < 2 ? (i ? '' : 'head') : t.startsWith('Lost') ? 'bad' : 'muted']])).join('')
+    : li([], 'Press Ctrl+C (select all military) in game to read your army.'));
+  setPop(document.getElementById('arEnemy'), (ad.enemy || []).length ? ad.enemy.map(t => {
+      const seen = /^Seen: (.*)$/.exec(t), its = seen ? seen[1].split(/,\s*/).map(n => [n, GameIcons.byName(n) || GameIcons.find(n, 1)[0]]) : null;
+      return its && its.every(x => x[1]) ? `<li class="chips-row"><span class="chips-lab">Seen</span>${its.map(([n, it]) => `<span class="uchip enemy">${GameIcons.html(it, 'md')}<span><b>${esc(n)}</b></span></span>`).join('')}</li>` : liIcons([[t, 'head']]);
+    }).join('') : li([], 'Waiting for the player list or an enemy unit.'));
+  setPop(document.getElementById('arAdvice'), (ad.advice || []).map(([k, t]) => `<li class="${k} wi">${withIcons(t)}</li>`).join(''));
+  setPop(document.getElementById('arUps'), (ad.upgrades || []).length ? (ad.upgrades || []).map(t => {
+      const it = GameIcons.find(t, 1)[0];
+      return `<li class="up-row">${it ? GameIcons.html(it, 'md') : ''}<span>${esc(t)}</span></li>`;
+    }).join('') : li([], 'Shown after your first Ctrl+C.'));
 }
 document.getElementById('openLogs').addEventListener('click', () => inApp && window.app.openLogs());
 document.getElementById('pinBtn').addEventListener('click', () => inApp && window.app.send({cmd: 'pin'}));
@@ -1411,7 +1465,10 @@ function renderGame(g){
       <div class="panel"><h3 class="ph3">Steps you reached late</h3><ul class="lines late">${(s.late_steps || []).length
         ? s.late_steps.map(r => `<li><span style="color:var(--muted)">${esc(r.at)}</span><span>${esc(r.text || '')}</span><span class="d">+${r.late}s</span></li>`).join('')
         : `<li class="empty">${g.build ? 'None: you kept up with the build.' : 'No build was followed this game.'}</li>`}</ul></div>
-      <div class="panel"><h3 class="ph3">Timeline</h3><ul class="lines">${li((g.events || []).map(e => [`${Math.floor(e.t / 60)}:${String(e.t % 60).padStart(2, '0')}  ${e.text}`, e.kind === 'enemy_age' ? 'warn' : '']), 'Nothing recorded.')}</ul></div>
+      <div class="panel"><h3 class="ph3">Timeline</h3><ul class="lines tl">${(g.events || []).length ? g.events.map(e => {
+          const a = /(Feudal|Castle|Imperial)/.exec(e.text), n = a ? {Feudal: 2, Castle: 3, Imperial: 4}[a[1]] : 0;
+          return `<li class="${e.kind === 'enemy_age' ? 'warn' : ''}"><span class="t">${Math.floor(e.t / 60)}:${String(e.t % 60).padStart(2, '0')}</span>${n ? GameIcons.age(n, 18) : '<span class="dotx"></span>'}<span>${esc(e.text)}</span></li>`;
+        }).join('') : '<li class="empty">Nothing recorded.</li>'}</ul></div>
     </div>`;
   drawChart(g);
 }

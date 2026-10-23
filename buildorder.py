@@ -119,6 +119,7 @@ class Step:
     villagers: Optional[int] = None    # total villagers at this step, when the build gives it
     builders: Optional[int] = None     # villagers building (not counted on any resource)
     blank: Dict[str, bool] = field(default_factory=dict)   # resource left empty (usually 0), not "+"
+    icons: List[dict] = field(default_factory=list)       # in-game icons the step shows: {"src", "title"}
 
 
 @dataclass
@@ -154,7 +155,8 @@ class BuildOrder:
                                      text=html_to_text(st.get("description", "")),
                                      villagers=_count(str(st.get("villagers") or "")),
                                      builders=_count(str(st.get("builders") or "")),
-                                     blank={r: not str(st.get(r) or "").strip() for r in RESOURCES}))
+                                     blank={r: not str(st.get(r) or "").strip() for r in RESOURCES},
+                                     icons=icons_in(st.get("description", ""))))
         for k, v in (data.get("ageTimings") or {}).items():
             if isinstance(v, dict) and v.get("t"):
                 bo.age_times[k] = v["t"]
