@@ -56,7 +56,10 @@ jobs:
         run: npm ci
 
       - name: Check pinning to the game window (stand-in window)
-        run: npx electron packaging/pin_test.js
+        shell: bash
+        run: |
+          npx electron packaging/pin_test.js || true
+          grep -qx OK pin_result.txt
 
       - name: Build installer
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}

@@ -58,5 +58,7 @@ r = wintypes.RECT(); u.GetWindowRect(h, ctypes.byref(r)); print(r.left, r.top, r
   if (attached && after.x === before.x && after.width === before.width) fail('did not follow the window');
   game.kill();
   note(ok ? 'OK: found by Python, pinned, and follows the window' : 'pin test failed', ok ? 'notice' : 'warning');
+  // The result goes in a file: Electron's exit code isn't reliable while the add-on's hook is running.
+  require('fs').writeFileSync(path.join(ROOT, 'pin_result.txt'), ok ? 'OK' : 'FAIL');
   app.exit(ok ? 0 : 1);
 });
