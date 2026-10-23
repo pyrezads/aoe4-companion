@@ -1,0 +1,46 @@
+{
+ "_about": "Official World's Edge API ids for AoE4, decoded by tools/probe_official2.py (lining up matches with their known details). Unknown ids show as 'Civ <id>' in the app; re-run the probe after a patch adds civs.",
+ "civilization_id": {
+  "131384": "french",
+  "106553": "english",
+  "9000850": "sengoku_daimyo",
+  "9000860": "tughlaq_dynasty",
+  "2121950": "zhu_xis_legacy",
+  "2121952": "order_of_the_dragon",
+  "199703": "abbasid_dynasty",
+  "2109886": "japanese",
+  "5000002": "knights_templar",
+  "5000003": "house_of_lancaster",
+  "136150": "delhi_sultanate",
+  "2058393": "malians",
+  "2039321": "ottomans",
+  "2101234": "byzantines",
+  "129267": "mongols",
+  "9003910": "jin_dynasty",
+  "2121949": "ayyubids",
+  "133008": "rus",
+  "137266": "chinese",
+  "134522": "holy_roman_empire",
+  "9001050": "macedonian_dynasty",
+  "9000878": "golden_horde",
+  "2121948": "jeanne_darc"
+ },
+ "matchtype_id": {
+  "1": "rm_1v1",
+  "2": "rm_2v2",
+  "3": "rm_3v3",
+  "4": "rm_4v4",
+  "20": "qm_1v1",
+  "21": "qm_2v2",
+  "22": "qm_3v3",
+  "23": "qm_4v4",
+  "0": "custom"
+ },
+ "resulttype": {
+  "0": "loss",
+  "1": "win"
+ },
+ "leaderboard_id": {
+  "17": "rm_1v1"
+ }
+}
