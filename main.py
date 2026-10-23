@@ -149,22 +149,6 @@ def reader_loop(state: AppState, cfg: dict, monitor: dict, stop: threading.Event
                         "pop": h.pop, "pop_cap": h.pop_cap, "idle": h.idle,
                         "villagers": h.villagers, "resources": h.resources,
                         "width": frame.shape[1], "height": frame.shape[0]})
-            if state.get("screen_request"):          # Settings > Save a screenshot for setup
-                label = re.sub(r"[^a-z0-9-]", "", str(state.get("screen_request")).lower())[:30] or "screen"
-                state.set(screen_request=None)
-                saved, err = None, None
-                try:
-                    from PIL import Image
-                    base = pathlib.Path(cfg.get("cache_dir") or HERE / "cache").parent / "calibration"
-                    base.mkdir(parents=True, exist_ok=True)
-                    saved = str(base / f"{label}-{frame.shape[1]}x{frame.shape[0]}-{int(t0)}.png")
-                    Image.fromarray(np.clip(frame, 0, 255).astype("uint8")).save(saved)
-                except Exception as e:
-                    err = f"{type(e).__name__}: {e}"
-                emit = state.get("emit")
-                if emit:
-                    emit.send("screen_saved", data={"path": saved, "label": label, "error": err,
-                                                    "width": frame.shape[1], "height": frame.shape[0]})
             an.refresh_advice_if_needed(t0)
             alerts = state.get("alerts") or []
             keys = {re.sub(r"\d+", "#", t.split(":")[0]) for _, t in alerts}

@@ -70,7 +70,6 @@ function writeCoreConfig() {
   cfg.aoe4world_profile_id = settings.profileId || 0;
   cfg.cache_dir = path.join(userDir(), 'cache');
   cfg.coach_follow_by = settings.followBy || 'villagers';
-  cfg.map_watch = settings.mapWatch !== false;
   fs.mkdirSync(userDir(), { recursive: true });
   fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
   return p;
@@ -128,7 +127,7 @@ function startCore() {
         if (b?.url) core.send({ cmd: 'use_build', url: b.url });
         else if (b?.id) core.send({ cmd: 'use_build', id: b.id, civ: b.civ });
       }
-      if (!['builds', 'build_detail', 'reading_check', 'error', 'games', 'game_detail', 'game_saved', 'matches', 'match_detail', 'replay_saved', 'steam_profile', 'screen_saved'].includes(type)) latest[type] = data;
+      if (!['builds', 'build_detail', 'reading_check', 'error', 'games', 'game_detail', 'game_saved', 'matches', 'match_detail', 'replay_saved', 'steam_profile'].includes(type)) latest[type] = data;
       if (type === 'status' && data?.game_window) ensurePinned(data.game_window);
       broadcast(type, data);
     },
@@ -383,7 +382,7 @@ ipcMain.handle('core:send', (_e, cmd) => {
 });
 ipcMain.handle('settings:get', () => ({ ...settings }));
 ipcMain.handle('settings:set', (_e, patch) => {
-  const before = [settings.profileId, settings.followBy, settings.mapWatch];
+  const before = [settings.profileId, settings.followBy];
   settings = { ...settings, ...patch,
     overlay: { ...settings.overlay, ...(patch.overlay || {}) }, voice: { ...settings.voice, ...(patch.voice || {}) } };
   saveSettings();
@@ -394,7 +393,7 @@ ipcMain.handle('settings:set', (_e, patch) => {
     else sendOverlaySettings();
   }
   if (patch.openAtLogin !== undefined && app.isPackaged) app.setLoginItemSettings({ openAtLogin: !!patch.openAtLogin });
-  if (core && (settings.profileId !== before[0] || settings.followBy !== before[1] || settings.mapWatch !== before[2])) {   // restart the core with them
+  if (core && (settings.profileId !== before[0] || settings.followBy !== before[1])) {   // restart the core with them
     writeCoreConfig();
     for (const k of Object.keys(latest)) delete latest[k];
     core.restart();

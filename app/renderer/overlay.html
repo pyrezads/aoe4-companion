@@ -227,7 +227,7 @@ if (window.coach && window.coach.onSettings) window.coach.onSettings(s => {
 });
 if (!mode) document.body.classList.add('preview');
 
-let lastWord = null, lastStep = null, lastAge = null, mapState = null;
+let lastWord = null, lastStep = null, lastAge = null;
 const AGE_N = {Dark: 1, Feudal: 2, Castle: 3, Imperial: 4};
 GameIcons.ready.then(() => { lastStep = lastAge = null; });
 // a step's icons: the build's own in-game icons, else the units/buildings/techs its text names
@@ -291,10 +291,9 @@ function render(m){
     $('sa').innerHTML = to ? GameIcons.age(to, 16, soon ? 'soon' : '') : '';
   }
   const a = $('alert');
-  const raid = typeof mapState !== 'undefined' && mapState && mapState.raid;
-  a.hidden = !m.idle && !raid;
+  a.hidden = !m.idle;
   const sendTo = [...new Set(m.idle_to && m.idle_to.length ? m.idle_to : [m.next.resource])].join(' and ');
-  a.textContent = [raid ? 'Enemy units near your base!' : '', m.idle ? `${m.idle} idle villager${m.idle > 1 ? 's' : ''}. Send ${m.idle > 1 ? 'them' : 'it'} to ${sendTo}.` : ''].filter(Boolean).join(' ');
+  a.textContent = m.idle ? `${m.idle} idle villager${m.idle > 1 ? 's' : ''}. Send ${m.idle > 1 ? 'them' : 'it'} to ${sendTo}.` : '';
 }
 
 const CIVS = {ABB:"Abbasid Dynasty",AYY:"Ayyubids",BYZ:"Byzantines",CHI:"Chinese",DEL:"Delhi Sultanate",ENG:"English",
@@ -327,7 +326,6 @@ if (inElectron) {
     if (type === 'status') live = !!(data && data.live);
     else if (type === 'build') build = data;
     else if (type === 'coach') coach = data;
-    else if (type === 'map') { mapState = data; if (coach) render(coach); }
     update();
   });
   update();
