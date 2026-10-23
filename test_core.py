@@ -118,5 +118,18 @@ send(cmd="quit")
 t.join(5)
 check(not t.is_alive(), "quits on request")
 
+print("Player list: who's an enemy, which row is you")
+from scoreboard import PlayerRow, assign_sides
+for name, pat, want in [
+        ("4v4, allies then you then enemies", [None, None, None, None, True, True, True, True], (3, [4, 5, 6, 7])),
+        ("2v2, one enemy's swords hidden", [None, None, True, None], (1, [2, 3])),
+        ("1v1", [None, True], (0, [1])),
+        ("no swords seen, 3v3", [None] * 6, (2, [3, 4, 5])),
+        ("swords on the first row (free-for-all or custom order)", [True, None, True, True, True, True, True, True], (1, [0, 2, 3, 4, 5, 6, 7])),
+        ("free-for-all, you listed third", [True, True, None, True], (2, [0, 1, 3]))]:
+    rows = [PlayerRow(index=i, y=0, enemy=p) for i, p in enumerate(pat)]
+    me = assign_sides(rows)
+    check((me, [r.index for r in rows if r.enemy]) == want, name)
+
 print("\nALL PASS" if ok else "\nSOME FAILED")
 raise SystemExit(0 if ok else 1)

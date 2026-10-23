@@ -201,19 +201,32 @@ class ScoreboardReader:
             sb.rows.append(row)
         if not sb.rows:
             return sb
-        n = len(sb.rows)
-        flagged = [r for r in sb.rows if r.enemy]
-        if flagged:
-            first_enemy = min(r.index for r in flagged)
-            for r in sb.rows:
-                r.enemy = r.index >= first_enemy
-            sb.me = first_enemy - 1 if first_enemy > 0 else None
-        elif n % 2 == 0:
-            # swords covered: standard layout is allies, you, then enemies, equal teams
-            for r in sb.rows:
-                r.enemy = r.index >= n // 2
-            sb.me = n // 2 - 1
+        sb.me = assign_sides(sb.rows)
         return sb
+
+
+def assign_sides(rows: List[PlayerRow]) -> Optional[int]:
+    """Decides who's an enemy from the crossed swords (row.enemy True = swords seen, None = not seen)
+    and returns your row. Normally the list is your allies, you, then the enemies, and a swords icon
+    can be hidden behind another icon, so everything from the first swords row down is an enemy. When
+    the very first row has swords the list isn't in that order (free-for-all, some custom games), so
+    each row counts on its own and you are the last row without swords."""
+    n = len(rows)
+    flagged = [r.index for r in rows if r.enemy]
+    if not flagged:
+        if n % 2:
+            return None
+        for r in rows:                      # swords covered: allies, you, then equal enemies
+            r.enemy = r.index >= n // 2
+        return n // 2 - 1
+    if flagged[0] == 0:
+        free = [r.index for r in rows if not r.enemy]
+        for r in rows:
+            r.enemy = bool(r.enemy)
+        return free[-1] if free else None
+    for r in rows:
+        r.enemy = r.index >= flagged[0]
+    return flagged[0] - 1
 
 
 class TeamTracker:
