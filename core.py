@@ -256,12 +256,13 @@ class Commands:
     def do_list_matches(self, msg):
         """Recent games, with leaderboards and insights. Runs in the background: it can take a few seconds."""
         def work():
-            from history import insights, slim
+            from history import by_period, slim
             try:
                 pid = self._pid(msg)
                 d = self._history().load(pid, force=bool(msg.get("refresh")))
                 self.emit.send("matches", data={"profile": d["profile"], "leaderboards": d.get("leaderboards", []),
-                                                "matches": [slim(m) for m in d["matches"]], "insights": insights(d["matches"]),
+                                                "matches": [slim(m) for m in d["matches"]], "periods": (per := by_period(d["matches"])), "insights": per["all"],
+                                                "kept_since": min((m["end"] for m in d["matches"] if m.get("end")), default=None),
                                                 "fetched_at": d.get("fetched_at"), "offline": d.get("offline", False)})
             except Exception as e:
                 self.emit.send("error", data={"cmd": "list_matches", "message": f"{type(e).__name__}: {e}"})

@@ -288,7 +288,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 @media (max-width:760px){.app{grid-template-columns:1fr}.side{display:none}}
 
 /* match history */
-.hx-top-r{display:flex;align-items:center;gap:12px}
+.hx-top-r{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.seg[hidden]{display:none}
 .hx-when{color:var(--muted);font-size:13px}
 .gbtn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:9px 16px;font-weight:700;font-size:13.5px;cursor:pointer;color:var(--ink);
   background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
@@ -769,7 +770,9 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
     <section class="view" id="v-history" aria-label="Match history">
       <div class="top">
         <div><h1>Match history</h1><p class="sub">Straight from the official Age of Empires service: your latest games in every mode.</p></div>
-        <div class="hx-top-r"><span class="hx-when" id="hxWhen"></span><button class="gbtn" id="hxRefresh"><svg class="i"><use href="#i-refresh"/></svg>Refresh</button></div>
+        <div class="hx-top-r"><div class="seg" id="hxPeriod" role="group" aria-label="Period" hidden>
+          <button data-hxp="day" aria-pressed="false">24 hours</button><button data-hxp="week" aria-pressed="false">7 days</button><button data-hxp="month" aria-pressed="false">30 days</button><button data-hxp="all" aria-pressed="true">All</button></div>
+          <span class="hx-when" id="hxWhen"></span><button class="gbtn" id="hxRefresh"><svg class="i"><use href="#i-refresh"/></svg>Refresh</button></div>
       </div>
       <div id="hxBody"></div>
     </section>
@@ -1473,7 +1476,7 @@ const SAMPLE_GAME = (() => {
 const SAMPLE_GAME_ROW = {id: 'sample', date: SAMPLE_GAME.date, civ: 'zhu_xis_legacy', enemies: ['french'], length: '12:40', feudal: '5:30', villagers_10: 32};
 
 // ── Match history, from the official Age of Empires service (through the Python core).
-const hx = {data: null, loading: false, error: null, filter: 'all', open: null, detail: {}, mode: null, saved: {}, saving: null, drawn: false};
+const hx = {data: null, loading: false, error: null, filter: 'all', period: 'all', open: null, detail: {}, mode: null, saved: {}, saving: null, drawn: false};
 const acct = {profileId: null, steam: null};
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const hxBody = document.getElementById('hxBody');
@@ -1496,6 +1499,9 @@ const ago = t => {
   return new Date(t * 1000).toLocaleDateString([], {month: 'short', day: 'numeric'});
 };
 const diffTxt = d => d == null ? '' : d > 0 ? `<span class="up">+${d}</span>` : d < 0 ? `<span class="down">−${-d}</span>` : '<span style="color:var(--muted)">±0</span>';
+const PERIOD = {day: ['the last 24 hours', 86400], week: ['the last 7 days', 7 * 86400], month: ['the last 30 days', 30 * 86400], all: ['everything kept', 0]};
+const hxIns = () => (hx.data.periods || {})[hx.period] || hx.data.insights;
+const hxInPeriod = m => !PERIOD[hx.period][1] || (m.end || 0) >= Date.now() / 1000 - PERIOD[hx.period][1];
 const hxPane = (cls, inner, i = 0, tag = 'div') => `<${tag} class="glass hx-in ${cls}" style="--i:${i}">${inner}</${tag}>`;
 
 function loadHistory(force){
@@ -1512,6 +1518,15 @@ function loadHistory(force){
   if (!games.length) window.app.send({cmd: 'list_games'});     // to link games you reviewed
 }
 document.getElementById('hxRefresh').addEventListener('click', () => loadHistory(true));
+document.getElementById('hxPeriod').addEventListener('click', e => {
+  const b = e.target.closest('[data-hxp]');
+  if (!b || !hx.data) return;
+  hx.period = b.dataset.hxp; hx.drawn = false; hx.open = null;
+  document.querySelectorAll('[data-hxp]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  try { localStorage.setItem('hxPeriod', hx.period); } catch {}
+  renderHistory();
+});
+try { const p = localStorage.getItem('hxPeriod'); if (p && p in {day: 1, week: 1, month: 1, all: 1}) { hx.period = p; document.querySelectorAll('[data-hxp]').forEach(x => x.setAttribute('aria-pressed', x.dataset.hxp === p)); } } catch {}
 
 function renderHistory(){
   const btn = document.getElementById('hxRefresh'), when = document.getElementById('hxWhen');
@@ -1522,13 +1537,16 @@ function renderHistory(){
   if (inApp && !acct.profileId) return hxLinkState();
   if (hx.loading && !d) return hxSkeleton();
   if (hx.error && !d) return hxBody.innerHTML = hxPane('hx-state', `<h2>Couldn't load your games</h2><p>${esc(hx.error)}</p><button class="gbtn" data-hx="retry"><svg class="i"><use href="#i-refresh"/></svg>Try again</button>`);
+  document.getElementById('hxPeriod').hidden = !d;
   if (!d) return hxBody.innerHTML = '';
+  const kept = d.kept_since ? `Kept since ${new Date(d.kept_since * 1000).toLocaleDateString([], {month: 'short', day: 'numeric'})}` : '';
+  const insN = hxIns().games;
   hxBody.innerHTML = hxHero(d) + hxLeaderboards(d) + `
     <div class="hx-bar hx-in" style="--i:4"><h2>Recent games</h2>
       <div class="seg" role="group" aria-label="Filter games">${HX_FILTERS.map(([k, l]) => `<button data-hxf="${k}" aria-pressed="${hx.filter === k}">${l}</button>`).join('')}</div></div>
     <div class="hx-list" id="hxList"></div>
-    <div class="hx-bar hx-in" style="--i:6"><h2>What wins for you</h2><span class="hx-when">Last ${d.insights.games} finished games</span></div>
-    <div class="hx-ins">${hxInsights(d.insights)}</div>`;
+    <div class="hx-bar hx-in" style="--i:6"><h2>What wins for you</h2><span class="hx-when">${insN} finished game${insN === 1 ? '' : 's'} in ${PERIOD[hx.period][0]}${hx.period === 'all' && kept ? ' · ' + kept.toLowerCase() : ''}</span></div>
+    <div class="hx-ins">${hxInsights(hxIns())}</div>`;
   renderHxList();
   hxDrawRating();
   hxAnimate();
@@ -1557,9 +1575,10 @@ function hxLinkState(){
 }
 
 function hxHero(d){
-  const p = d.profile || {}, ins = d.insights || {}, st = ins.streak;
-  const modes = Object.keys(ins.rating || {}).filter(k => (ins.rating[k] || []).length);
-  if (!hx.mode || !modes.includes(hx.mode)) hx.mode = modes.sort((a, b) => ins.rating[b].length - ins.rating[a].length)[0] || null;
+  const p = d.profile || {}, ins = hxIns() || {}, st = ins.streak, none = !ins.games;
+  const ORDER = ['rm_1v1', 'rm_2v2', 'rm_3v3', 'rm_4v4', 'qm_1v1', 'qm_2v2', 'qm_3v3', 'qm_4v4'];
+  const modes = Object.keys(ins.rating || {}).filter(k => (ins.rating[k] || []).length).sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+  if (!hx.mode || !modes.includes(hx.mode)) hx.mode = [...modes].sort((a, b) => ins.rating[b].length - ins.rating[a].length)[0] || null;
   const C = 2 * Math.PI * 52;
   return `<div class="glass hx-hero hx-in" style="--i:0">
     <div class="hx-me">
@@ -1569,7 +1588,7 @@ function hxHero(d){
         <div class="ring" role="img" aria-label="Won ${ins.win_rate ?? 0}% of ${ins.games} games"><svg viewBox="0 0 120 120">
           <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#52b0c7"/><stop offset="1" stop-color="#1c8aa5"/></linearGradient></defs>
           <circle class="tr" cx="60" cy="60" r="52"/><circle class="fg" cx="60" cy="60" r="52" stroke-dasharray="${C}" stroke-dashoffset="${C}" data-to="${C * (1 - (ins.win_rate || 0) / 100)}"/></svg>
-          <div class="c"><b><span data-count="${ins.win_rate ?? 0}">0</span>%</b><span>won</span></div></div>
+          <div class="c">${none ? '<b>–</b><span>no games</span>' : `<b><span data-count="${ins.win_rate ?? 0}">0</span>%</b><span>won</span>`}</div></div>
         <div class="hx-nums">
           <div class="hx-num"><div class="l">Games</div><div class="v"><span data-count="${ins.games || 0}">0</span><small>${ins.wins || 0} won</small></div></div>
           <div class="hx-num"><div class="l">Streak</div><div class="v ${st ? st.result : ''}">${st ? `${st.count} ${st.result === 'win' ? (st.count > 1 ? 'wins' : 'win') : (st.count > 1 ? 'losses' : 'loss')}` : '–'}</div></div>
@@ -1600,7 +1619,7 @@ const reviewFor = m => games.find(g => g.ended_at && m.end && Math.abs(g.ended_a
 function renderHxList(){
   const box = document.getElementById('hxList');
   if (!box || !hx.data) return;
-  const list = hx.data.matches.filter(m => hxKeep(m, hx.filter));
+  const list = hx.data.matches.filter(m => hxKeep(m, hx.filter) && hxInPeriod(m));
   box.innerHTML = list.length ? list.map((m, i) => {
     const res = m.result === 'win' ? 'Win' : m.result === 'loss' ? 'Loss' : 'No result';
     const rv = reviewFor(m);
@@ -1616,7 +1635,7 @@ function renderHxList(){
         <svg class="i hx-chev"><use href="#i-chev"/></svg>
       </button>
       <div class="hx-drawer"><div id="hxd-${m.id}">${hx.open === m.id ? hxDetail(m.id) : ''}</div></div></div>`;
-  }).join('') : hxPane('hx-state', '<p>No games of this kind in your recent history.</p>');
+  }).join('') : hxPane('hx-state', `<p>No ${hx.filter === 'all' ? '' : 'games of this kind '}${hx.filter === 'all' ? 'games ' : ''}in ${PERIOD[hx.period][0]}.</p>`);
   if (hx.open) hxAnimateBars();
 }
 
@@ -1670,7 +1689,7 @@ function hxInsights(ins){
 function hxDrawRating(){
   const box = document.getElementById('hxChartBox'), now = document.getElementById('hxNow');
   if (!box) return;
-  const pts = ((hx.data.insights.rating || {})[hx.mode] || []).filter(p => p[0] && p[1]);
+  const pts = ((hxIns().rating || {})[hx.mode] || []).filter(p => p[0] && p[1]);
   const last = pts[pts.length - 1], first = pts[0];
   now.innerHTML = last ? `${last[1]}${pts.length > 1 ? `<small class="${last[1] >= first[1] ? 'up' : 'down'}">${last[1] >= first[1] ? '+' : '−'}${Math.abs(last[1] - first[1])} over ${pts.length} games</small>` : ''}` : '';
   if (pts.length < 2) { box.innerHTML = `<div class="hx-empty-chart">${pts.length ? 'One rated game so far in this mode.' : 'No rated games in your recent history.'}</div>`; return; }
@@ -1858,7 +1877,19 @@ function SAMPLE_HISTORY(){
   const fin = ms.filter(m => m.result !== 'unknown'), wins = fin.filter(m => m.result === 'win').length;
   const group = f => { const g = {}; for (const m of fin) for (const k of [].concat(f(m))) { g[k] = g[k] || {key: k, wins: 0, games: 0}; g[k].games++; g[k].wins += m.result === 'win'; }
     return Object.values(g).map(r => ({...r, win_rate: Math.round(100 * r.wins / r.games)})).sort((a, b) => b.games - a.games || b.win_rate - a.win_rate); };
-  return {profile: {profile_id: 6979980, name: 'Sample player', country: 'us', level: 57, steam: '76561199110245053'},
+  const insOf = list => {
+    const f = list.filter(m => m.result !== 'unknown'), w = f.filter(m => m.result === 'win').length;
+    const g = fn => { const o = {}; for (const m of f) for (const k of [].concat(fn(m))) { o[k] = o[k] || {key: k, wins: 0, games: 0}; o[k].games++; o[k].wins += m.result === 'win'; }
+      return Object.values(o).map(r => ({...r, win_rate: Math.round(100 * r.wins / r.games)})).sort((a, b) => b.games - a.games || b.win_rate - a.win_rate); };
+    const rt = {};
+    for (const m of [...list].reverse()) if (m.rating && /^(rm|qm)_/.test(m.mode)) (rt[m.mode] = rt[m.mode] || []).push([m.end, m.rating]);
+    let n = 0; for (const m of f) { if (m.result !== f[0].result) break; n++; }
+    return {games: f.length, wins: w, win_rate: f.length ? Math.round(100 * w / f.length) : null, streak: f.length ? {result: f[0].result, count: n} : null,
+      avg_minutes: f.length ? Math.round(f.reduce((a, m) => a + m.duration, 0) / f.length / 6) / 10 : null, avg_apm: f.length ? 87 : null,
+      by_civ: g(m => m.civ), by_map: g(m => m.map), by_mode: g(m => m.mode), vs_civ: g(m => [...new Set(m.enemies)]), rating: rt};
+  };
+  const periods = Object.fromEntries(Object.entries({day: 86400, week: 7 * 86400, month: 30 * 86400, all: 0}).map(([k, sp]) => [k, insOf(ms.filter(m => !sp || m.end >= now - sp))]));
+  return {periods, kept_since: Math.min(...ms.map(m => m.end)), profile: {profile_id: 6979980, name: 'Sample player', country: 'us', level: 57, steam: '76561199110245053'},
     leaderboards: [{mode: 'rm_1v1', rating: ms[0].rating, highest: 1241, wins: 64, losses: 51, rank: 8421}, {mode: 'rm_2v2', rating: 1090, highest: 1133, wins: 22, losses: 19, rank: 15210},
       {mode: 'qm_2v2', rating: 1043, highest: 1101, wins: 40, losses: 33, rank: 0}],
     matches: ms, fetched_at: now - 40, offline: false,

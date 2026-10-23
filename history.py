@@ -223,6 +223,26 @@ def slim(m: dict) -> dict:
         "players": [{k: p[k] for k in ("name", "civ", "team", "result", "rating", "rating_diff", "profile_id")} for p in m["players"]]}
 
 
+KEEP = 2000          # games kept in the local archive
+
+
+def merge(new: List[dict], old: List[dict]) -> List[dict]:
+    """The service only returns the latest ~10 games per mode, so every fetch is added to the
+    games seen before: the archive grows the longer the app is used. Newer copies win."""
+    seen = {m["id"]: m for m in old}
+    seen.update({m["id"]: m for m in new})
+    return sorted(seen.values(), key=lambda m: -(m.get("end") or m.get("start") or 0))[:KEEP]
+
+
+PERIODS = {"day": 86400, "week": 7 * 86400, "month": 30 * 86400, "all": None}
+
+
+def by_period(ms: List[dict], now: Optional[float] = None) -> Dict[str, dict]:
+    """insights() for the last 24 hours, 7 days, 30 days and everything kept."""
+    now = now or time.time()
+    return {k: insights([m for m in ms if span is None or (m.get("end") or 0) >= now - span]) for k, span in PERIODS.items()}
+
+
 class History:
     """Fetches and caches a player's history (cache_dir/history_<id>.json), refreshing
     at most every couple of minutes; the cache keeps it working offline."""
@@ -255,6 +275,7 @@ class History:
                 print(f"  [history] leaderboards: {e}")
                 got["leaderboards"] = (cached or {}).get("leaderboards", [])
             got["fetched_at"] = now
+            got["matches"] = merge(got["matches"], (cached or {}).get("matches", []))
             self.mem[profile_id] = got
             if f:
                 f.parent.mkdir(parents=True, exist_ok=True)

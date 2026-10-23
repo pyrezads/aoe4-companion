@@ -4,6 +4,7 @@ Run:  python test_history.py
 """
 import base64
 import json
+import pathlib
 import tempfile
 import zlib
 
@@ -106,6 +107,23 @@ history._get = down
 d = History(tmp, refresh_after=0).load(ME)
 check(d["offline"] and len(d["matches"]) == 3, "offline: last saved history")
 check(h.match(ME, 2)["map"] == "Danube River", "one match by id")
+
+print("Archive and periods")
+from history import merge, by_period
+old = [{"id": 1, "end": 100, "v": "old"}, {"id": 2, "end": 200, "v": "old"}]
+new = [{"id": 2, "end": 200, "v": "new"}, {"id": 3, "end": 300, "v": "new"}]
+mg = merge(new, old)
+check([m["id"] for m in mg] == [3, 2, 1] and mg[1]["v"] == "new", "fetches are added to the archive, newest copy wins")
+history._get = fake_get
+tmp2 = tempfile.mkdtemp()
+pathlib.Path(tmp2, f"history_{ME}.json").write_text(json.dumps({"profile": {}, "matches": [dict(History(tmp).load(ME)["matches"][0], id=99, end=10)], "fetched_at": 0}))
+d = History(tmp2, refresh_after=0).load(ME)
+check(len(d["matches"]) == 4 and d["matches"][-1]["id"] == 99, "games older than the service's list are kept")
+ms = [dict(m) for m in d["matches"]]
+for m, end in zip(ms, (1000 - 3600, 1000 - 3 * 86400, 1000 - 20 * 86400, 1000 - 90 * 86400)):
+    m["end"] = end
+per = by_period(ms, now=1000)
+check([per[k]["games"] for k in ("day", "week", "month", "all")] == [1, 2, 3, 4], f"games per period {[per[k]['games'] for k in per]}")
 
 print("Steam")
 check(steam_id_from("https://steamcommunity.com/profiles/76561199110245053/") == "76561199110245053", "Steam profile link")
