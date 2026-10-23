@@ -15,6 +15,25 @@ const path = require('path');
 const fs = require('fs');
 const { Core } = require('./core');
 
+// ── updates: the installed app checks GitHub Releases, downloads in the background,
+//    and installs on restart (or when you press "Restart to update").
+let update = null;            // {state: 'available'|'ready', version}
+function setupUpdates() {
+  if (!app.isPackaged) return;
+  let autoUpdater;
+  try { ({ autoUpdater } = require('electron-updater')); } catch { return; }
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  const tell = () => home && !home.isDestroyed() && home.webContents.send('app:update', update);
+  autoUpdater.on('update-available', (i) => { update = { state: 'available', version: i.version }; tell(); });
+  autoUpdater.on('update-downloaded', (i) => { update = { state: 'ready', version: i.version }; tell(); });
+  autoUpdater.on('error', (e) => console.log('[update]', e?.message || e));
+  ipcMain.handle('app:install-update', () => { core?.stop(); autoUpdater.quitAndInstall(); });
+  const check = () => autoUpdater.checkForUpdates().catch((e) => console.log('[update]', e?.message || e));
+  setTimeout(check, 8000);
+  setInterval(check, 4 * 3600 * 1000);
+}
+
 const ROOT = path.join(__dirname, '..');
 const page = (name) => path.join(ROOT, 'app', 'renderer', name);
 const isMac = process.platform === 'darwin';
@@ -129,6 +148,7 @@ function createHome() {
   home.once('ready-to-show', () => home.show());
   home.webContents.on('did-finish-load', () => {
     sendCoreState();
+    if (update) home.webContents.send('app:update', update);
     for (const [t, d] of Object.entries(latest)) home.webContents.send('core:msg', t, d);
   });
   home.on('closed', () => { home = null; closeCoach(); });
@@ -190,6 +210,7 @@ ipcMain.handle('coach:toggle', () => {
   return !!panel;
 });
 ipcMain.handle('core:state', () => coreState());
+ipcMain.handle('app:version', () => app.getVersion());
 ipcMain.handle('core:send', (_e, cmd) => {
   if (cmd?.cmd === 'use_build') {             // remember it for next time
     settings.build = { id: cmd.id || null, url: cmd.url || null, civ: cmd.civ || null };
@@ -222,6 +243,7 @@ app.whenReady().then(() => {
   loadSettings();
   startCore();
   createHome();
+  setupUpdates();
   const refresh = () => home?.webContents.send('displays:changed');
   screen.on('display-added', refresh);
   screen.on('display-removed', refresh);

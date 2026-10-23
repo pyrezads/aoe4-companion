@@ -8,7 +8,8 @@
   "scripts": {
     "start": "electron .",
     "demo": "electron . --demo",
-    "dist:win": "electron-builder --win nsis"
+    "dist:win": "electron-builder --win nsis",
+    "build:core": "python -m PyInstaller packaging/aoe4-core.spec --distpath dist-core --workpath build-core --noconfirm"
   },
   "devDependencies": {
     "electron": "43.7.7",
@@ -28,11 +29,33 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "artifactName": "AoE4-Coach-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": true,
-      "perMachine": false
-    }
+      "perMachine": false,
+      "shortcutName": "AoE4 Coach"
+    },
+    "extraResources": [
+      {
+        "from": "dist-core/aoe4-core",
+        "to": "core",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "pyrezads",
+        "repo": "aoe4-companion",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "6.8.10"
   }
 }

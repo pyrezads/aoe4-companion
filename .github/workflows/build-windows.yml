@@ -1,11 +1,14 @@
 # Builds the Windows installer (AoE4-Coach-Setup-x.y.z.exe) on GitHub's Windows machines.
 #
-# Every push to main: runs the Python tests and builds the installer (download it from
-# the run's "Artifacts" section).
-# A version tag (git tag v0.1.0 && git push --tags): also publishes it as a GitHub Release.
+# Every push to main: runs the tests, packs the Python screen reader (aoe4-core.exe),
+# checks the packed copy really starts and reads a screenshot, then builds the installer.
+# Download it from the run's "Artifacts" section.
 #
-# Friends install from the Release page. Nobody needs Node or Python on their PC:
-# the installer carries everything.
+# A version tag publishes a release that installed apps update to by themselves:
+#   1. set "version" in package.json (e.g. 0.2.0) and push
+#   2. git tag v0.2.0 && git push --tags
+#
+# Nobody needs Node or Python on their PC: the installer carries everything.
 
 name: Build Windows app
 
@@ -36,6 +39,14 @@ jobs:
           python test_builds.py
           python test_production_math.py
 
+      - name: Pack the screen reader (aoe4-core.exe)
+        run: |
+          pip install pyinstaller==6.22.3
+          python -m PyInstaller packaging/aoe4-core.spec --distpath dist-core --workpath build-core --noconfirm
+
+      - name: Check the packed screen reader runs
+        run: python packaging/smoke_core.py dist-core/aoe4-core/aoe4-core.exe
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -45,15 +56,23 @@ jobs:
         run: npm ci
 
       - name: Build installer
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: npx electron-builder --win nsis --publish never
+
+      - name: Check the tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} but package.json says $v"; exit 1; }
+
+      - name: Build and publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: npx electron-builder --win nsis --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-artifact@v4
         with:
           name: AoE4-Coach-installer
           path: dist/*.exe
-
-      - name: Publish release (tags only)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*.exe

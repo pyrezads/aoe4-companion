@@ -18,6 +18,10 @@ contextBridge.exposeInMainWorld('app', {
   send: (cmd) => ipcRenderer.invoke('core:send', cmd),
   onMessage: onMsg,
   restartCore: () => ipcRenderer.invoke('core:restart'),
+  // updates
+  version: () => ipcRenderer.invoke('app:version'),
+  onUpdate: (cb) => ipcRenderer.on('app:update', (_e, u) => cb(u)),
+  installUpdate: () => ipcRenderer.invoke('app:install-update'),
   // settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),

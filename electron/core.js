@@ -23,15 +23,16 @@ class Core {
     this.wanted = false;
   }
 
-  // Packaged app: resources/core/aoe4-core.exe (added with the installer step).
-  // Development: python on PATH running main.py. AOE4_PYTHON overrides the interpreter.
+  // Installed app: resources/core/aoe4-core.exe (Python packed by PyInstaller, run from its own folder).
+  // Development: python on PATH running main.py from the project. AOE4_PYTHON overrides the interpreter.
   command() {
-    const exe = process.resourcesPath && path.join(process.resourcesPath, 'core', 'aoe4-core.exe');
-    if (exe && fs.existsSync(exe)) return [[exe, []]];
+    const name = process.platform === 'win32' ? 'aoe4-core.exe' : 'aoe4-core';
+    const exe = process.resourcesPath && path.join(process.resourcesPath, 'core', name);
+    if (exe && fs.existsSync(exe)) return [[exe, [], path.dirname(exe)]];
     const script = path.join(this.root, 'main.py');
     const pythons = process.env.AOE4_PYTHON ? [process.env.AOE4_PYTHON]
       : process.platform === 'win32' ? ['python', 'py'] : ['python3', 'python'];
-    return pythons.map((p) => [p, [script]]);
+    return pythons.map((p) => [p, [script], this.root]);
   }
 
   start() {
@@ -40,14 +41,16 @@ class Core {
   }
 
   tryStart(candidates) {
-    if (!candidates.length) return this.fail('Python not found. Install Python 3 or set AOE4_PYTHON.');
-    const [cmd, pre] = candidates[0];
+    if (!candidates.length) return this.fail(process.resourcesPath && !process.defaultApp
+      ? 'The screen reader is missing from this install. Reinstall AoE4 Coach.'
+      : 'Python not found. Install Python 3 or set AOE4_PYTHON.');
+    const [cmd, pre, cwd] = candidates[0];
     // AOE4_CORE_ARGS: extra arguments for testing, e.g. "--offline --replay calib/s02.png,calib/s07.png"
     const extra = (process.env.AOE4_CORE_ARGS || '').split(' ').filter(Boolean);
     const args = [...pre, '--core', '--config', this.configPath, ...extra];
     let proc;
     try {
-      proc = spawn(cmd, args, { cwd: this.root, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true,
+      proc = spawn(cmd, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true,
         env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8' } });
     } catch (e) {
       return this.tryStart(candidates.slice(1));

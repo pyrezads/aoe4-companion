@@ -139,6 +139,12 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .platform-darwin .side{padding-top:46px}
 .in-app button,.in-app input,.in-app select,.in-app label{-webkit-app-region:no-drag}
 
+/* update banner */
+.update{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;padding:12px 14px 12px 18px;border-radius:16px;background:var(--card);border:1px solid var(--teal);font-size:14px}
+.update[hidden]{display:none}
+.update .btn{padding:8px 16px}
+.side .ver{color:var(--dim);font-size:12px;padding:0 14px}
+
 /* first-time setup */
 .setup{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:24px;
   background:radial-gradient(ellipse 760px 520px at 100% 0%,rgba(6,69,87,.62),transparent 75%),rgba(5,9,9,.94)}
@@ -219,12 +225,14 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
       <button class="nav" data-go="settings"><svg class="i"><use href="#i-sliders"/></svg>Settings</button>
     </div>
     <span class="spacer"></span>
+    <p class="ver" id="ver"></p>
     <label class="foot"><span><svg class="i" style="width:18px;height:18px"><use href="#i-monitor"/></svg>Start with Windows</span><input type="checkbox" class="sw" id="startWin"></label>
   </nav>
 
   <main>
     <!-- ════════ HOME ════════ -->
     <section class="view on" id="v-home" aria-label="Home">
+      <div class="update" id="update" hidden><span id="updateText"></span><button class="btn primary" id="updateBtn" hidden>Restart to update</button></div>
       <div class="top">
         <div>
           <h1 id="hello">Ready when you are</h1>
@@ -546,6 +554,17 @@ if (inApp) {
   sw.addEventListener('change', () => window.app.setSettings({openAtLogin: sw.checked}));
   document.body.classList.add('in-app', 'platform-' + window.app.platform);
   window.app.onDisplaysChanged(loadDisplays);
+  window.app.version().then(v => document.getElementById('ver').textContent = 'Version ' + v);
+  window.app.onUpdate(u => {
+    const box = document.getElementById('update');
+    box.hidden = !u;
+    if (!u) return;
+    document.getElementById('updateText').textContent = u.state === 'ready'
+      ? `Version ${u.version} is ready. It installs when you restart the app.`
+      : `Downloading version ${u.version}…`;
+    document.getElementById('updateBtn').hidden = u.state !== 'ready';
+  });
+  document.getElementById('updateBtn').addEventListener('click', () => window.app.installUpdate());
 } else {
   startBtn.addEventListener('click', () => window.open('overlay.html', '_blank'));
 }
