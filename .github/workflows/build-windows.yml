@@ -4,9 +4,10 @@
 # checks the packed copy really starts and reads a screenshot, then builds the installer.
 # Download it from the run's "Artifacts" section.
 #
-# A version tag publishes a release that installed apps update to by themselves:
+# Publishing a release, which installed apps update to by themselves:
 #   1. set "version" in package.json (e.g. 0.2.0) and push
-#   2. git tag v0.2.0 && git push --tags
+#   2. on GitHub: Actions > Build Windows app > Run workflow, tick "Publish", Run
+#      (or push a tag: git tag v0.2.0 && git push --tags). The release is tagged v<version>.
 #
 # Nobody needs Node or Python on their PC: the installer carries everything.
 
@@ -17,6 +18,11 @@ on:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish as a release (installed apps update to it)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -87,7 +93,7 @@ jobs:
           grep -qx OK e2e_result.txt
 
       - name: Build installer
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') && github.event.inputs.publish != 'true' }}
         run: npx electron-builder --win nsis --publish never
 
       - name: Check the tag matches package.json
@@ -97,8 +103,18 @@ jobs:
           v=$(node -p "require('./package.json').version")
           [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} but package.json says $v"; exit 1; }
 
+      - name: Check this version isn't published yet
+        if: ${{ github.event.inputs.publish == 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          v=$(node -p "require('./package.json').version")
+          if gh release view "v$v" >/dev/null 2>&1; then echo "::error::v$v is already released: raise the version in package.json first"; exit 1; fi
+          echo "::notice::Publishing v$v"
+
       - name: Build and publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish == 'true' }}
         run: npx electron-builder --win nsis --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
