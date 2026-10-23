@@ -288,9 +288,6 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 @media (max-width:760px){.app{grid-template-columns:1fr}.side{display:none}}
 
 /* match history */
-#v-history{position:relative}
-#v-history > *:not(.ambient){position:relative;z-index:1}
-#v-history .ambient{left:252px}
 .hx-top-r{display:flex;align-items:center;gap:12px}
 .hx-when{color:var(--muted);font-size:13px}
 .gbtn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:9px 16px;font-weight:700;font-size:13.5px;cursor:pointer;color:var(--ink);
@@ -436,6 +433,38 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
   .hx-sum{grid-template-columns:6px 60px minmax(200px,1.3fr) minmax(120px,1fr) 90px 18px;gap:12px}}
 @media (prefers-reduced-motion:reduce){.hx-in,.hx-chart.draw .ln,.hx-chart.draw .area,.hx-chart.draw .pt{animation:none!important;opacity:1!important;stroke-dashoffset:0!important}
   .ring .fg,.wr .t i,.cmp .cb i,.hx-drawer{transition:none!important}}
+
+/* ── liquid glass on every surface (recipe in theme.css) ── */
+.side,main{position:relative;z-index:1}
+.side{background:rgba(8,13,14,.55)!important;-webkit-backdrop-filter:blur(30px) saturate(150%);backdrop-filter:blur(30px) saturate(150%);border-right:1px solid rgba(255,255,255,.07)}
+.nav[aria-current="page"]{background:var(--glass-teal)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 10px 24px -14px rgba(28,138,165,.9)}
+.nav:hover{background:rgba(255,255,255,.07)}
+.panel,.tools,.screen,.rcard,.set,.rv-item,.rv-empty,.tile,.chart-card,.update,.scout,.setup-card{
+  background:var(--glass-sheen),var(--glass-bg)!important;border:1px solid var(--glass-edge)!important;
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow)}
+.setup-card{background:var(--glass-sheen),rgba(23,27,31,.55)!important}
+.coach,.fix{background:var(--glass-sheen),var(--glass-teal)!important;border:1px solid rgba(255,255,255,.2);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 26px 60px -28px rgba(28,138,165,.75)}
+.picked{background:rgba(5,9,9,.2);border:1px solid rgba(255,255,255,.12)}
+.mini{background:rgba(5,9,9,.5)!important;border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.tools .tool{transition:background .2s}
+.tools .tool:hover{background:rgba(255,255,255,.035)}
+.bw,.key,.monitors,.sel select,.inp,.civ,.hx-saved{background:var(--glass-well)!important;border-color:var(--glass-well-edge)!important}
+.bw{transition:border-color .2s,background .2s}
+.bw:hover{border-color:rgba(255,255,255,.16)!important}
+.bw:has(input:checked),.rv-item[aria-current="true"]{background:rgba(28,138,165,.16)!important;border-color:rgba(82,176,199,.55)!important}
+.rv-item,.scout{transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s}
+.rv-item:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.2)!important}
+.scout.threat{border-color:var(--pink)!important;box-shadow:var(--glass-shadow),0 0 30px -12px rgba(200,110,214,.6)}
+.mon{background:rgba(255,255,255,.05);backdrop-filter:blur(10px)}
+.more,.pill,kbd,.rcard .want,.flag,.civ .age{background:rgba(255,255,255,.08)}
+.btn.quiet{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.btn.quiet:hover{background:rgba(255,255,255,.12)}
+.chip{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12)}
+.field .btn{white-space:nowrap;flex:none}
+.view.on > *{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+.view.on > *:nth-child(2){animation-delay:.05s} .view.on > *:nth-child(3){animation-delay:.1s} .view.on > *:nth-child(4){animation-delay:.15s} .view.on > *:nth-child(n+5){animation-delay:.2s}
+@media (prefers-reduced-motion:reduce){.view.on > *{animation:none}}
 </style>
 </head>
 <body>
@@ -469,7 +498,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
       <h2 id="setupTitle">Welcome. Two quick questions.</h2>
       <p class="sub">Your profile brings in your match history, ratings and replays, and lets the coach scout ranked opponents. Paste your Steam profile link (on Steam: your name, then Profile, then copy the page link) or your aoe4world.com profile.</p>
       <div class="field"><label for="setupPid">Steam or aoe4world profile</label><input class="inp" id="setupPid" placeholder="https://steamcommunity.com/profiles/7656…" autocomplete="off"><span class="hint" id="setupPidHint"></span></div>
-      <div class="setup-actions"><button class="btn quiet" id="setupSkip">I don't play ranked</button><button class="btn primary" id="setupNext">Next</button></div>
+      <div class="setup-actions"><button class="btn quiet" id="setupSkip">Skip for now</button><button class="btn primary" id="setupNext">Next</button></div>
     </section>
     <section data-step="2" hidden>
       <h2>Which monitor is the game on?</h2>
@@ -480,6 +509,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
   </div>
 </div>
 <div class="app">
+  <div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
   <nav class="side" aria-label="Main">
     <div class="brand"><img src="img/logo.png" alt="AoE4 Coach" width="212" height="86"></div>
     <p class="grp">Play</p>
@@ -737,7 +767,6 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 
     <!-- ════════ MATCH HISTORY ════════ -->
     <section class="view" id="v-history" aria-label="Match history">
-      <div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="top">
         <div><h1>Match history</h1><p class="sub">Straight from the official Age of Empires service: your latest games in every mode.</p></div>
         <div class="hx-top-r"><span class="hx-when" id="hxWhen"></span><button class="gbtn" id="hxRefresh"><svg class="i"><use href="#i-refresh"/></svg>Refresh</button></div>
@@ -1939,6 +1968,10 @@ document.getElementById('setupDone').addEventListener('click', async () => {
   if (s.build && s.build.civ) civSel.value = s.build.civ;
   if (!s.setupDone) { await loadDisplays(); setup.hidden = false; setupStep(1); document.getElementById('setupPid').focus(); }
 })();
+
+function calm(){ document.body.classList.toggle('calm', document.hidden || !document.hasFocus() || !!(status && status.live)); }
+addEventListener('focus', calm); addEventListener('blur', calm); document.addEventListener('visibilitychange', calm);
+setInterval(calm, 3000); calm();
 
 const hr = new Date().getHours();
 document.getElementById('hello').textContent = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';

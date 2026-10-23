@@ -84,6 +84,17 @@ svg{display:block}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
+/* glass recipe, shared by the app and the coach windows */
+:root{
+  --glass-bg:linear-gradient(150deg,rgba(255,255,255,.085) 0%,rgba(255,255,255,.025) 42%,rgba(255,255,255,.05) 100%);
+  --glass-sheen:radial-gradient(120% 70% at 12% -20%,rgba(255,255,255,.13),transparent 55%);
+  --glass-edge:rgba(255,255,255,.11);
+  --glass-blur:blur(26px) saturate(170%);
+  --glass-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(255,255,255,.03),0 22px 50px -24px rgba(0,0,0,.65);
+  --glass-well:rgba(0,0,0,.26);          /* recessed: inputs, rows inside a glass card */
+  --glass-well-edge:rgba(255,255,255,.08);
+  --glass-teal:linear-gradient(140deg,rgba(82,176,199,.62) 0%,rgba(28,138,165,.55) 48%,rgba(11,79,96,.62) 100%);
+}
 /* ── Liquid glass ────────────────────────────────────────────────────
    Frosted, slightly refractive panels with a specular highlight on the top edge.
    Glass needs something behind it: pair with .ambient (slow, soft colour fields). */
@@ -120,4 +131,5 @@ svg{display:block}
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);animation:shimmer 1.4s ease-in-out infinite}
 @keyframes shimmer{to{transform:translateX(100%)}}
 
+.calm .ambient i{animation-play-state:paused}       /* while a game is running or the app is in the background */
 @media (prefers-reduced-motion:reduce){.ambient i,.skel::after{animation:none!important}}
