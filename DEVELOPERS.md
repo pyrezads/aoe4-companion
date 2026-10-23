@@ -121,6 +121,17 @@ core.py            core mode: no window; messages and commands are documented at
 - Licence: Age of Empires IV © Microsoft, used under Microsoft's Game Content Usage Rules. The app must stay
   free, and the credit line in Settings > Help must stay.
 
+## Map watch (minimap)
+- `scoreboard.read_color` reads each player's colour from their name in the player list (letters told
+  apart from the map behind by being more saturated than their surroundings); `TeamTracker.palette()`.
+- `minimap.py`: `MinimapReader` gives every vivid minimap pixel to the nearest player colour (you, ally,
+  enemy); `MapWatch` learns static coloured things in the first 25 s (gold mines, the frame), finds your
+  base, and reports raids, early forward buildings and fast-growing enemy presence. Events go to the
+  game review; state to the app as `map` (Live analyst radar, coach panel alert, spoken calls).
+- `DEFAULT_RECT` (where the minimap is at 1440p) is a guess until set from real screenshots: Settings >
+  Map watch > Screenshots for setup saves full frames to the calibration folder (`save_screen`).
+  Config `minimap_rect` overrides it. `python test_minimap.py`.
+
 ## Tests
 `test_coach.py`, `test_core.py`, `test_review.py`, `test_history.py`, `test_sizes.py`, `test_live.py`, `test_builds.py`,
 `test_production_math.py` (Python), `tests/e2e_app.js` (the whole app, GitHub "Test the app"),

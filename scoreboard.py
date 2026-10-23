@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 DATA = pathlib.Path(__file__).with_name("data")
 BASE_W, BASE_H = 2560, 1440
@@ -43,6 +43,7 @@ class PlayerRow:
     civ_score: float = 0.0
     enemy: Optional[bool] = None      # None = swords not visible (covered)
     age: Optional[int] = None
+    color: Optional[Tuple[int, int, int]] = None   # the player's colour, from their name
 
 
 @dataclass
@@ -185,6 +186,23 @@ class ScoreboardReader:
         return float(score.max()) > 0.55
 
     # ── full read ─────────────────────────────────────────────────────
+    @staticmethod
+    def read_color(rgb, y) -> Optional[Tuple[int, int, int]]:
+        """The player's colour: the letters of their name and "| Age", told apart from the map behind
+        them by being more saturated than their surroundings."""
+        strip = rgb[y - 10:y + 11, TEXT_X1 - 430:TEXT_X1 - 4].astype(np.float32)
+        if strip.size == 0:
+            return None
+        blur = np.asarray(Image.fromarray(strip.clip(0, 255).astype(np.uint8)).filter(ImageFilter.BoxBlur(4))).astype(np.float32)
+        mx, mn = strip.max(2), strip.min(2)
+        sat, bsat = mx - mn, blur.max(2) - blur.min(2)
+        px = strip[(sat > 80) & (mx > 120) & (sat - bsat > 35)]
+        if len(px) < 15:
+            return None
+        s = px.max(1) - px.min(1)
+        c = np.median(px[s >= np.median(s)], 0)
+        return int(c[0]), int(c[1]), int(c[2])
+
     def read(self, rgb: np.ndarray, with_swords: bool = True) -> Scoreboard:
         if rgb.shape[1] != BASE_W or rgb.shape[0] != BASE_H:
             rgb = np.asarray(Image.fromarray(rgb.astype(np.uint8)).resize((BASE_W, BASE_H))).astype(np.int16)
@@ -195,7 +213,7 @@ class ScoreboardReader:
                 break
             civ, score = self.classify_flag(rgb, y)
             row = PlayerRow(index=k, y=y, civ=civ if score >= 0.55 else None, civ_score=score,
-                            age=self.read_age(rgb, y))
+                            age=self.read_age(rgb, y), color=self.read_color(rgb, y))
             if with_swords:
                 row.enemy = True if self.has_swords(rgb, y) else None
             sb.rows.append(row)
@@ -231,6 +249,7 @@ class TeamTracker:
         self.pending: Dict[int, Tuple[int, int]] = {}   # row -> (age, times seen)
         self.n_rows = 0
         self.me: Optional[int] = None
+        self.colors: Dict[int, List[Tuple[int, int, int]]] = {}
 
     def update(self, sb: Scoreboard, clock: Optional[str]) -> List[str]:
         events = []
@@ -247,6 +266,9 @@ class TeamTracker:
             if r.civ:
                 self.votes.setdefault(r.index, {}).setdefault(r.civ, 0)
                 self.votes[r.index][r.civ] += 1
+            if r.color:
+                self.colors.setdefault(r.index, []).append(r.color)
+                self.colors[r.index] = self.colors[r.index][-9:]
             if r.enemy is not None:
                 self.enemy_votes.setdefault(r.index, []).append(bool(r.enemy))
                 self.enemy_votes[r.index] = self.enemy_votes[r.index][-10:]
@@ -278,6 +300,19 @@ class TeamTracker:
     def is_enemy(self, i: int) -> bool:
         v = self.enemy_votes.get(i) or []
         return sum(v) > len(v) / 2 if v else False
+
+    def color(self, i: int) -> Optional[Tuple[int, int, int]]:
+        c = self.colors.get(i)
+        return tuple(int(x) for x in np.median(np.array(c), 0)) if c else None
+
+    def palette(self) -> Dict[str, List[Tuple[int, int, int]]]:
+        """Player colours by side, for the minimap: {"me": [...], "ally": [...], "enemy": [...]}."""
+        out = {"me": [], "ally": [], "enemy": []}
+        for i in sorted(set(self.votes) | set(self.colors)):
+            c = self.color(i)
+            if c:
+                out["me" if i == self.me else "enemy" if self.is_enemy(i) else "ally"].append(c)
+        return out
 
     def summary(self) -> dict:
         rows = sorted(self.votes)

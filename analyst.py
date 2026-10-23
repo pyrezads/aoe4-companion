@@ -58,6 +58,11 @@ class Analyst:
         self.games_dir = str(base / "games")
         self.recorder = GameRecorder(self.games_dir, on_saved=self._game_saved)
         self.coach_for = None                                     # the BuildOrder the coach follows
+        from minimap import MapWatch, MinimapReader
+        self.minimap = MinimapReader(cfg.get("minimap_rect"))
+        self.mapwatch = MapWatch()
+        self.map_alerts: List[Tuple[str, str]] = []
+        self.last_map = 0.0
 
     # ── who am I ──────────────────────────────────────────────────────
     def my_civ(self) -> Optional[str]:
@@ -104,6 +109,22 @@ class Analyst:
         self.team_events = [(t, e) for t, e in self.team_events if now - t < 45]
         alerts += [("warn", e) for _, e in self.team_events if e.startswith("Enemy")][:3]
 
+        # map watch: enemy dots on the minimap, once a second
+        if snap.live and now - self.last_map >= 1.0 and self.cfg.get("map_watch", True):
+            self.last_map = now
+            pal = self.teams.palette()
+            if pal["me"] and pal["enemy"]:
+                try:
+                    self.map_alerts, evs = self.mapwatch.update(self.minimap.read(frame, pal), snap.seconds, now)
+                    for kind, text in evs:
+                        self.recorder.note(snap.seconds, kind, text)
+                        print(f"  [{snap.clock}] {text}")
+                    self.state.set(map={**self.mapwatch.state, "alerts": [t for _, t in self.map_alerts]})
+                except Exception as e:                       # never let the map break the rest
+                    print(f"  [map] {type(e).__name__}: {e}")
+        if snap.live:
+            alerts += self.map_alerts
+
         # enemy units: a selection that isn't your Ctrl+C army
         if snap.live and h.selection_total and now - self.last_army_key > 2.5:
             sig = (h.selection_total, tuple(h.selection_counts))
@@ -140,9 +161,11 @@ class Analyst:
         self.my_army = []
         self.enemy_seen.clear()
         self.team_events.clear()
+        self.mapwatch.reset()
+        self.map_alerts = []
         if self.coach:
             self.coach.reset()
-        self.state.set(coach=None, army_lines=None, enemy_lines=None, advice_lines=None, upgrade_lines=None, teams=None)
+        self.state.set(coach=None, army_lines=None, enemy_lines=None, advice_lines=None, upgrade_lines=None, teams=None, map=None)
 
     def coach_skip(self, n: int = 1) -> None:
         """F10: move the coach one step on (n=-1 goes back)."""

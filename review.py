@@ -84,6 +84,11 @@ class GameRecorder:
         self.step: Optional[int] = None
         self.steps_reached: List[dict] = []
 
+    def note(self, t: Optional[int], kind: str, text: str) -> None:
+        """An event from elsewhere (the map watch: raids, forward buildings) for the timeline."""
+        if t is not None:
+            self.events.append({"t": int(t), "kind": kind, "text": text})
+
     # ── every frame ───────────────────────────────────────────────────
     def update(self, snap, now: float, coach: Optional[dict] = None, teams: Optional[dict] = None,
                build=None, match=None) -> Optional[str]:

@@ -130,6 +130,7 @@ def _payloads(state) -> dict:
         "match": {"lines": state.get("briefing_lines")},
         "scout": state.get("scout"),
         "army": {"lines": state.get("army_lines")},
+        "map": state.get("map"),
         "advice": {"enemy": state.get("enemy_lines"), "advice": state.get("advice_lines"),
                    "upgrades": state.get("upgrade_lines")},
     }
@@ -327,6 +328,9 @@ class Commands:
         req = self.state.get("pin_request")
         if req:
             req.set()
+
+    def do_save_screen(self, msg):
+        self.state.set(screen_request=msg.get("label") or "screen")   # the reader thread saves its next frame
 
     def do_reading_check(self, msg):
         self.state.set(check_request=True)          # the reader thread answers on its next frame

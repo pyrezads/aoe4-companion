@@ -38,6 +38,7 @@ jobs:
           python test_core.py
           python test_review.py
           python test_history.py
+          python test_minimap.py
           python test_sizes.py
           python test_builds.py
           python test_production_math.py

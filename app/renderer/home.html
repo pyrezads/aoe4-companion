@@ -486,6 +486,34 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .uchip small{display:block;color:var(--muted);font-size:12.5px;font-weight:600}
 .uchip.enemy{border-color:rgba(200,110,214,.35);background:rgba(200,110,214,.07)}
 .uchip.enemy b{font:700 14px var(--body)}
+
+/* map watch */
+.mw{display:grid;grid-template-columns:230px 1fr;gap:24px;align-items:start}
+.mw-radar{aspect-ratio:1;border-radius:20px;overflow:hidden;background:radial-gradient(circle at 30% 20%,rgba(82,176,199,.12),rgba(0,0,0,.35) 70%);
+  border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 40px rgba(0,0,0,.5);position:relative}
+.mw-radar::after{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0deg,rgba(82,176,199,.18) 40deg,transparent 60deg);
+  animation:sweep 4s linear infinite;pointer-events:none}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.mw-radar svg{width:100%;height:100%;display:block;position:relative;z-index:1}
+.mw-radar .grid line{stroke:rgba(255,255,255,.06);stroke-width:.4}
+.mw-radar .home{fill:rgba(35,149,174,.08);stroke:#52b0c7;stroke-width:.7;stroke-dasharray:2 1.6}
+.mw-radar .me{fill:#2395ae}
+.mw-radar .al{fill:var(--sky);opacity:.85}
+.mw-radar .en{fill:var(--pink);filter:drop-shadow(0 0 1.6px rgba(200,110,214,.9))}
+.mw.raid{border-color:rgba(200,110,214,.6)!important;box-shadow:var(--glass-shadow),0 0 40px -10px rgba(200,110,214,.55)!important}
+.mw.raid .en{animation:blip 1s ease-in-out infinite}
+@keyframes blip{50%{opacity:.45}}
+.mw-status{margin:0 0 10px;font-size:14.5px}
+.mw-status .bad{color:var(--pink)}
+.mw-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.mw-legend span{display:inline-flex;align-items:center;gap:6px}
+.mw-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.mw-legend i.ring{border:1.5px dashed #52b0c7;width:11px;height:11px}
+.shot-btns{display:flex;flex-wrap:wrap;gap:8px}
+.shot-btns .btn{padding:8px 14px;font-size:13.5px}
+@media (prefers-reduced-motion:reduce){.mw-radar::after,.mw.raid .en{animation:none}}
+.calm .mw-radar::after{animation-play-state:paused}
+@media (max-width:900px){.mw{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -749,6 +777,15 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
         <div class="panel"><h3 class="ph3">Alerts</h3><ul class="lines" id="anAlerts"></ul></div>
         <div class="panel"><h3 class="ph3">Teams</h3><div id="anTeams" class="teams"></div></div>
       </div>
+      <div class="panel mw" id="mwPanel" style="margin-top:14px">
+        <div class="mw-radar"><svg id="mwRadar" viewBox="0 0 100 100" role="img" aria-label="Map watch: your base and enemy units seen on the minimap"></svg></div>
+        <div class="mw-side">
+          <h3 class="ph3">Map watch</h3>
+          <p class="mw-status" id="mwStatus">Reads your minimap once a second once a game starts.</p>
+          <div class="mw-legend"><span><i style="background:#2395ae"></i>You</span><span><i style="background:var(--sky)"></i>Allies</span><span><i style="background:var(--pink)"></i>Enemies</span><span><i class="ring"></i>Your base</span></div>
+          <ul class="lines" id="mwLog"></ul>
+        </div>
+      </div>
       <p class="foot-note" id="anRead"></p>
     </section>
 
@@ -836,6 +873,22 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
             <div class="field"><label for="steam">Steam profile</label><div style="display:flex;gap:10px"><input class="inp" id="steam" placeholder="https://steamcommunity.com/profiles/7656…" autocomplete="off"><button class="btn quiet" id="steamFind">Find me</button></div>
               <span class="hint" id="steamHint">On Steam: your name, then Profile. Copy the page link. It needs the number, so a custom /id/ link won't work.</span></div>
             <div class="field" style="margin:0"><label for="pid">Or your aoe4world.com profile</label><div style="display:flex;gap:10px"><input class="inp" id="pid" placeholder="https://aoe4world.com/players/…"><button class="btn quiet" id="pidSave">Save</button></div><span class="hint" id="pidHint">Paste your profile link or your player ID.</span></div>
+          </div>
+        </div>
+        <div class="set">
+          <div><h3>Map watch</h3><p class="why">Warns you when enemies show up near your base, from the minimap. Player colours are read from the player list, so the game's normal colours work.</p></div>
+          <div>
+            <label class="auto" style="color:var(--ink);font-size:14px;margin-bottom:14px"><input type="checkbox" class="sw" id="mapWatch" checked>Watch the minimap for raids and forward buildings</label>
+            <span class="lab" style="font-size:14px;font-weight:700;display:block;margin-bottom:8px">Screenshots for setup</span>
+            <p class="why" style="margin:0 0 12px">In a game, click the one that matches what's on screen. They're saved in the calibration folder, to tune where the minimap is on your screen.</p>
+            <div class="shot-btns">
+              <button class="btn quiet" data-shot="quiet">Quiet moment</button>
+              <button class="btn quiet" data-shot="enemy-near-base">Enemy near my base</button>
+              <button class="btn quiet" data-shot="fight">A fight</button>
+              <button class="btn quiet" data-shot="enemy-selected">Enemy unit selected</button>
+              <button class="btn quiet" data-shot="my-unit-selected">My unit selected</button>
+            </div>
+            <p class="why" id="shotNote" style="margin-top:10px;color:var(--ink)"></p>
           </div>
         </div>
         <div class="set">
@@ -1172,6 +1225,9 @@ if (inApp) {
       civSel.value = data.me.civ; listBuilds();      // your civ, read from the player list
     }
     else if (type === 'reading_check') showReadingCheck(data);
+    else if (type === 'map') { renderMap(data); voiceMap(data); }
+    else if (type === 'screen_saved' && data) document.getElementById('shotNote').textContent = data.error
+      ? "Couldn't save it: " + data.error : `Saved ${data.label} (${data.width} × ${data.height}). Open the log folder below, then the calibration folder, and send these over.`;
     else if (type === 'games' && data) { games = data.games || []; renderGames(); if (!gameOpen && games.length) openGame(games[0].id); }
     else if (type === 'game_detail' && data) { gameCache[data.id] = data; if (gameOpen === data.id) renderGame(data); }
     else if (type === 'game_saved' && data) { games = [data, ...games.filter(g => g.id !== data.id)]; renderGames(); }
@@ -1332,6 +1388,57 @@ if (!inApp) {      // browser preview: a sample game so the pages aren't empty
     upgrades: ['Bloomery (Blacksmith, Feudal) · helps 30 units', 'Fitted Leatherwork (Blacksmith, Feudal) · helps 12 units']});
 }
 
+
+// ── Map watch (minimap): a small radar of your base and the enemy dots the app sees
+const mwLog = [];
+let mwLastKey = '';
+function renderMap(m){
+  const svg = document.getElementById('mwRadar'), status = document.getElementById('mwStatus'), panel = document.getElementById('mwPanel');
+  if (!m) { svg.innerHTML = ''; status.textContent = 'Reads your minimap once a second once a game starts.'; panel.classList.remove('raid'); return; }
+  const c = 100 / m.grid, at = v => (v + .5) * c;
+  const dot = (cls, n) => ([y, x, k]) => `<circle class="${cls}" cx="${at(x).toFixed(1)}" cy="${at(y).toFixed(1)}" r="${Math.min(3.2, .9 + Math.sqrt(k) * .32).toFixed(2)}"/>`;
+  let grid = '';
+  for (let i = 1; i < 4; i++) grid += `<line x1="${i * 25}" y1="0" x2="${i * 25}" y2="100"/><line x1="0" y1="${i * 25}" x2="100" y2="${i * 25}"/>`;
+  svg.innerHTML = `<g class="grid">${grid}</g>`
+    + (m.home ? `<circle class="home" cx="${at(m.home[1])}" cy="${at(m.home[0])}" r="${(m.radius * c).toFixed(1)}"/>` : '')
+    + (m.me || []).map(dot('me')).join('') + (m.ally || []).map(dot('al')).join('') + (m.enemy || []).map(dot('en')).join('');
+  panel.classList.toggle('raid', !!m.raid);
+  const n = (m.enemy || []).reduce((a, e) => a + e[2], 0);
+  status.innerHTML = m.raid ? '<b class="bad">Enemy units near your base</b>' : !m.home ? 'Finding your base…'
+    : n ? `Watching. Some enemy on the map, none near your base.` : 'Watching. No enemy in sight.';
+  const key = (m.alerts || []).join('|');
+  if (key && key !== mwLastKey) {
+    const clock = T.hud && T.hud.clock || '';
+    for (const a of m.alerts) if (!mwLog.length || mwLog[0].text !== a) mwLog.unshift({clock, text: a});
+    mwLog.splice(6);
+  }
+  mwLastKey = key;
+  document.getElementById('mwLog').innerHTML = mwLog.map(e => `<li class="warn"><span style="color:var(--muted);margin-right:10px">${esc(e.clock)}</span>${esc(e.text)}</li>`).join('');
+}
+function voiceMap(m){
+  if (!m) return;
+  for (const a of m.alerts || []) {
+    const k = 'map:' + a.slice(0, 20), now = Date.now(), cd = /near your base$/.test(a) ? 40 : 120;
+    if (vLast[k] && now - vLast[k] < cd * 1000) continue;
+    vLast[k] = now;
+    vPlay({text: a.replace(/:.*$/, '')});
+  }
+}
+document.querySelectorAll('[data-shot]').forEach(b => b.addEventListener('click', () => {
+  const note = document.getElementById('shotNote');
+  if (!inApp || core.demo) { note.textContent = 'Screenshots need the Python part running on the PC with the game.'; return; }
+  note.textContent = 'Saving…';
+  window.app.send({cmd: 'save_screen', label: b.dataset.shot});
+}));
+const mapWatchSw = document.getElementById('mapWatch');
+mapWatchSw.addEventListener('change', () => inApp && window.app.setSettings({mapWatch: mapWatchSw.checked}));
+if (!inApp) {             // browser preview: a raid in progress
+  const me = [[26, 4, 30], [27, 5, 22], [25, 5, 8], [27, 3, 6]], en = [[23, 8, 14], [24, 7, 9], [22, 9, 6], [9, 20, 4], [8, 21, 3]];
+  T.hud = T.hud || {clock: '9:40'};
+  renderMap({grid: 32, home: [26, 4], radius: 5.5, me, ally: [[6, 27, 20], [5, 26, 9]], enemy: en, raid: true,
+    alerts: ['Enemy units near your base']});
+}
+
 // ── Overlay settings
 const stripPos = document.getElementById('stripPos'), panelMode = document.getElementById('panelMode'), opIn = document.getElementById('op');
 const saveOverlay = () => inApp && window.app.setSettings({overlay: {strip: stripPos.value, panel: panelMode.value, opacity: +opIn.value}});
@@ -1467,7 +1574,7 @@ function renderGame(g){
         : `<li class="empty">${g.build ? 'None: you kept up with the build.' : 'No build was followed this game.'}</li>`}</ul></div>
       <div class="panel"><h3 class="ph3">Timeline</h3><ul class="lines tl">${(g.events || []).length ? g.events.map(e => {
           const a = /(Feudal|Castle|Imperial)/.exec(e.text), n = a ? {Feudal: 2, Castle: 3, Imperial: 4}[a[1]] : 0;
-          return `<li class="${e.kind === 'enemy_age' ? 'warn' : ''}"><span class="t">${Math.floor(e.t / 60)}:${String(e.t % 60).padStart(2, '0')}</span>${n ? GameIcons.age(n, 18) : '<span class="dotx"></span>'}<span>${esc(e.text)}</span></li>`;
+          return `<li class="${['enemy_age', 'raid', 'forward'].includes(e.kind) ? 'warn' : ''}"><span class="t">${Math.floor(e.t / 60)}:${String(e.t % 60).padStart(2, '0')}</span>${n ? GameIcons.age(n, 18) : '<span class="dotx"></span>'}<span>${esc(e.text)}</span></li>`;
         }).join('') : '<li class="empty">Nothing recorded.</li>'}</ul></div>
     </div>`;
   drawChart(g);
@@ -2053,6 +2160,7 @@ document.getElementById('setupDone').addEventListener('click', async () => {
   if (s.overlay) { stripPos.value = s.overlay.strip || 'top'; panelMode.value = s.overlay.panel || 'on'; opIn.value = s.overlay.opacity || 88; }
   if (s.voice) { Object.assign(voice, s.voice); vOn.checked = !!voice.on; vSteps.checked = voice.steps !== false; vVol.value = voice.volume || 80; }
   if (s.auto === false) autoPick.checked = false;
+  if (s.mapWatch === false) document.getElementById('mapWatch').checked = false;
   if (s.build && s.build.civ) civSel.value = s.build.civ;
   if (!s.setupDone) { await loadDisplays(); setup.hidden = false; setupStep(1); document.getElementById('setupPid').focus(); }
 })();
