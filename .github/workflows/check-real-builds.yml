@@ -1,0 +1,21 @@
+# Plays the top aoe4guides builds for every civ through the coach (tools/check_real_builds.py).
+# Runs after coach changes, every Monday (builds change with patches), or by hand.
+name: Check coach on real builds
+
+on:
+  push:
+    branches: [main]
+    paths: ["coach.py", "buildorder.py", "tools/check_real_builds.py"]
+  schedule:
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/check_real_builds.py --per-civ 4 --json real_builds_report.json
