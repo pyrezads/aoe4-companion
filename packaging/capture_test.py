@@ -51,11 +51,12 @@ Image.open("calib/s07.png").convert("RGB").resize((W, H), Image.LANCZOS).save(im
 mon = list_monitors()[0]
 note(f"runner screen {mon['width']}x{mon['height']}")
 
-# The stand-in game: a borderless Tk window, which (unlike WinForms) may be bigger than
-# the runner's small screen, so it can be a real 1920x1080.
+# The stand-in game: a Tk window, which (unlike WinForms) may be bigger than the runner's
+# small screen, so its picture can be a real 1920x1080. It has a title bar and borders,
+# like the game in windowed mode, so cutting those off is tested too.
 game = subprocess.Popen([sys.executable, "-c", f"""
 import tkinter as tk
-r = tk.Tk(); r.title('Age of Empires IV'); r.overrideredirect(True); r.wm_maxsize(4000, 4000)
+r = tk.Tk(); r.title('Age of Empires IV'); r.wm_maxsize(4000, 4000)   # normal window: title bar + borders, like windowed mode
 r.geometry('{W}x{H}+0+0')
 img = tk.PhotoImage(file=r'{img}')
 tk.Label(r, image=img, borderwidth=0).pack()
