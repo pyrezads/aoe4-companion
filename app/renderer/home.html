@@ -139,6 +139,58 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .platform-darwin .side{padding-top:46px}
 .in-app button,.in-app input,.in-app select,.in-app label{-webkit-app-region:no-drag}
 
+/* tool pages */
+.bigclock{font:600 40px/1 var(--display)}
+.res-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+.rcard{background:var(--card);border:1px solid var(--edge);border-radius:22px;padding:18px 20px}
+.rcard .n{font-weight:700;font-size:14px}
+.rcard .v{font:600 46px/1.05 var(--display);margin:6px 0 2px}
+.rcard .m{color:var(--muted);font-size:13px}
+.rcard .want{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;background:var(--card-2);color:var(--muted)}
+.rcard .want.short{background:var(--orange);color:#111}
+.rcard .want.ok{background:var(--green);color:#111}
+.an-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.stat .lab{color:var(--muted);font-size:13px;font-weight:600;display:block}
+.stat b{display:block;font:600 32px/1.2 var(--display);margin:2px 0 8px}
+.stat .hint{color:var(--muted);font-size:13px}
+.two-even{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ph3{font:600 18px var(--display);margin:0 0 12px}
+.lines{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.lines li{font-size:14.5px;line-height:1.45}
+.lines li.empty{color:var(--muted)}
+.lines li.warn{color:var(--pink);font-weight:600}
+.lines li.info{color:var(--yellow)}
+.lines li.good{color:var(--green);font-weight:600}
+.lines li.bad{color:var(--pink);font-weight:600}
+.lines li.even{color:var(--yellow);font-weight:600}
+.lines li.head{font-weight:700}
+.lines li.muted{color:var(--muted)}
+.advice{margin-top:10px}
+.teams{display:grid;gap:10px}
+.team{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.team .who{width:70px;color:var(--muted);font-size:13px;font-weight:600}
+.civ{display:inline-flex;align-items:center;gap:7px;background:var(--base);border:1px solid var(--edge);border-radius:999px;padding:4px 12px 4px 6px;font-size:13.5px;font-weight:600}
+.civ .age{font:700 11px var(--display);background:var(--card-2);border-radius:999px;padding:2px 7px;color:var(--teal-hi)}
+.team.enemies .civ .age{color:var(--pink)}
+.foot-note{color:var(--dim);font-size:12.5px;margin-top:14px}
+.scouts{display:grid;gap:10px}
+.scout{background:var(--base);border:1px solid var(--edge);border-radius:16px;padding:13px 15px}
+.scout.threat{border-color:var(--pink)}
+.scout .badge{display:inline-block;font-size:11.5px;font-weight:700;color:#111;background:var(--pink);border-radius:999px;padding:1px 9px;margin-bottom:6px}
+.scout .l{font-size:14.5px}
+.scout .flags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.flag{font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--card-2);color:var(--muted)}
+.flag.hot{background:var(--pink);color:#111}
+.flag.cold{background:var(--sky);color:#111}
+.flag.up{background:var(--yellow);color:#111}
+.team-sum{margin:0 0 12px;font-weight:700;color:var(--teal-hi)}
+.team-sum[hidden]{display:none}
+.pin-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--edge)}
+.pin-row .hint{color:var(--muted);font-size:13px}
+.pin-row .btn{white-space:nowrap;flex:none}
+.panel .hint{color:var(--muted);font-size:13px}
+@media (max-width:1060px){.res-grid{grid-template-columns:repeat(2,1fr)}.an-row,.two-even{grid-template-columns:1fr}}
+
 /* update banner */
 .update{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;padding:12px 14px 12px 18px;border-radius:16px;background:var(--card);border:1px solid var(--teal);font-size:14px}
 .update[hidden]{display:none}
@@ -216,9 +268,9 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
     <div class="navlist">
       <button class="nav" data-go="home" aria-current="page"><svg class="i"><use href="#i-home"/></svg>Home</button>
       <button class="nav" data-go="coach"><svg class="i"><use href="#i-scroll"/></svg>Build coach</button>
-      <button class="nav" data-tool="analyst" disabled title="Coming to the app; in the old dashboard for now"><svg class="i"><use href="#i-eye"/></svg>Live analyst</button>
-      <button class="nav" data-tool="scout" disabled title="Coming to the app; in the old dashboard for now"><svg class="i"><use href="#i-glass"/></svg>Opponent scout</button>
-      <button class="nav" data-tool="army" disabled title="Coming to the app; in the old dashboard for now"><svg class="i"><use href="#i-swords"/></svg>Army and counters</button>
+      <button class="nav" data-go="analyst"><svg class="i"><use href="#i-eye"/></svg>Live analyst</button>
+      <button class="nav" data-go="scout"><svg class="i"><use href="#i-glass"/></svg>Opponent scout</button>
+      <button class="nav" data-go="army"><svg class="i"><use href="#i-swords"/></svg>Army and counters</button>
     </div>
     <p class="grp">Setup</p>
     <div class="navlist">
@@ -283,7 +335,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 
       <div class="section-h">
         <h2>Tools</h2>
-        <p>Live analyst, scout and army run in the old dashboard (start.bat) until they move in here.</p>
+        <p>Everything reads your game screen only. Nothing is sent to the game.</p>
       </div>
       <div class="tools">
         <div class="tool" style="--tone:var(--teal-hi)">
@@ -292,23 +344,23 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
           <span></span>
           <button class="btn quiet open" id="openCoach">Open</button>
         </div>
-        <div class="tool" style="--tone:var(--green)" aria-disabled="true">
+        <div class="tool" style="--tone:var(--green)">
           <div class="ic"><svg class="i"><use href="#i-eye"/></svg></div>
-          <div><div class="n">Live analyst <span class="tag">Next</span></div><div class="d">Economy, idle villagers, housing and resource alerts every second.</div></div>
+          <div><div class="n">Live analyst</div><div class="d">Economy, idle villagers, housing and resource alerts every second.</div></div>
           <span></span>
-          <button class="btn quiet open" disabled title="In the old dashboard (start.bat) for now">Soon</button>
+          <button class="btn quiet open" data-go="analyst">Open</button>
         </div>
-        <div class="tool" style="--tone:var(--pink)" aria-disabled="true">
+        <div class="tool" style="--tone:var(--pink)">
           <div class="ic"><svg class="i"><use href="#i-glass"/></svg></div>
-          <div><div class="n">Opponent scout <span class="tag">Next</span></div><div class="d">Ranked opponents' rating, civ record, streaks and your head-to-head.</div></div>
+          <div><div class="n">Opponent scout</div><div class="d">Ranked opponents' rating, civ record, streaks and your head-to-head.</div></div>
           <span></span>
-          <button class="btn quiet open" disabled title="In the old dashboard (start.bat) for now">Soon</button>
+          <button class="btn quiet open" data-go="scout">Open</button>
         </div>
-        <div class="tool" style="--tone:var(--yellow)" aria-disabled="true">
+        <div class="tool" style="--tone:var(--yellow)">
           <div class="ic"><svg class="i"><use href="#i-swords"/></svg></div>
-          <div><div class="n">Army and counters <span class="tag">Next</span></div><div class="d">Your army by unit type, what beats the enemy's, and upgrades worth buying.</div></div>
+          <div><div class="n">Army and counters</div><div class="d">Your army by unit type, what beats the enemy's, and upgrades worth buying.</div></div>
           <span></span>
-          <button class="btn quiet open" disabled title="In the old dashboard (start.bat) for now">Soon</button>
+          <button class="btn quiet open" data-go="army">Open</button>
         </div>
         <div class="tool" style="--tone:var(--lavender)" aria-disabled="true">
           <div class="ic"><svg class="i"><use href="#i-hourglass"/></svg></div>
@@ -398,6 +450,50 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
       </div>
     </section>
 
+    <!-- ════════ LIVE ANALYST ════════ -->
+    <section class="view" id="v-analyst" aria-label="Live analyst">
+      <div class="top">
+        <div><h1>Live analyst</h1><p class="sub">Your economy, read off the HUD every second.</p></div>
+        <div class="bigclock" id="anClock">--:--</div>
+      </div>
+      <div class="res-grid" id="anRes"></div>
+      <div class="an-row">
+        <div class="panel stat"><span class="lab">Population</span><b id="anPop">–</b><div class="spectrum" id="anPopBar" style="--p:0"></div></div>
+        <div class="panel stat"><span class="lab">Idle villagers</span><b id="anIdle">–</b><span class="hint" id="anIdleHint"></span></div>
+        <div class="panel stat"><span class="lab">Villagers</span><b id="anVils">–</b><span class="hint">working or idle (builders aren't on the HUD)</span></div>
+      </div>
+      <div class="two-even">
+        <div class="panel"><h3 class="ph3">Alerts</h3><ul class="lines" id="anAlerts"></ul></div>
+        <div class="panel"><h3 class="ph3">Teams</h3><div id="anTeams" class="teams"></div></div>
+      </div>
+      <p class="foot-note" id="anRead"></p>
+    </section>
+
+    <!-- ════════ OPPONENT SCOUT ════════ -->
+    <section class="view" id="v-scout" aria-label="Opponent scout">
+      <div class="top">
+        <div><h1>Opponent scout</h1><p class="sub">Ranked opponents from aoe4world.com, 20–40 seconds after the game starts.</p></div>
+      </div>
+      <div class="panel" style="margin-bottom:18px"><h3 class="ph3" id="scMatchTitle">Match</h3><ul class="lines" id="scMatch"></ul></div>
+      <div class="panel"><h3 class="ph3">Opponents</h3><p class="team-sum" id="scSum" hidden></p><div id="scEnemies" class="scouts"></div>
+        <h3 class="ph3" style="margin-top:22px">Allies</h3><div id="scAllies" class="scouts"></div></div>
+    </section>
+
+    <!-- ════════ ARMY AND COUNTERS ════════ -->
+    <section class="view" id="v-army" aria-label="Army and counters">
+      <div class="top">
+        <div><h1>Army and counters</h1><p class="sub">Press your "select all military" key (Ctrl+C) in game to read your army.</p></div>
+      </div>
+      <div class="two-even">
+        <div class="panel"><h3 class="ph3">Your army</h3><ul class="lines" id="arArmy"></ul></div>
+        <div class="panel"><h3 class="ph3">Enemy and counters</h3><ul class="lines" id="arEnemy"></ul><ul class="lines advice" id="arAdvice"></ul>
+          <div class="pin-row"><span class="hint">Click an enemy unit to log it. For units your civ also has, select them and press F9.</span>
+            <button class="btn quiet" id="pinBtn">Mark selected as enemy</button></div></div>
+      </div>
+      <div class="panel" style="margin-top:18px"><h3 class="ph3">Upgrades for your army</h3><ul class="lines" id="arUps"></ul>
+        <p class="hint" style="margin:8px 0 0">It can't see what you've researched, so skip the ones you already have.</p></div>
+    </section>
+
     <!-- ════════ SETTINGS ════════ -->
     <section class="view" id="v-settings" aria-label="Settings">
       <div class="top"><div><h1>Settings</h1><p class="sub">Most of this is detected for you. Change it only if something reads wrong.</p></div></div>
@@ -453,7 +549,7 @@ document.querySelectorAll('.pips .p').forEach(el => {
   el.innerHTML = n ? Array.from({length:n}, (_, i) => `<i class="${i < have ? 'f' : ''}"></i>`).join('') : '<span style="color:var(--dim)">none</span>';
 });
 
-const views = {home:'v-home', coach:'v-coach', settings:'v-settings'};
+const views = {home:'v-home', coach:'v-coach', analyst:'v-analyst', scout:'v-scout', army:'v-army', settings:'v-settings'};
 function go(name){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === views[name]));
   document.querySelectorAll('.nav').forEach(n => n.dataset.go === name ? n.setAttribute('aria-current','page') : n.removeAttribute('aria-current'));
@@ -657,6 +753,7 @@ if (inApp) {
     if (!s.running) note(s.error ? "The Python part isn't running: " + s.error : '');
   });
   window.app.onMessage((type, data) => {
+    tools(type, data);
     if (type === 'status') { status = data || {}; renderStatus(); renderAccount(); }
     else if (type === 'coach' && data) renderMini(data);
     else if (type === 'build') showPicked(data);
@@ -692,6 +789,103 @@ function renderMini(c){
   });
   document.getElementById('miniBar').style.setProperty('--p', c.age ? c.age.progress : 1);
   document.getElementById('miniAge').textContent = c.age ? `${c.age.target} at ${c.age.at}` : 'Build complete';
+}
+
+// ── Tool pages: live analyst, opponent scout, army and counters
+const T = {hud: null, coach: null, teams: null, match: null, scout: null, army: null, advice: null, status: null};
+const RESN = {food:'Food', wood:'Wood', gold:'Gold', stone:'Stone'}, AGE = {1:'I', 2:'II', 3:'III', 4:'IV'};
+const li = (rows, empty) => rows && rows.length
+  ? rows.map(([t, c]) => `<li class="${c || ''}">${esc(t)}</li>`).join('')
+  : `<li class="empty">${esc(empty)}</li>`;
+function tools(type, data){
+  if (!(type in T)) return;
+  T[type] = data;
+  if (type === 'hud' || type === 'coach' || type === 'status' || type === 'teams') renderAnalyst();
+  if (type === 'match' || type === 'scout' || type === 'status') renderScout();
+  if (type === 'army' || type === 'advice') renderArmy();
+}
+function renderAnalyst(){
+  const s = T.hud, c = T.coach, live = s && s.live;
+  document.getElementById('anClock').textContent = live ? s.clock : '--:--';
+  document.getElementById('anRes').innerHTML = ['food','wood','gold','stone'].map(r => {
+    const v = live ? s.villagers[r] : null, inc = live ? s.income_est[r] : null, bank = live ? s.bank[r] : null;
+    const want = c && c.want ? c.want[r] : null, short = c && c.short ? c.short[r] : false;
+    return `<div class="rcard"><div class="n" style="color:var(--${r})">${RESN[r]}</div>
+      <div class="v">${v ?? '–'}</div>
+      <div class="m">${[inc ? '~' + Math.round(inc) + ' a minute' : null, bank != null && bank < 50000 ? bank + ' banked' : null].filter(Boolean).join(' · ') || '&nbsp;'}</div>
+      ${want != null ? `<span class="want ${short ? 'short' : v === want ? 'ok' : ''}">build wants ${want}</span>` : ''}</div>`;
+  }).join('');
+  const pop = live && s.pop != null ? s.pop : null, cap = live ? s.pop_cap : null;
+  document.getElementById('anPop').textContent = pop != null ? `${pop} / ${cap}` : '–';
+  document.getElementById('anPopBar').style.setProperty('--p', pop != null && cap ? Math.min(1, pop / cap) : 0);
+  const idle = live ? s.idle : null;
+  const idleEl = document.getElementById('anIdle');
+  idleEl.textContent = idle ?? '–';
+  idleEl.style.color = idle >= 2 ? 'var(--pink)' : idle ? 'var(--yellow)' : idle === 0 ? 'var(--green)' : '';
+  document.getElementById('anIdleHint').textContent = idle && c && c.idle_to && c.idle_to.length ? 'Send to ' + [...new Set(c.idle_to)].join(' and ') : '';
+  document.getElementById('anVils').textContent = live && s.villagers_total != null ? s.villagers_total : '–';
+  document.getElementById('anAlerts').innerHTML = live ? li((s.alerts || []).map(a => [a.text, a.level]), 'All good.')
+    : li([], 'Waiting for the game. Start a match in Borderless Windowed.');
+  const t = T.teams;
+  const civ = p => `<span class="civ"><span class="age">${AGE[p.age] || '?'}</span>${esc(p.civ ? civName(p.civ) : 'Unknown')}</span>`;
+  document.getElementById('anTeams').innerHTML = t && t.me ? `
+    <div class="team"><span class="who">You</span>${civ(t.me)}</div>
+    ${t.allies.length ? `<div class="team"><span class="who">Allies</span>${t.allies.map(civ).join('')}</div>` : ''}
+    <div class="team enemies"><span class="who">Enemies</span>${t.enemies.map(civ).join('') || '<span class="hint">not read yet</span>'}</div>`
+    : '<p class="hint" style="margin:0;color:var(--muted)">Read from the player list at the top right once a game starts.</p>';
+  const st = T.status;
+  document.getElementById('anRead').textContent = st && st.read_quality != null
+    ? `Reading ${Math.round(st.read_quality * 100)}% of the HUD` + (st.missed && st.missed.length && st.live ? ` (missed: ${st.missed.slice(0, 3).join(', ')})` : '') : '';
+}
+function renderScout(){
+  const m = T.match && T.match.lines, sc = T.scout, st = T.status;
+  document.getElementById('scMatch').innerHTML = m && m.length
+    ? li(m.map((t, i) => [t, i ? '' : 'head']))
+    : li([], (st && st.match_note) || 'Waiting for a game.');
+  const sum = document.getElementById('scSum');
+  sum.hidden = !(sc && sc.summary && sc.summary.length);
+  if (!sum.hidden) sum.textContent = sc.summary[0];
+  const card = (line, i, threats) => {
+    const mm = line.match(/^(.*?)\s+\[(.*)\]$/), text = (mm ? mm[1] : line).replace(/^Biggest threat: /, '');
+    const flags = mm ? mm[2].split(', ') : [];
+    const fc = f => /hot|strong/.test(f) ? 'hot' : /cold/.test(f) ? 'cold' : /climbing/.test(f) ? 'up' : '';
+    return `<div class="scout ${threats && i === 0 && line.startsWith('Biggest') ? 'threat' : ''}">
+      ${threats && line.startsWith('Biggest') ? '<span class="badge">Biggest threat</span>' : ''}
+      <div class="l">${esc(text)}</div>${flags.length ? `<div class="flags">${flags.map(f => `<span class="flag ${fc(f)}">${esc(f)}</span>`).join('')}</div>` : ''}</div>`;
+  };
+  document.getElementById('scEnemies').innerHTML = sc && sc.enemies && sc.enemies.length
+    ? sc.enemies.map((l, i) => card(l, i, true)).join('')
+    : `<p style="color:var(--muted);margin:0">${st && /profile in Settings/.test(st.match_note || '') ? 'Add your aoe4world profile in Settings to scout ranked opponents.' : 'Appears 20–40 s after a ranked game starts, once aoe4world shows it.'}</p>`;
+  document.getElementById('scAllies').innerHTML = sc && sc.allies && sc.allies.length
+    ? sc.allies.map((l, i) => card(l, i, false)).join('') : '<p style="color:var(--muted);margin:0">None in this game.</p>';
+}
+function renderArmy(){
+  const a = T.army && T.army.lines, ad = T.advice || {};
+  document.getElementById('arArmy').innerHTML = a && a.length
+    ? li(a.map((t, i) => [t, i < 2 ? (i ? '' : 'head') : t.startsWith('Lost') ? 'bad' : 'muted']))
+    : li([], 'Press Ctrl+C (select all military) in game to read your army.');
+  document.getElementById('arEnemy').innerHTML = li((ad.enemy || []).map(t => [t, 'head']), 'Waiting for the player list or an enemy unit.');
+  document.getElementById('arAdvice').innerHTML = (ad.advice || []).map(([k, t]) => `<li class="${k}">${esc(t)}</li>`).join('');
+  document.getElementById('arUps').innerHTML = li((ad.upgrades || []).map(t => [t]), 'Shown after your first Ctrl+C.');
+}
+document.getElementById('pinBtn').addEventListener('click', () => inApp && window.app.send({cmd: 'pin'}));
+
+if (!inApp) {      // browser preview: a sample game so the pages aren't empty
+  tools('teams', {me: {civ: 'zhu_xis_legacy', age: 2}, allies: [{civ: 'english', age: 2}], enemies: [{civ: 'french', age: 2}, {civ: 'mongols', age: 3}]});
+  tools('coach', {want: {food: 9, wood: 6, gold: 3, stone: 0}, short: {food: false, wood: true, gold: false, stone: false}, idle_to: ['wood']});
+  tools('status', {live: true, read_quality: .97, missed: [], match_note: ''});
+  tools('hud', {live: true, clock: '6:12', pop: 31, pop_cap: 40, idle: 1, villagers_total: 26, villagers: {food: 9, wood: 4, gold: 3, stone: 0},
+    income_est: {food: 333, wood: 124, gold: 111, stone: 0}, bank: {food: 140, wood: 85, gold: 460, stone: 50},
+    alerts: [{level: 'warn', text: 'Floating gold 460: spend it'}, {level: 'info', text: '1 idle villager'}]});
+  tools('match', {lines: ['RM 2V2 on Dry Arabia · your bracket 1000-1199', "Zhu Xi's Legacy: 51.8% in this mode (6 of 22)", 'Strongest here: Mongols 55%, French 54%, Rus 53%', 'Games on this map usually last ~24 min']});
+  tools('scout', {summary: ["Team rating: yours 1127 vs theirs 1195 (-68) — they're favoured"],
+    enemies: ['Biggest threat: Hericium (Templar) · 1329 · Diamond 2 · 56% of 135 · Templar 182 games, 58% (main) · last 9: 8-1 (+105) · vs you 1-2  [strong on this civ, hot streak, climbing fast (was Plat 1)]',
+              'Arkon (French) · 1061 · Plat 3 · 49% of 210 · French 40 games, 47% · last 10: 4-6 (-31)'],
+    allies: ['Wally (English) · 1090 · Plat 3 · 52% of 301 · English 220 games, 53% (main)']});
+  tools('army', {lines: ['6:40  ·  34 military  ·  groups: 18, 12, 4', '18 Spearman · 12 Zhuge Nu · 4 Horseman', '+9 since 5:10 in 1:30']});
+  tools('advice', {enemy: ['Seen: Royal Knight, Arbalétrier'],
+    advice: [['even', 'Your army vs an equal-size army of those: close fight, slight edge to you'], ['info', 'Best counters for you: Spearman, Crossbowman'], ['info', 'Add ~10 Spearman to be safe. Two buildings non-stop need about 6 on food, 3 on wood.']],
+    upgrades: ['Bloomery (Blacksmith, Feudal) · helps 30 units', 'Fitted Leatherwork (Blacksmith, Feudal) · helps 12 units']});
 }
 
 // ── Settings: reading check and profile

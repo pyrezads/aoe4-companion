@@ -24,6 +24,7 @@ In:
     {"cmd": "coach_skip", "n": 1}         n = -1 goes back a step
     {"cmd": "set_monitor", "width": 2560, "height": 1440, "x": 0, "y": 0}
     {"cmd": "reading_check"}
+    {"cmd": "pin"}                        same as F9: the selected units are enemy units
     {"cmd": "quit"}
 """
 
@@ -211,6 +212,12 @@ class Commands:
         x, y = msg.get("x", 0), msg.get("y", 0)
         best = min(same, key=lambda m: abs(m["left"] - x) + abs(m["top"] - y))
         self.state.set(game_monitor=best)
+
+    def do_pin(self, msg):
+        """Same as F9: treat the units selected in game as enemy units."""
+        req = self.state.get("pin_request")
+        if req:
+            req.set()
 
     def do_reading_check(self, msg):
         self.state.set(check_request=True)          # the reader thread answers on its next frame

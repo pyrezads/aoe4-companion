@@ -45,7 +45,7 @@ Threads: reader_loop (screen), match_loop (network), Tk main thread (UI). They o
 electron/main.js   windows, settings (userData/settings.json), monitors, routes core messages
 electron/core.js   starts `python main.py --core --config userData/config.json`, JSON lines both ways
 electron/preload.js  what the pages may call: window.app (launcher), window.coach (overlays)
-app/renderer/      home.html (launcher, build picker, settings, first-time setup), overlay.html, theme.css
+app/renderer/      home.html (launcher, build picker, live analyst, scout, army, settings, setup), overlay.html, theme.css
 core.py            core mode: no window; messages and commands are documented at the top
 ```
 - The app starts the core itself. If Python is missing or crashes, the launcher says why and the
@@ -56,6 +56,15 @@ core.py            core mode: no window; messages and commands are documented at
 - Test without the game: `AOE4_CORE_ARGS="--offline --replay calib/s07.png" npm start`
   (or `python main.py --core --offline --replay calib/s07.png` to see the raw messages).
 - `python test_core.py` drives the core like the app does, replaying calib screenshots.
+- The old Tkinter dashboard (`python main.py`, start.bat) still works and shows the same data;
+  it goes once the app has been through real games.
+
+## Installer and updates
+- GitHub Actions (`.github/workflows/build-windows.yml`) packs the core with PyInstaller
+  (`packaging/aoe4-core.spec`), checks the packed copy reads a screenshot (`packaging/smoke_core.py`),
+  then builds `AoE4-Coach-Setup-x.y.z.exe` with the core in `resources/core`.
+- Release: bump `version` in package.json, push, then `git tag vX.Y.Z && git push --tags`.
+  Installed apps find it on GitHub Releases, download it and install on restart.
 
 ## Known limits / ideas
 - mss uses GDI BitBlt: fine in Borderless Windowed, can be black in exclusive fullscreen.
