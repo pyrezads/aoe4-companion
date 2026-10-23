@@ -43,7 +43,12 @@ require(path.join(ROOT, 'electron', 'main.js'));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const find = (s) => BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().includes(s));
 let ok = true;
-const check = (cond, msg) => { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!cond) ok = false; };
+const GH = process.env.GITHUB_ACTIONS === 'true';
+const check = (cond, msg) => {
+  console.log((cond ? 'PASS ' : 'FAIL ') + msg);
+  if (GH) process.stdout.write(`::${cond ? 'notice' : 'warning'} title=App test (${process.platform})::${cond ? 'PASS' : 'FAIL'} ${msg}\n`);
+  if (!cond) ok = false;
+};
 async function until(fn, ms = 10000) {
   const end = Date.now() + ms;
   while (Date.now() < end) { try { const v = await fn(); if (v) return v; } catch {} await wait(250); }
