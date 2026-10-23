@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('app', {
   version: () => ipcRenderer.invoke('app:version'),
   onUpdate: (cb) => ipcRenderer.on('app:update', (_e, u) => cb(u)),
   installUpdate: () => ipcRenderer.invoke('app:install-update'),
+  openLogs: () => ipcRenderer.invoke('app:open-logs'),
   // settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),

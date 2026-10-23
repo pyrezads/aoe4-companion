@@ -9,7 +9,8 @@ const fs = require('fs');
 const ALLOWED = new Set(['list_builds', 'use_build', 'auto_build', 'coach_skip', 'set_monitor', 'reading_check', 'pin']);
 
 class Core {
-  constructor({ root, configPath, onMessage, onState }) {
+  constructor({ root, configPath, logPath, onMessage, onState }) {
+    this.logPath = logPath;           // the core's log, so problems on someone's PC can be sent over
     this.root = root;
     this.configPath = configPath;
     this.onMessage = onMessage;
@@ -57,6 +58,10 @@ class Core {
     }
     this.proc = proc;
     this.ready = false;
+    if (this.logPath) {                 // keep the log small: start fresh when it gets big
+      try { if (fs.statSync(this.logPath).size > 2e6) fs.unlinkSync(this.logPath); } catch {}
+      this.addLog(`--- starting ${cmd} ${args.join(' ')}`);
+    }
     let started = false;
 
     proc.on('error', (e) => {                     // e.g. ENOENT: this python doesn't exist
@@ -88,6 +93,9 @@ class Core {
 
   addLog(line) {
     console.log('[core]', line);
+    if (this.logPath) {
+      try { fs.appendFileSync(this.logPath, `${new Date().toISOString().slice(11, 19)} ${line}\n`); } catch {}
+    }
     this.log.push(line);
     if (this.log.length > 40) this.log.shift();
   }

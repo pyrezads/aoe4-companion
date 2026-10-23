@@ -110,6 +110,7 @@ function startCore() {
   core = new Core({
     root: ROOT,
     configPath: writeCoreConfig(),
+    logPath: path.join(userDir(), 'core.log'),
     onMessage: (type, data) => {
       if (type === 'ready') {
         tellCoreMonitor();
@@ -211,6 +212,7 @@ ipcMain.handle('coach:toggle', () => {
 });
 ipcMain.handle('core:state', () => coreState());
 ipcMain.handle('app:version', () => app.getVersion());
+ipcMain.handle('app:open-logs', () => require('electron').shell.openPath(userDir()));
 ipcMain.handle('core:send', (_e, cmd) => {
   if (cmd?.cmd === 'use_build') {             // remember it for next time
     settings.build = { id: cmd.id || null, url: cmd.url || null, civ: cmd.civ || null };

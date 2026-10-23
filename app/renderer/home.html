@@ -531,6 +531,10 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
           <div class="field" style="margin:0"><label for="pid">aoe4world.com profile</label><div style="display:flex;gap:10px"><input class="inp" id="pid" placeholder="https://aoe4world.com/players/…"><button class="btn quiet" id="pidSave">Save</button></div><span class="hint" id="pidHint">Paste your profile link or your player ID.</span></div>
         </div>
         <div class="set">
+          <div><h3>Help</h3><p class="why">If something doesn't work, send core.log from this folder.</p></div>
+          <div><button class="btn quiet" id="openLogs">Open the log folder</button></div>
+        </div>
+        <div class="set">
           <div><h3>Hotkeys</h3><p class="why">The game still receives these keys. The companion only listens.</p></div>
           <div class="keys">
             <div class="key">Read my army (your "select all military" key)<kbd>Ctrl + C</kbd></div>
@@ -868,6 +872,7 @@ function renderArmy(){
   document.getElementById('arAdvice').innerHTML = (ad.advice || []).map(([k, t]) => `<li class="${k}">${esc(t)}</li>`).join('');
   document.getElementById('arUps').innerHTML = li((ad.upgrades || []).map(t => [t]), 'Shown after your first Ctrl+C.');
 }
+document.getElementById('openLogs').addEventListener('click', () => inApp && window.app.openLogs());
 document.getElementById('pinBtn').addEventListener('click', () => inApp && window.app.send({cmd: 'pin'}));
 
 if (!inApp) {      // browser preview: a sample game so the pages aren't empty
