@@ -1383,9 +1383,25 @@ function speakable(t){
     .replace(/\b(\d+) villager\b/g, (m, n) => n === '1' ? '1 villager' : n + ' villagers')
     .replace(/\s+/g, ' ').replace(/(\. )+/g, '. ').trim().slice(0, 220);
 }
+
+// ── Game start: what to do with your first villagers, said once at the start of each game
+const clockSecs = c => { const m = String(c || '').match(/(\d+):(\d{2})$/); return m ? +m[1] * 60 + +m[2] : null; };
+const RES_WORD = {food: 'food', wood: 'wood', gold: 'gold', stone: 'stone'};
+function startLine(c){
+  const t = c.step && c.step.text ? c.step.text.trim().replace(/\.$/, '') : '';
+  const split = Object.entries(c.want || {}).filter(([, n]) => n > 0).map(([r, n]) => `${n} on ${RES_WORD[r]}`).join(', ');
+  return t || (split ? `Put ${split}` : 'Send them to food');
+}
 function voiceCoach(c){
   if (!c) return;
   const v = vState;
+  const secs = clockSecs(c.clock);
+  if (secs != null && v.lastSecs != null && secs + 30 < v.lastSecs) v.startSaid = false;      // a new game
+  if (secs != null) v.lastSecs = secs;
+  if (secs != null && secs <= 25 && !v.startSaid) {
+    v.startSaid = true;
+    vPlay({text: `Game on. Your first ${c.villagers} villagers: ${speakable(startLine(c))}.`});
+  }
   if (v.villagers != null && c.villagers > v.villagers) say('vil_' + (v.next || c.next.resource));   // the one that just came out goes where the coach said
   else if (v.next && c.next.resource !== v.next && c.villagers === v.villagers) say('vil_' + c.next.resource, 8);
   if (c.idle && c.idle > v.idle) say(c.idle === 1 ? 'idle_1' : c.idle === 2 ? 'idle_2' : 'idle_many', 20);
