@@ -1,0 +1,24 @@
+{
+ "voice": "bm_george",
+ "model": "Kokoro-82M (Apache-2.0)",
+ "phrases": {
+  "vil_food": "Villager to food.",
+  "vil_wood": "Villager to wood.",
+  "vil_gold": "Villager to gold.",
+  "vil_stone": "Villager to stone.",
+  "idle_1": "Idle villager.",
+  "idle_2": "Two idle villagers.",
+  "idle_many": "Idle villagers. Put them to work.",
+  "housed": "You're housed. Build a house.",
+  "floating": "Floating resources. Spend them.",
+  "pop_flat": "Keep making villagers.",
+  "age_2": "Time to age up to Feudal.",
+  "age_3": "Time to age up to Castle.",
+  "age_4": "Time to age up to Imperial.",
+  "enemy_2": "Enemy reached Feudal Age.",
+  "enemy_3": "Enemy reached Castle Age.",
+  "enemy_4": "Enemy reached Imperial Age.",
+  "build_done": "Build order complete. Keep villagers coming.",
+  "test": "Coach voice is on."
+ }
+}

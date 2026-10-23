@@ -40,4 +40,5 @@ if (process.argv.includes('--aoe4-splash')) {
 contextBridge.exposeInMainWorld('coach', {
   demo,
   onMessage: onMsg,
+  onSettings: (cb) => ipcRenderer.on('overlay:settings', (_e, s) => cb(s)),
 });

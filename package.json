@@ -53,9 +53,12 @@
         "repo": "aoe4-companion",
         "releaseType": "release"
       }
-    ]
+    ],
+    "npmRebuild": false
   },
   "dependencies": {
+    "electron-log": "5.4.4",
+    "electron-overlay-window": "4.1.0",
     "electron-updater": "6.8.10"
   }
 }

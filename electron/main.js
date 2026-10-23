@@ -11,6 +11,10 @@
 // with `npm run demo`, the overlay plays a simulated game instead.
 
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
+// The app's own log (userData/logs/main.log), next to the screen reader's core.log.
+const log = require('electron-log/main');
+log.initialize();
+Object.assign(console, log.functions);
 const path = require('path');
 const fs = require('fs');
 const { Core } = require('./core');
@@ -45,10 +49,14 @@ const latest = {};            // last message of each type from the core, for wi
 // ── settings (kept in the app's own folder, e.g. %APPDATA%/AoE4 Coach) ──
 const userDir = () => app.getPath('userData');
 const settingsPath = () => path.join(userDir(), 'settings.json');
-let settings = { setupDone: false, profileId: null, gameDisplayId: null, build: null, auto: true, followBy: 'villagers' };
+let settings = { setupDone: false, profileId: null, gameDisplayId: null, build: null, auto: true, followBy: 'villagers',
+  overlay: { strip: 'top', panel: 'on', opacity: 88 }, voice: { on: false, volume: 80, steps: true } };
 
 function loadSettings() {
-  try { settings = { ...settings, ...JSON.parse(fs.readFileSync(settingsPath(), 'utf8')) }; } catch {}
+  try {
+    const saved = JSON.parse(fs.readFileSync(settingsPath(), 'utf8'));
+    settings = { ...settings, ...saved, overlay: { ...settings.overlay, ...saved.overlay }, voice: { ...settings.voice, ...saved.voice } };
+  } catch {}
 }
 function saveSettings() {
   fs.mkdirSync(userDir(), { recursive: true });
@@ -120,6 +128,7 @@ function startCore() {
         else if (b?.id) core.send({ cmd: 'use_build', id: b.id, civ: b.civ });
       }
       if (!['builds', 'reading_check', 'error'].includes(type)) latest[type] = data;
+      if (type === 'status' && data?.game_window) ensurePinned(data.game_window);
       broadcast(type, data);
     },
     onState: (s) => { sendCoreState(); if (s?.error) startupStep(); },
@@ -254,31 +263,84 @@ function overlayWindow(opts, mode) {
   return w;
 }
 
-function openCoach() {
-  // Coach panel on the second monitor (or the right edge of the only one).
-  const cd = coachDisplay();
-  const wa = cd.workArea;
-  const w = 460, h = Math.min(760, wa.height - 48);
-  panel = overlayWindow({ x: wa.x + wa.width - w - 24, y: wa.y + 24, width: w, height: h,
-    alwaysOnTop: cd.id === gameDisplay().id }, 'panel');
-  panel.on('closed', () => { panel = null; closeCoach(); });
+// ── the strip pinned to the game window (Windows) ─────────────────────
+// electron-overlay-window keeps a transparent, click-through window exactly over
+// Age of Empires IV: it follows the game when it moves or resizes and hides when
+// you Alt-Tab away. The core reports the game window's exact title. The pinned
+// window lives for the whole session (the add-on can only attach once).
+let OverlayController = null, OVERLAY_OPTS = null, pinned = null, pinnedAttached = false;
+if (process.platform === 'win32') {
+  try { ({ OverlayController, OVERLAY_WINDOW_OPTS: OVERLAY_OPTS } = require('electron-overlay-window')); }
+  catch (e) { console.log('[overlay] pinning not available:', e.message); }
+}
+function ensurePinned(gameWindow) {
+  if (!OverlayController || pinned || !gameWindow?.title) return;
+  pinned = new BrowserWindow({ ...OVERLAY_OPTS, title: 'AoE4 Coach strip', webPreferences: webPreferences(coreState().demo) });
+  pinned.setIgnoreMouseEvents(true);
+  pinned.loadFile(page('overlay.html'), { query: { mode: 'strip', pinned: '1' } });
+  pinned.webContents.on('did-finish-load', () => {
+    for (const t of toOverlay) if (latest[t] !== undefined) pinned.webContents.send('core:msg', t, latest[t]);
+    sendOverlaySettings();
+  });
+  // Only switch over once it has really attached; until then the plain strip stays.
+  OverlayController.events.on('attach', () => {
+    pinnedAttached = true;
+    console.log('[overlay] attached to the game window');
+    if (strip && !strip.isDestroyed()) strip.close();
+    sendOverlaySettings();
+  });
+  OverlayController.events.on('detach', () => {           // game closed: back to the plain strip
+    pinnedAttached = false;
+    if (coachOpen) openStrip();
+  });
+  OverlayController.attachByTitle(pinned, gameWindow.title);
+  console.log('[overlay] looking for the game window', JSON.stringify(gameWindow.title));
+}
 
-  // Strip at the top centre of the game screen. Clicks go through it to the game.
+let coachOpen = false;
+function overlaySettingsFor() {
+  return { active: coachOpen && settings.overlay.strip !== 'off', position: settings.overlay.strip, opacity: settings.overlay.opacity };
+}
+function sendOverlaySettings() {
+  const o = overlaySettingsFor();
+  for (const w of [panel, strip, pinned]) if (w && !w.isDestroyed()) w.webContents.send('overlay:settings', o);
+}
+
+function openStrip() {
+  if (pinnedAttached || settings.overlay.strip === 'off' || (strip && !strip.isDestroyed())) return;
+  // Until the game window is found: a small strip at the top of the game's monitor.
   const gb = gameDisplay().bounds;
   const sw = 600, sh = 64;
-  strip = overlayWindow({ x: Math.round(gb.x + (gb.width - sw) / 2), y: gb.y + 6, width: sw, height: sh,
-    movable: false, focusable: false, skipTaskbar: true }, 'strip');
+  const x = settings.overlay.strip === 'left' ? gb.x + 16 : Math.round(gb.x + (gb.width - sw) / 2);
+  strip = overlayWindow({ x, y: gb.y + 6, width: sw, height: sh, movable: false, focusable: false, skipTaskbar: true }, 'strip');
   strip.setAlwaysOnTop(true, 'screen-saver');
   strip.setIgnoreMouseEvents(true);
   if (isMac) strip.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  strip.webContents.on('did-finish-load', sendOverlaySettings);
   strip.on('closed', () => { strip = null; });
+}
 
+function openCoach() {
+  coachOpen = true;
+  // Coach panel on the second monitor (or the right edge of the only one).
+  if (settings.overlay.panel !== 'off') {
+    const cd = coachDisplay();
+    const wa = cd.workArea;
+    const w = 460, h = Math.min(760, wa.height - 48);
+    panel = overlayWindow({ x: wa.x + wa.width - w - 24, y: wa.y + 24, width: w, height: h,
+      alwaysOnTop: cd.id === gameDisplay().id }, 'panel');
+    panel.on('closed', () => { panel = null; if (coachOpen) closeCoach(); });
+  }
+  openStrip();
+  sendOverlaySettings();
   home?.webContents.send('coach:state', true);
 }
 
 function closeCoach() {
+  coachOpen = false;
   for (const w of [panel, strip]) if (w && !w.isDestroyed()) w.close();
   panel = strip = null;
+  sendOverlaySettings();                                     // the pinned strip just goes blank
   if (home && !home.isDestroyed()) home.webContents.send('coach:state', false);
 }
 
@@ -288,12 +350,12 @@ ipcMain.handle('set-game-display', (_e, id) => {
   settings.gameDisplayId = id;
   saveSettings();
   tellCoreMonitor();
-  if (panel) { closeCoach(); openCoach(); }
+  if (coachOpen) { closeCoach(); openCoach(); }
   return displaysInfo();
 });
 ipcMain.handle('coach:toggle', () => {
-  if (panel) closeCoach(); else openCoach();
-  return !!panel;
+  if (coachOpen) closeCoach(); else openCoach();
+  return coachOpen;
 });
 ipcMain.handle('core:state', () => coreState());
 ipcMain.handle('app:version', () => app.getVersion());
@@ -313,9 +375,15 @@ ipcMain.handle('core:send', (_e, cmd) => {
 ipcMain.handle('settings:get', () => ({ ...settings }));
 ipcMain.handle('settings:set', (_e, patch) => {
   const before = [settings.profileId, settings.followBy];
-  settings = { ...settings, ...patch };
+  settings = { ...settings, ...patch,
+    overlay: { ...settings.overlay, ...(patch.overlay || {}) }, voice: { ...settings.voice, ...(patch.voice || {}) } };
   saveSettings();
   if (patch.gameDisplayId !== undefined) tellCoreMonitor();
+  if (patch.overlay && coachOpen) {                          // re-open the coach windows with the new layout
+    settings.overlay = { ...settings.overlay };
+    if (patch.overlay.strip !== undefined || patch.overlay.panel !== undefined) { closeCoach(); openCoach(); }
+    else sendOverlaySettings();
+  }
   if (patch.openAtLogin !== undefined && app.isPackaged) app.setLoginItemSettings({ openAtLogin: !!patch.openAtLogin });
   if (core && (settings.profileId !== before[0] || settings.followBy !== before[1])) {   // restart the core with them
     writeCoreConfig();

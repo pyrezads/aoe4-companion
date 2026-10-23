@@ -445,6 +445,12 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
             <div class="sel"><select id="followBy"><option value="villagers">Villager count (recommended)</option><option value="clock">Game clock</option></select></div>
             <span class="hint">By villager count, the coach stays in step even if you fall behind the build's times.</span>
           </div>
+          <div class="field">
+            <span class="lab">Spoken calls</span>
+            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw" id="voiceOn">Say where each villager goes, idle villagers, housed and age-up time</label>
+            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw" id="voiceSteps" checked>Read each new build step</label>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:4px"><input type="range" id="voiceVol" class="range" min="10" max="100" value="80" aria-label="Voice volume"><button class="btn quiet" id="voiceTest" style="padding:7px 14px">Test</button></div>
+          </div>
           <button class="btn primary" style="width:100%;justify-content:center" id="useBuild">Use this build</button>
           <p class="hint" id="useNote" style="margin:10px 0 0;color:var(--muted);font-size:13px"></p>
         </div>
@@ -520,11 +526,12 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
           <div>
             <div class="row2">
               <div class="field"><span class="lab">On the game screen</span>
-                <div class="sel"><select><option>Small strip, top centre</option><option>Small strip, below the minimap</option><option>Off</option></select></div></div>
+                <div class="sel"><select id="stripPos"><option value="top">Small strip, top centre</option><option value="left">Small strip, top left</option><option value="off">Off</option></select></div>
+                <span class="hint">It sticks to the game window and hides when you Alt-Tab away.</span></div>
               <div class="field"><span class="lab">On the second monitor</span>
-                <div class="sel"><select><option>Full coach panel</option><option>Coach and live analyst</option><option>Off</option></select></div></div>
+                <div class="sel"><select id="panelMode"><option value="on">Coach panel</option><option value="off">Off</option></select></div></div>
             </div>
-            <div class="field"><label for="op">Strip opacity</label><input type="range" id="op" class="range" min="40" max="100" value="85"></div>
+            <div class="field"><label for="op">Strip opacity</label><input type="range" id="op" class="range" min="40" max="100" value="88"></div>
           </div>
         </div>
         <div class="set">
@@ -532,7 +539,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
           <div class="field" style="margin:0"><label for="pid">aoe4world.com profile</label><div style="display:flex;gap:10px"><input class="inp" id="pid" placeholder="https://aoe4world.com/players/…"><button class="btn quiet" id="pidSave">Save</button></div><span class="hint" id="pidHint">Paste your profile link or your player ID.</span></div>
         </div>
         <div class="set">
-          <div><h3>Help</h3><p class="why">If something doesn't work, send core.log from this folder.</p></div>
+          <div><h3>Help</h3><p class="why">If something doesn't work, send core.log and the logs folder from here. Screens the reading check couldn't read are in calibration.</p></div>
           <div><button class="btn quiet" id="openLogs">Open the log folder</button></div>
         </div>
         <div class="set">
@@ -760,7 +767,8 @@ if (inApp) {
   window.app.onMessage((type, data) => {
     tools(type, data);
     if (type === 'status') { status = data || {}; renderStatus(); renderAccount(); }
-    else if (type === 'coach' && data) renderMini(data);
+    else if (type === 'coach' && data) { renderMini(data); voiceCoach(data); }
+    else if (type === 'hud') voiceHud(data);
     else if (type === 'build') showPicked(data);
     else if (type === 'builds' && data.civ === waitingFor) {
       builds = data.builds;
@@ -894,6 +902,78 @@ if (!inApp) {      // browser preview: a sample game so the pages aren't empty
     upgrades: ['Bloomery (Blacksmith, Feudal) · helps 30 units', 'Fitted Leatherwork (Blacksmith, Feudal) · helps 12 units']});
 }
 
+// ── Overlay settings
+const stripPos = document.getElementById('stripPos'), panelMode = document.getElementById('panelMode'), opIn = document.getElementById('op');
+const saveOverlay = () => inApp && window.app.setSettings({overlay: {strip: stripPos.value, panel: panelMode.value, opacity: +opIn.value}});
+stripPos.addEventListener('change', saveOverlay);
+panelMode.addEventListener('change', saveOverlay);
+opIn.addEventListener('change', saveOverlay);
+
+// ── Spoken calls. Fixed calls are recorded ahead of time (voice/*.ogg, see tools/make_voice.py);
+//    build steps differ per build, so they're read by the computer's own voice.
+const voice = {on: false, steps: true, volume: 80};
+const vq = [];
+let vBusy = false, vLast = {}, vState = {villagers: null, next: null, idle: 0, step: null, ageSaid: {}, done: false, alerts: {}};
+function vPlay(item){
+  if (!voice.on && !item.test) return;
+  if (vq.length > 2) vq.splice(0, vq.length - 2);         // never fall far behind the game
+  vq.push(item);
+  vRun();
+}
+function vRun(){
+  if (vBusy || !vq.length) return;
+  const item = vq.shift();
+  vBusy = true;
+  const done = () => { vBusy = false; setTimeout(vRun, 150); };
+  if (item.clip) {
+    const a = new Audio(`voice/${item.clip}.ogg`);
+    a.volume = voice.volume / 100;
+    a.onended = a.onerror = done;
+    a.play().catch(done);
+  } else if (item.text && 'speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance(item.text);
+    u.volume = voice.volume / 100;
+    u.rate = 1.05;
+    const en = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+    u.voice = en.find(v => /GB|UK/i.test(v.lang + v.name)) || en[0] || null;
+    u.onend = u.onerror = done;
+    speechSynthesis.speak(u);
+  } else done();
+}
+function say(clip, cooldown = 0){
+  const now = Date.now();
+  if (cooldown && vLast[clip] && now - vLast[clip] < cooldown * 1000) return;
+  vLast[clip] = now;
+  vPlay({clip});
+}
+const AGE_N = {Feudal: 2, Castle: 3, Imperial: 4};
+function voiceCoach(c){
+  if (!c) return;
+  const v = vState;
+  if (v.villagers != null && c.villagers > v.villagers) say('vil_' + (v.next || c.next.resource));   // the one that just came out goes where the coach said
+  else if (v.next && c.next.resource !== v.next && c.villagers === v.villagers) say('vil_' + c.next.resource, 8);
+  if (c.idle && c.idle > v.idle) say(c.idle === 1 ? 'idle_1' : c.idle === 2 ? 'idle_2' : 'idle_many', 20);
+  const stepKey = c.step && c.step.index;
+  if (voice.steps && v.step != null && stepKey !== v.step && c.step.text) vPlay({text: c.step.text.slice(0, 180)});
+  if (c.age && c.age.progress >= 0.97 && !v.ageSaid[c.age.target] && AGE_N[c.age.target]) { v.ageSaid[c.age.target] = true; say('age_' + AGE_N[c.age.target]); }
+  if (c.done && !v.done) say('build_done');
+  Object.assign(v, {villagers: c.villagers, next: c.next.resource, idle: c.idle || 0, step: stepKey, done: !!c.done});
+}
+function voiceHud(s){
+  if (!s || !s.live) return;
+  for (const a of s.alerts || []) {
+    if (/^Housed/.test(a.text)) say('housed', 45);
+    else if (/^Floating/.test(a.text)) say('floating', 120);
+    else if (/^Population flat/.test(a.text)) say('pop_flat', 60);
+    const m = a.text.match(/^Enemy .*reached (Feudal|Castle|Imperial)/);
+    if (m && !vState.alerts[a.text]) { vState.alerts[a.text] = true; say('enemy_' + AGE_N[m[1]]); }
+  }
+}
+const vOn = document.getElementById('voiceOn'), vSteps = document.getElementById('voiceSteps'), vVol = document.getElementById('voiceVol');
+const saveVoice = () => { Object.assign(voice, {on: vOn.checked, steps: vSteps.checked, volume: +vVol.value}); if (inApp) window.app.setSettings({voice: {...voice}}); };
+[vOn, vSteps, vVol].forEach(el => el.addEventListener('change', saveVoice));
+document.getElementById('voiceTest').addEventListener('click', () => { voice.volume = +vVol.value; vPlay({clip: 'test', test: true}); });
+
 // ── Settings: reading check and profile
 document.getElementById('readCheck').addEventListener('click', async () => {
   const out = document.getElementById('readResult');
@@ -903,13 +983,16 @@ document.getElementById('readCheck').addEventListener('click', async () => {
 });
 function showReadingCheck(r){
   const out = document.getElementById('readResult');
+  const saved = r.saved ? ` I saved this screen in the calibration folder: send it over so ${r.width} × ${r.height} can be added. <a href="#" id="openCal">Open the folder</a>` : '';
   const pct = Math.round((r.confidence || 0) * 100);
   const v = r.villagers || {}, res = r.resources || {};
   out.innerHTML = pct >= 90
     ? `Read ${pct}% of the HUD at ${r.width} × ${r.height}. Clock ${esc(r.clock || '?')}, villagers food ${v.food ?? '?'}, wood ${v.wood ?? '?'}, gold ${v.gold ?? '?'}, stone ${v.stone ?? '?'}. All good.`
     : pct > 0
-      ? `Read ${pct}% at ${r.width} × ${r.height}. Missed: ${esc((r.missed || []).join(', '))}. If you're in a game, this screen size or UI scale needs calibrating.`
-      : `Couldn't read the HUD at ${r.width} × ${r.height}. Start a skirmish, make sure the game is on the monitor marked Game, then try again.`;
+      ? `Read ${pct}% at ${r.width} × ${r.height}. Missed: ${esc((r.missed || []).join(', '))}. If you're in a game, this screen size or UI scale needs calibrating.` + saved
+      : `Couldn't read the HUD at ${r.width} × ${r.height}. Start a skirmish, make sure the game is on the monitor marked Game, then try again.` + saved;
+  const oc = document.getElementById('openCal');
+  if (oc) oc.addEventListener('click', e => { e.preventDefault(); window.app.openLogs(); });
 }
 
 const pidInput = document.getElementById('pid');
@@ -964,6 +1047,8 @@ document.getElementById('setupDone').addEventListener('click', async () => {
   const s = inApp ? await window.app.getSettings() : {setupDone: !new URLSearchParams(location.search).has('setup')};
   if (s.profileId) pidInput.value = `https://aoe4world.com/players/${s.profileId}`;
   if (s.followBy) document.getElementById('followBy').value = s.followBy;
+  if (s.overlay) { stripPos.value = s.overlay.strip || 'top'; panelMode.value = s.overlay.panel || 'on'; opIn.value = s.overlay.opacity || 88; }
+  if (s.voice) { Object.assign(voice, s.voice); vOn.checked = !!voice.on; vSteps.checked = voice.steps !== false; vVol.value = voice.volume || 80; }
   if (s.auto === false) autoPick.checked = false;
   if (s.build && s.build.civ) civSel.value = s.build.civ;
   if (!s.setupDone) { await loadDisplays(); setup.hidden = false; setupStep(1); document.getElementById('setupPid').focus(); }

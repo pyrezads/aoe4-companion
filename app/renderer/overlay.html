@@ -31,6 +31,11 @@ body:not(.preview) .gameshot .strip{position:static;transform:none}
 body.mode-panel{padding:10px}
 body.mode-panel .pv:last-child{display:none}
 body.mode-strip{display:flex;justify-content:center;padding-top:4px;overflow:hidden}
+/* pinned over the game window: the page is as big as the game */
+body.pinned{padding-top:max(6px, 0.6vh)}
+body.mode-strip.pos-left{justify-content:flex-start;padding-left:16px}
+body.inactive .strip{display:none}
+.strip{opacity:var(--strip-opacity,.88)}
 body.mode-strip .pv:first-child{display:none}
 .ph{-webkit-app-region:drag}   /* drag the panel by its header */
 
@@ -164,6 +169,13 @@ const $ = id => document.getElementById(id);
 const mode = new URLSearchParams(location.search).get('mode');
 const inElectron = !!window.coach && !window.coach.demo;   // live data from the app; demo mode simulates
 if (mode) document.body.classList.add('mode-' + mode);
+if (new URLSearchParams(location.search).has('pinned')) document.body.classList.add('pinned', 'inactive');
+if (window.coach && window.coach.onSettings) window.coach.onSettings(s => {
+  if (mode !== 'strip') return;
+  document.body.classList.toggle('inactive', !s.active);
+  document.body.classList.toggle('pos-left', s.position === 'left');
+  document.documentElement.style.setProperty('--strip-opacity', (s.opacity || 88) / 100);
+});
 if (!mode) document.body.classList.add('preview');
 
 let lastWord = null;

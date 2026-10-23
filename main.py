@@ -75,6 +75,7 @@ class AppState:
 # ── workers ───────────────────────────────────────────────────────────
 
 def reader_loop(state: AppState, cfg: dict, monitor: dict, stop: threading.Event, make_screen=None):
+    import numpy as np
     from screen import GameScreen
     from analyst import Analyst
 
@@ -98,9 +99,19 @@ def reader_loop(state: AppState, cfg: dict, monitor: dict, stop: threading.Event
             if state.get("check_request"):           # Settings > Run a reading check
                 state.set(check_request=False)
                 h = an.hud.read(frame)
+                saved = None
+                if h.confidence < 0.9:                   # keep the screen so this size can be calibrated
+                    try:
+                        from PIL import Image
+                        base = pathlib.Path(cfg.get("cache_dir") or HERE / "cache").parent / "calibration"
+                        base.mkdir(parents=True, exist_ok=True)
+                        saved = str(base / f"{frame.shape[1]}x{frame.shape[0]}-{int(t0)}.png")
+                        Image.fromarray(np.clip(frame, 0, 255).astype("uint8")).save(saved)
+                    except Exception as e:
+                        print(f"  [check] couldn't save the screenshot: {e}")
                 emit = state.get("emit")
                 if emit:
-                    emit.send("reading_check", data={
+                    emit.send("reading_check", data={"saved": saved,
                         "confidence": h.confidence, "missed": h.missed, "clock": h.clock,
                         "pop": h.pop, "pop_cap": h.pop_cap, "idle": h.idle,
                         "villagers": h.villagers, "resources": h.resources,

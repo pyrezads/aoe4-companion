@@ -116,6 +116,7 @@ def _payloads(state) -> dict:
             "read_quality": state.get("read_quality"), "missed": state.get("missed") or [],
             "match_note": state.get("match_note"), "build_note": state.get("build_note"),
             "screen": {"width": mon.get("width"), "height": mon.get("height")},
+            "game_window": state.get("game_window"),
         },
         "hud": dataclasses.asdict(snap) if snap else None,
         "coach": state.get("coach"),
@@ -281,7 +282,12 @@ def run_core(cfg: dict, replay=None, stdin=None, stdout=None, publish_every: flo
 
     emit.send("ready", data={"version": 1, "replay": bool(replay)})
     sent = {}
+    next_window_check = 0.0
     while not stop.is_set() and not emit.closed:
+        if time.time() >= next_window_check:           # the game's window, for pinning the strip to it
+            next_window_check = time.time() + 5
+            from gamewindow import find_game_window
+            state.set(game_window=find_game_window())
         for k, v in _payloads(state).items():
             text = json.dumps(v, default=_jsonable, sort_keys=True)
             if sent.get(k) != text:

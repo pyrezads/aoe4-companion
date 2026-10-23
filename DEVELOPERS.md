@@ -77,3 +77,13 @@ core.py            core mode: no window; messages and commands are documented at
 - Unit data is from aoe4world/data (May 2026); Vikings and Scots units are missing.
 - Packaging: PyInstaller would give a single .exe with no rewrite. A web UI (Electron/Tauri)
   could replace dashboard.py by serving AppState over a local websocket while keeping the Python core.
+
+## Overlay pinning and voice
+- `electron-overlay-window` (Windows) keeps the strip over the game window; `gamewindow.py` finds the
+  game's window (RelicCardinal.exe) and the core reports its exact title in `status.game_window`.
+  The plain strip stays until the add-on reports "attach", so nothing disappears if pinning fails.
+  `packaging/pin_test.js` checks it on GitHub's Windows machine with a stand-in window.
+- Spoken calls: fixed phrases are recorded ahead of time in `app/renderer/voice/` with
+  `tools/make_voice.py` (Kokoro-82M, Apache 2.0). Build steps are read by Windows' own voice.
+- Logs: `core.log` (screen reader) and `logs/main.log` (the app) in the app's data folder.
+  The reading check saves screens it can't read to `calibration/` there.
