@@ -1,0 +1,58 @@
+# Builds the Windows installer (AoE4-Coach-Setup-x.y.z.exe) on GitHub's Windows machines.
+#
+# Every push to main: runs the Python tests and builds the installer (download it from
+# the run's "Artifacts" section).
+# A version tag (git tag v0.1.0 && git push --tags): also publishes it as a GitHub Release.
+#
+# Friends install from the Release page. Nobody needs Node or Python on their PC:
+# the installer carries everything.
+
+name: Build Windows app
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python tests
+        run: |
+          pip install -r requirements.txt
+          python test_coach.py
+          python test_builds.py
+          python test_production_math.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build installer
+        run: npx electron-builder --win nsis --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AoE4-Coach-installer
+          path: dist/*.exe
+
+      - name: Publish release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.exe

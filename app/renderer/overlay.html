@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AoE4 Coach overlay</title>
+<!--
+  One file, two windows. Electron opens it as:
+    overlay.html?mode=panel  → the full coach on your second monitor
+    overlay.html?mode=strip  → a small transparent, click-through strip on the game screen
+  Opened in a normal browser it shows both on a preview backdrop with a simulated game.
+-->
+<link rel="stylesheet" href="theme.css">
+<style>
+body{background:transparent;overflow:visible;height:auto}
+body:not(.preview){min-height:0}
+
+/* preview backdrop (browser only) */
+body.preview{background:radial-gradient(ellipse 760px 520px at 100% 0%,rgba(6,69,87,.62),transparent 70%),var(--base);min-height:100vh;overflow:auto;padding:32px;display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.pv{display:grid;gap:10px}
+.pv>.cap{color:var(--dim);font-size:13px}
+.gameshot{width:640px;max-width:100%;aspect-ratio:16/9;border-radius:14px;position:relative;overflow:hidden;
+  background:radial-gradient(120% 90% at 30% 60%,#4d5b33 0%,#3a4527 45%,#2a3220 100%)}
+.gameshot::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18%;background:#151a20;border-top:2px solid #2b2f34}
+.gameshot .strip{position:absolute;top:10px;left:50%;transform:translateX(-50%) scale(.82);transform-origin:top center}
+body:not(.preview) .cap{display:none}
+/* inside the app each window shows one thing, no backdrop */
+body:not(.preview) .gameshot{display:contents}
+body:not(.preview) .gameshot::after{display:none}
+body:not(.preview) .gameshot .strip{position:static;transform:none}
+body.mode-panel{padding:10px}
+body.mode-panel .pv:last-child{display:none}
+body.mode-strip{display:flex;justify-content:center;padding-top:4px;overflow:hidden}
+body.mode-strip .pv:first-child{display:none}
+.ph{-webkit-app-region:drag}   /* drag the panel by its header */
+
+/* ── panel (second monitor) ──────────────────────────── */
+.panel{width:440px;background:var(--card);border:1px solid var(--edge);border-radius:24px;overflow:hidden}
+body.mode-strip .panel{display:none}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 14px}
+.ph .t{font-weight:700;font-size:14px;max-width:26ch}
+.ph .c{color:var(--muted);font-size:13px}
+.clock{font:600 32px/1 var(--display);text-align:right}
+.pace{display:inline-block;font-size:12px;font-weight:700;margin-top:6px;padding:2px 10px;border-radius:999px;color:#111}
+.pace.behind{background:var(--orange)} .pace.ahead{background:var(--green)} .pace.on{background:var(--card-2);color:var(--muted)}
+.ph>div:last-child{text-align:right}
+
+/* the hero is the teal card, like the savings card in the reference */
+.hero{margin:0 12px;padding:20px 18px 18px;border-radius:20px;background:var(--teal);color:#fff}
+.hero .lead{font-size:15px;color:rgba(255,255,255,.8)}
+.hero .lead b{color:#fff;font-weight:700}
+.word{display:flex;align-items:center;gap:14px;margin-top:2px}
+.word .big{font:700 80px/0.95 var(--display);letter-spacing:-1.5px}
+.word .badge{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:var(--tone);color:#0b1112;flex:none}
+.word .badge .i{width:34px;height:34px;stroke-width:1.9}
+.word.bump{animation:bump .5s ease-out}
+@keyframes bump{0%{transform:translateY(6px);opacity:.2}100%{transform:none;opacity:1}}
+.then{font-size:14px;margin-top:8px;color:rgba(255,255,255,.8)}
+.then b{font-weight:700;color:#fff;background:rgba(5,9,9,.22);padding:1px 9px;border-radius:999px}
+
+.split{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px}
+.res{background:var(--base);border:1px solid var(--edge);border-radius:16px;padding:10px 10px 11px}
+.res .n{font-size:12.5px;font-weight:700}
+.res .v{font:600 26px/1.15 var(--display);color:var(--ink)}
+.res .v small{font:500 14px var(--body);color:var(--muted)}
+.res .pips{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;min-height:9px}
+.res .pips i{width:8px;height:8px;border-radius:3px;border:1.5px solid currentColor}
+.res .pips i.f{background:currentColor}
+.res.short{border-color:currentColor}
+
+.steps{padding:6px 20px 16px;display:grid;gap:12px}
+.st{display:grid;grid-template-columns:54px 1fr;gap:12px}
+.st .w{font:600 15px var(--display);color:var(--muted);padding-top:1px}
+.st.now .w{color:var(--teal-hi)}
+.st.now .x{font-weight:600}
+.st.later .x{color:var(--muted)}
+
+.agewrap{padding:0 20px 20px}
+.agewrap .lab{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;padding-top:7px}
+
+.alert{display:flex;gap:10px;align-items:center;margin:0 12px 12px;padding:10px 14px;border-radius:14px;background:var(--card-plum);color:var(--pink);font-size:14px;font-weight:600}
+.alert[hidden]{display:none}
+
+/* ── strip (game screen) ────────────────────────────── */
+.strip{display:inline-flex;align-items:center;gap:12px;background:rgba(5,9,9,.86);border:1px solid rgba(255,255,255,.08);
+  border-radius:999px;padding:6px 16px 6px 6px;backdrop-filter:blur(6px);white-space:nowrap}
+body.mode-panel .strip{display:none}
+body.preview .strip{display:inline-flex}
+.strip .badge{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--tone);color:#0b1112}
+.strip .badge .i{width:18px;height:18px;stroke-width:2}
+.strip .a{font:700 19px/1 var(--display)}
+.strip .a span{color:var(--tone)}
+.strip .b{color:var(--muted);font-size:13px;border-left:1px solid rgba(255,255,255,.12);padding-left:12px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="r-food" viewBox="0 0 24 24"><circle cx="9" cy="14" r="4"/><circle cx="15.5" cy="14.5" r="3.5"/><circle cx="12" cy="8.5" r="3.5"/><path d="M12 5c0-1.5 1-2.5 2.5-2.5"/></symbol>
+  <symbol id="r-wood" viewBox="0 0 24 24"><ellipse cx="6.5" cy="12" rx="3" ry="5"/><path d="M6.5 7H18c1.7 0 3 2.2 3 5s-1.3 5-3 5H6.5"/><path d="M6.5 10.5v3"/></symbol>
+  <symbol id="r-gold" viewBox="0 0 24 24"><path d="M3 18h8l-1.5-5h-5zM13 18h8l-1.5-5h-5zM8 11.5h8L14.5 6.5h-5z"/></symbol>
+  <symbol id="r-stone" viewBox="0 0 24 24"><path d="M4 17.5 7 9l5-3.5 5.5 2.5 3 9.5-7.5 2.5z"/><path d="M7 9l5 3 5.5-4M12 12l1 8.5"/></symbol>
+</defs></svg>
+
+<div class="pv">
+  <div class="cap">Second monitor: coach panel</div>
+  <section class="panel" aria-live="polite">
+    <header class="ph">
+      <div><div class="t" id="title">Zhuge Nu-Timing-Attack(10-14)</div><div class="c">Zhu Xi's Legacy</div></div>
+      <div><div class="clock" id="clock">0:00</div><div class="pace on" id="pace">On pace</div></div>
+    </header>
+    <div class="hero">
+      <div class="lead">Villager <b id="vnum">7</b> goes to</div>
+      <div class="word" id="word"><span class="badge"><svg class="i"><use id="wordIcon" href="#r-wood"/></svg></span><span class="big" id="wordTxt">Wood</span></div>
+      <div class="then" id="then"></div>
+    </div>
+    <div class="split" id="split"></div>
+    <div class="alert" id="alert" hidden></div>
+    <div class="steps">
+      <div class="st now"><div class="w" id="nowW">Now</div><div class="x" id="nowX"></div></div>
+      <div class="st later"><div class="w" id="nextW"></div><div class="x" id="nextX"></div></div>
+    </div>
+    <div class="agewrap">
+      <div class="spectrum" id="af"></div>
+      <div class="lab"><span>Dark Age</span><span id="ageTarget">Feudal at 4:20</span></div>
+    </div>
+  </section>
+</div>
+
+<div class="pv">
+  <div class="cap">Game screen: small strip, top centre, clicks pass through it</div>
+  <div class="gameshot">
+    <div class="strip" id="strip">
+      <span class="badge"><svg class="i"><use id="stripIcon" href="#r-wood"/></svg></span>
+      <span class="a">Villager <span id="sv">7</span> to <span id="sr">wood</span></span>
+      <span class="b" id="sb">Feudal at 4:20</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   Coach view. In Electron, the Python core sends a "coach" message
+   over the local websocket roughly once a second:
+     { clock, villagers, have:{food,wood,gold,stone}, idle,
+       next:{resource, then}, step:{text, at}, upcoming:{text, at, villagers},
+       pace_seconds, age:{target, at, progress}, build:{title, civ} }
+   render(msg) draws it. Without Electron we simulate a game below.
+   ───────────────────────────────────────────────────────────── */
+const RES = ['food','wood','gold','stone'];
+const NAME = {food:'Food', wood:'Wood', gold:'Gold', stone:'Stone'};
+const $ = id => document.getElementById(id);
+const mode = new URLSearchParams(location.search).get('mode');
+const inElectron = !!window.coach && !window.coach.demo;   // live data from the app; demo mode simulates
+if (mode) document.body.classList.add('mode-' + mode);
+if (!mode) document.body.classList.add('preview');
+
+let lastWord = null;
+function render(m){
+  const r = m.next.resource;
+  document.documentElement.style.setProperty('--tone', `var(--${r})`);
+  $('clock').textContent = m.clock;
+  $('vnum').textContent = $('sv').textContent = m.villagers + 1;
+  $('wordTxt').textContent = NAME[r];
+  $('sr').textContent = r;
+  $('wordIcon').setAttribute('href', '#r-' + r);
+  $('stripIcon').setAttribute('href', '#r-' + r);
+  if (lastWord !== r) { const w = $('word'); w.classList.remove('bump'); void w.offsetWidth; w.classList.add('bump'); lastWord = r; }
+  $('then').innerHTML = m.next.then ? `Then <b>${m.next.then}</b>` : '';
+
+  const p = m.pace_seconds, pace = $('pace');
+  pace.className = 'pace ' + (Math.abs(p) < 5 ? 'on' : p > 0 ? 'behind' : 'ahead');
+  pace.textContent = Math.abs(p) < 5 ? 'On pace' : `${Math.abs(p)} s ${p > 0 ? 'behind' : 'ahead of'} the build`;
+
+  $('split').innerHTML = RES.map(k => {
+    const h = m.have[k], w = m.want[k], n = Math.max(h, w);
+    const pips = Array.from({length:n}, (_, i) => `<i class="${i < h ? 'f' : ''}"></i>`).join('');
+    return `<div class="res ${h < w ? 'short' : ''}" style="color:var(--${k})">
+      <div class="n">${NAME[k]}</div>
+      <div class="v" style="color:var(--ink)">${h}<small> / ${w}</small></div>
+      <div class="pips">${pips}</div></div>`;
+  }).join('');
+
+  $('nowX').textContent = m.step.text;
+  $('nextW').textContent = m.upcoming ? m.upcoming.at : '';
+  $('nextX').textContent = m.upcoming ? m.upcoming.text : 'End of the build. Keep villagers coming.';
+  $('af').style.setProperty('--p', m.age ? Math.min(1, m.age.progress) : 1);
+  $('ageTarget').textContent = $('sb').textContent = m.age ? `${m.age.target} at ${m.age.at}` : 'Build complete';
+  const a = $('alert');
+  a.hidden = !m.idle;
+  const to = [...new Set(m.idle_to && m.idle_to.length ? m.idle_to : [m.next.resource])].join(' and ');
+  a.textContent = m.idle ? `${m.idle} idle villager${m.idle > 1 ? 's' : ''}. Send ${m.idle > 1 ? 'them' : 'it'} to ${to}.` : '';
+}
+
+if (inElectron) {
+  window.coach.onUpdate(render);
+} else {
+  /* ── preview simulation: a sample build, villagers arriving every 20 game seconds ── */
+  const BUILD = [
+    {v:6,  at:'0:00', t:{food:6,wood:0,gold:0,stone:0}, text:'All six villagers on sheep. Scout brings more sheep home.'},
+    {v:9,  at:'0:45', t:{food:6,wood:3,gold:0,stone:0}, text:'Next three villagers to wood. One builds a house first.'},
+    {v:12, at:'1:30', t:{food:6,wood:3,gold:3,stone:0}, text:'Three to gold. The first one builds a mining camp.'},
+    {v:15, at:'2:20', t:{food:9,wood:3,gold:3,stone:0}, text:'Three to berries. Build a mill next to the bushes.'},
+    {v:18, at:'3:15', t:{food:9,wood:6,gold:3,stone:0}, text:'Three more to wood. Start the Imperial Academy to age up.'},
+    {v:22, at:'4:20', t:{food:9,wood:7,gold:6,stone:0}, text:'Feudal. Build two archery ranges and start Zhuge Nu.'},
+  ];
+  const secs = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  const toSec = t => { const [m,s] = t.split(':'); return +m*60 + +s; };
+  let clock = 0, vils = 6, have = {food:6,wood:0,gold:0,stone:0};
+
+  function nextResource(target){
+    // the resource furthest below where the next step wants it
+    let best = null, gap = 0;
+    for (const k of RES) { const g = target[k] - have[k]; if (g > gap) { gap = g; best = k; } }
+    return best || 'food';
+  }
+  function tick(){
+    clock += 4;
+    if (clock % 20 === 0 && vils < 22) {          // a villager pops from the TC
+      const step = BUILD.find(s => s.v > vils) || BUILD[BUILD.length - 1];
+      have[nextResource(step.t)]++; vils++;
+    }
+    const i = Math.max(0, BUILD.findLastIndex(s => s.v <= vils));
+    const step = BUILD[i], up = BUILD[i + 1];
+    const goal = up || step;
+    const after = {...have};
+    const r1 = nextResource(goal.t); after[r1]++;
+    let r2 = null, gap = 0;
+    for (const k of RES) { const g = goal.t[k] - after[k]; if (g > gap) { gap = g; r2 = k; } }
+    // pace: when you reached this villager count vs when the build reaches it
+    const pace = clock - (toSec(step.at) + (vils - step.v) * 20);
+    render({
+      clock: secs(clock), villagers: vils, have:{...have}, want: goal.t,
+      idle: clock >= 96 && clock < 112 ? 2 : 0,
+      next:{resource:r1, then:r2},
+      step:{text:step.text}, upcoming: up ? {text:up.text, at:up.at} : null,
+      pace_seconds: Math.round(pace / 2),
+      age:{target:'Feudal', at:'4:20', progress: clock / 260},
+    });
+    if (clock >= 300) { clock = 0; vils = 6; have = {food:6,wood:0,gold:0,stone:0}; }
+  }
+  tick(); setInterval(tick, 600);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,2493 @@
+{
+ "DESERT_RAIDER": {
+  "name": "desert raider",
+  "time": 30.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 50.0,
+   "gold": 50.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "AYYUBIDS"
+  ],
+  "file": "AyyubidsUnits.ts"
+ },
+ "CAMEL_LANCER": {
+  "name": "camel lancer",
+  "time": 35.0,
+  "cost": {
+   "food": 130.0,
+   "wood": 0.0,
+   "gold": 110.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "AYYUBIDS"
+  ],
+  "file": "AyyubidsUnits.ts"
+ },
+ "DERVISH": {
+  "name": "dervish",
+  "time": 40.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 0.0,
+   "gold": 140.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "AYYUBIDS"
+  ],
+  "file": "AyyubidsUnits.ts"
+ },
+ "MANJANIQ": {
+  "name": "manganiq",
+  "time": 40.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 400.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "AYYUBIDS"
+  ],
+  "file": "AyyubidsUnits.ts"
+ },
+ "TOWER_OF_SULTAN": {
+  "name": "tower of sultan",
+  "time": 140.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 650.0,
+   "gold": 350.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "AYYUBIDS"
+  ],
+  "file": "AyyubidsUnits.ts"
+ },
+ "LIMITANEI": {
+  "name": "limitanei",
+  "time": 17.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 10.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "BYZANTINES"
+  ],
+  "file": "ByzantinesUnits.ts"
+ },
+ "CATAPHRACT": {
+  "name": "cataphract",
+  "time": 40.0,
+  "cost": {
+   "food": 180.0,
+   "wood": 0.0,
+   "gold": 150.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "BYZANTINES"
+  ],
+  "file": "ByzantinesUnits.ts"
+ },
+ "VARANGIAN_GUARD": {
+  "name": "varangian guard",
+  "time": 25.0,
+  "cost": {
+   "food": 90.0,
+   "wood": 0.0,
+   "gold": 40.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "BYZANTINES",
+   "MACEDONIAN_DYNASTY"
+  ],
+  "file": "ByzantinesUnits.ts"
+ },
+ "CHEIROSIPHON": {
+  "name": "cheirosiphon",
+  "time": 35.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 200.0,
+   "gold": 60.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "BYZANTINES",
+   "MACEDONIAN_DYNASTY"
+  ],
+  "file": "ByzantinesUnits.ts"
+ },
+ "DROMON": {
+  "name": "dromon",
+  "time": 30.0,
+  "cost": {
+   "food": 100.0,
+   "wood": 200.0,
+   "gold": 60.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "BYZANTINES",
+   "MACEDONIAN_DYNASTY"
+  ],
+  "file": "ByzantinesUnits.ts"
+ },
+ "GHAZI_RAIDER": {
+  "name": "ghazi raider",
+  "time": 25.0,
+  "cost": {
+   "food": 110.0,
+   "wood": 30.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DELHI"
+  ],
+  "file": "DelhiUnits.ts"
+ },
+ "SCHOLAR": {
+  "name": "scholar",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 0.0,
+   "gold": 135.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DELHI"
+  ],
+  "file": "DelhiUnits.ts"
+ },
+ "DOME_OF_FAIT_SCHOLAR": {
+  "name": "scholar",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 0.0,
+   "gold": 80.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DELHI"
+  ],
+  "file": "DelhiUnits.ts"
+ },
+ "TOWER_ELEPHANT": {
+  "name": "tower elephant",
+  "time": 60.0,
+  "cost": {
+   "food": 400.0,
+   "wood": 0.0,
+   "gold": 600.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DELHI"
+  ],
+  "file": "DelhiUnits.ts"
+ },
+ "WAR_ELEPHANT": {
+  "name": "war elephant",
+  "time": 60.0,
+  "cost": {
+   "food": 400.0,
+   "wood": 0.0,
+   "gold": 350.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DELHI"
+  ],
+  "file": "DelhiUnits.ts"
+ },
+ "GILDED_ARCHER": {
+  "name": "gilded archer",
+  "time": 18.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 100.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DRAGON_ORDER"
+  ],
+  "file": "DragonOrderUnits.ts"
+ },
+ "GILDED_SPEARMAN": {
+  "name": "gilded spearman",
+  "time": 18.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 40.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DRAGON_ORDER"
+  ],
+  "file": "DragonOrderUnits.ts"
+ },
+ "GILDED_HORSEMAN": {
+  "name": "gilded horseman",
+  "time": 27.0,
+  "cost": {
+   "food": 200.0,
+   "wood": 40.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DRAGON_ORDER"
+  ],
+  "file": "DragonOrderUnits.ts"
+ },
+ "GILDED_KNIGHT": {
+  "name": "gilded knight",
+  "time": 42.0,
+  "cost": {
+   "food": 280.0,
+   "wood": 0.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DRAGON_ORDER"
+  ],
+  "file": "DragonOrderUnits.ts"
+ },
+ "GILDED_MAN_AT_ARMS": {
+  "name": "gilded man at arms",
+  "time": 27.0,
+  "cost": {
+   "food": 200.0,
+   "wood": 0.0,
+   "gold": 40.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DRAGON_ORDER"
+  ],
+  "file": "DragonOrderUnits.ts"
+ },
+ "GILDED_LANDSKNECHT": {
+  "name": "gilded landsknecht",
+  "time": 27.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 0.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DRAGON_ORDER"
+  ],
+  "file": "DragonOrderUnits.ts"
+ },
+ "GILDED_CROSSBOWMAN": {
+  "name": "gilded crossbowman",
+  "time": 27.0,
+  "cost": {
+   "food": 160.0,
+   "wood": 0.0,
+   "gold": 80.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DRAGON_ORDER"
+  ],
+  "file": "DragonOrderUnits.ts"
+ },
+ "DRAGON_HANDCANNONEER": {
+  "name": "dragon handcannoneer",
+  "time": 35.0,
+  "cost": {
+   "food": 240.0,
+   "wood": 0.0,
+   "gold": 240.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DRAGON_ORDER"
+  ],
+  "file": "DragonOrderUnits.ts"
+ },
+ "LONGBOWMAN": {
+  "name": "longbowman",
+  "time": 15.0,
+  "cost": {
+   "food": 40.0,
+   "wood": 50.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "WYNGUARD_RAIDERS": {
+  "name": "wynguard raiders",
+  "time": 25.0,
+  "cost": {
+   "food": 650.0,
+   "wood": 0.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "WYNGUARD_RANGERS": {
+  "name": "wynguard rangers",
+  "time": 45.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 450.0,
+   "gold": 300.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "WYNGUARD_FOOTMAN": {
+  "name": "wynguard footmen",
+  "time": 45.0,
+  "cost": {
+   "food": 300.0,
+   "wood": 0.0,
+   "gold": 400.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "WHITE_TOWER_KNIGHT": {
+  "name": "knight",
+  "time": 35.0,
+  "cost": {
+   "food": 140.0,
+   "wood": 0.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "WHITE_TOWER_MAN_AT_ARMS": {
+  "name": "man at arms",
+  "time": 22.5,
+  "cost": {
+   "food": 100.0,
+   "wood": 0.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "WHITE_TOWER_CROSSBOWMAN": {
+  "name": "crossbowman",
+  "time": 22.5,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 40.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "WHITE_TOWER_LONGBOWMAN": {
+  "name": "longbowman",
+  "time": 15.0,
+  "cost": {
+   "food": 40.0,
+   "wood": 50.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "WHITE_TOWER_SPEARMAN": {
+  "name": "spearman",
+  "time": 15.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 20.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "WHITE_TOWER_HORSEMAN": {
+  "name": "horseman",
+  "time": 22.5,
+  "cost": {
+   "food": 100.0,
+   "wood": 20.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND"
+  ],
+  "file": "EnglishUnits.ts"
+ },
+ "ROYAL_KNIGHT": {
+  "name": "royal knight",
+  "time": 35.0,
+  "cost": {
+   "food": 140.0,
+   "wood": 0.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "FRENCH",
+   "JEANNE_D_ARC"
+  ],
+  "file": "FrenchUnits.ts"
+ },
+ "ARBALETRIER": {
+  "name": "arbaletrier",
+  "time": 22.5,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 40.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "FRENCH",
+   "JEANNE_D_ARC"
+  ],
+  "file": "FrenchUnits.ts"
+ },
+ "WAR_COG": {
+  "name": "war cog",
+  "time": 30.0,
+  "cost": {
+   "food": 75.0,
+   "wood": 200.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "FRENCH",
+   "JEANNE_D_ARC"
+  ],
+  "file": "FrenchUnits.ts"
+ },
+ "GALLEAS": {
+  "name": "galleas",
+  "time": 50.0,
+  "cost": {
+   "food": 200.0,
+   "wood": 360.0,
+   "gold": 300.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "FRENCH",
+   "JEANNE_D_ARC"
+  ],
+  "file": "FrenchUnits.ts"
+ },
+ "GOLDEN_HORDE_VILLAGER": {
+  "name": "villager",
+  "time": 37.0,
+  "cost": {
+   "food": 50.0,
+   "wood": 0.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "GOLDEN_HORDE_TRADER": {
+  "name": "trader",
+  "time": 60.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 60.0,
+   "gold": 60.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "GOLDEN_HORDE_SPEARMAN": {
+  "name": "spearman",
+  "time": 30.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 20.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "KHARASH": {
+  "name": "kharash",
+  "time": 20.0,
+  "cost": {
+   "food": 50.0,
+   "wood": 0.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "GOLDEN_HORDE_ARCHER": {
+  "name": "archer",
+  "time": 30.0,
+  "cost": {
+   "food": 30.0,
+   "wood": 50.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "GOLDEN_HORDE_HANDCANNONEER": {
+  "name": "handcannoneer",
+  "time": 70.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 0.0,
+   "gold": 120.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "GOLDEN_HORDE_SCOUT": {
+  "name": "scout",
+  "time": 43.0,
+  "cost": {
+   "food": 65.0,
+   "wood": 0.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "GOLDEN_HORDE_KESHIK": {
+  "name": "keshik",
+  "time": 60.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 0.0,
+   "gold": 80.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "TORGUUD": {
+  "name": "torguud",
+  "time": 20.0,
+  "cost": {
+   "food": 75.0,
+   "wood": 0.0,
+   "gold": 0.0,
+   "stone": 100.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "KIPCHAK_ARCHER": {
+  "name": "kipchak archer",
+  "time": 48.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 70.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "GOLDEN_HORDE_TRADE_SHIP": {
+  "name": "trade ship",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 90.0,
+   "gold": 90.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "GOLDEN_HORDE_WAR_JUNK": {
+  "name": "war junk",
+  "time": 60.0,
+  "cost": {
+   "food": 110.0,
+   "wood": 200.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "GoldenHordeUnits.ts"
+ },
+ "YEOMAN": {
+  "name": "YEOMAN",
+  "time": 15.0,
+  "cost": {
+   "food": 50.0,
+   "wood": 45.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "HOUSE_OF_LANCASTER"
+  ],
+  "file": "HouseOfLancasterUnits.ts"
+ },
+ "HOBELAR": {
+  "name": "hobelar",
+  "time": 15.0,
+  "cost": {
+   "food": 75.0,
+   "wood": 0.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "HOUSE_OF_LANCASTER"
+  ],
+  "file": "HouseOfLancasterUnits.ts"
+ },
+ "EARLS_GUARD": {
+  "name": "earls guard",
+  "time": 23.0,
+  "cost": {
+   "food": 100.0,
+   "wood": 0.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "HOUSE_OF_LANCASTER"
+  ],
+  "file": "HouseOfLancasterUnits.ts"
+ },
+ "EARLS_RETINUE": {
+  "name": "earls retinue",
+  "time": 50.0,
+  "cost": {
+   "food": 650.0,
+   "wood": 0.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "HOUSE_OF_LANCASTER"
+  ],
+  "file": "HouseOfLancasterUnits.ts"
+ },
+ "GARRISON_COMMAND": {
+  "name": "garrison command",
+  "time": 30.0,
+  "cost": {
+   "food": 300.0,
+   "wood": 200.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "HOUSE_OF_LANCASTER"
+  ],
+  "file": "HouseOfLancasterUnits.ts"
+ },
+ "GUNPOWDER_CONTINGENT": {
+  "name": "gunpowder contingent",
+  "time": 65.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 850.0,
+   "gold": 1050.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "HOUSE_OF_LANCASTER"
+  ],
+  "file": "HouseOfLancasterUnits.ts"
+ },
+ "FLOATING_GATE_VILLAGER": {
+  "name": "Yorishiro TC villager",
+  "time": 20.0,
+  "cost": {
+   "food": 50.0,
+   "wood": 0.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "YUMI_ASHIGARU": {
+  "name": "yumi ashigaru",
+  "time": 13.0,
+  "cost": {
+   "food": 30.0,
+   "wood": 35.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE",
+   "SENGOKU_DAIMYO"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "ONNA_BUGEISHA": {
+  "name": "onna-bugeisha",
+  "time": 15.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 0.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "SHINOBI": {
+  "name": "shinobi",
+  "time": 20.0,
+  "cost": {
+   "food": 50.0,
+   "wood": 0.0,
+   "gold": 50.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "BUDDHIST_MONK": {
+  "name": "buddhist monk",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 0.0,
+   "gold": 80.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "SHINTO_PRIEST": {
+  "name": "shinto priest",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 0.0,
+   "gold": 150.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "MOUNTED_SAMURAI": {
+  "name": "mounted samurai",
+  "time": 35.0,
+  "cost": {
+   "food": 140.0,
+   "wood": 0.0,
+   "gold": 110.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "SAMURAI": {
+  "name": "samurai",
+  "time": 20.0,
+  "cost": {
+   "food": 100.0,
+   "wood": 0.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "ONNA_MUSHA": {
+  "name": "onna-musha",
+  "time": 24.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 60.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "OZUTSU": {
+  "name": "ozutsu",
+  "time": 35.0,
+  "cost": {
+   "food": 85.0,
+   "wood": 0.0,
+   "gold": 155.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE",
+   "SENGOKU_DAIMYO"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "ATAKEBUNE": {
+  "name": "atakebune",
+  "time": 45.0,
+  "cost": {
+   "food": 100.0,
+   "wood": 220.0,
+   "gold": 220.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JAPANESE",
+   "SENGOKU_DAIMYO"
+  ],
+  "file": "JapaneseUnits.ts"
+ },
+ "ATGEIRMADR": {
+  "name": "atgeirmadr",
+  "time": 17.0,
+  "cost": {
+   "food": 70.0,
+   "wood": 20.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MACEDONIAN_DYNASTY"
+  ],
+  "file": "MacedonianDynastyUnits.ts"
+ },
+ "BOGMADR": {
+  "name": "bogmadr",
+  "time": 15.0,
+  "cost": {
+   "food": 40.0,
+   "wood": 50.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MACEDONIAN_DYNASTY"
+  ],
+  "file": "MacedonianDynastyUnits.ts"
+ },
+ "RIDDARI": {
+  "name": "riddari",
+  "time": 35.0,
+  "cost": {
+   "food": 130.0,
+   "wood": 0.0,
+   "gold": 110.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MACEDONIAN_DYNASTY"
+  ],
+  "file": "MacedonianDynastyUnits.ts"
+ },
+ "CATTLE": {
+  "name": "cattle",
+  "time": 15.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 0.0,
+   "gold": 90.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "DONSO": {
+  "name": "donso",
+  "time": 15.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 30.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "SOFA": {
+  "name": "sofa",
+  "time": 26.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 0.0,
+   "gold": 60.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "MUSOFADI_WARRIOR": {
+  "name": "musofadi warrior",
+  "time": 15.0,
+  "cost": {
+   "food": 45.0,
+   "wood": 0.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "JAVELIN_THROWER": {
+  "name": "javelin thrower",
+  "time": 22.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 40.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "MANSA_JAVELINEER": {
+  "name": "mansa javelineer",
+  "time": 23.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 40.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "MANSA_MUSOFADI_WARRIOR": {
+  "name": "mansa musofadi",
+  "time": 15.0,
+  "cost": {
+   "food": 45.0,
+   "wood": 0.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "FREEBORN_WARRIOR": {
+  "name": "freeborn warrior",
+  "time": 15.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 35.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "MUSOFADI_GUNNER": {
+  "name": "musofadi gunner",
+  "time": 35.0,
+  "cost": {
+   "food": 110.0,
+   "wood": 0.0,
+   "gold": 130.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "WARRIOR_SCOUT": {
+  "name": "warrior scout",
+  "time": 14.0,
+  "cost": {
+   "food": 90.0,
+   "wood": 0.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "HUNTING_CANOE": {
+  "name": "hunting canoe",
+  "time": 25.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 150.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "WAR_CANOE": {
+  "name": "war canoe",
+  "time": 30.0,
+  "cost": {
+   "food": 110.0,
+   "wood": 200.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MALIANS"
+  ],
+  "file": "MalianUnits.ts"
+ },
+ "KESHIK": {
+  "name": "keshik",
+  "time": 30.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 0.0,
+   "gold": 80.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MONGOLS"
+  ],
+  "file": "MongolsUnits.ts"
+ },
+ "MANGUDAI": {
+  "name": "mangudai",
+  "time": 28.0,
+  "cost": {
+   "food": 90.0,
+   "wood": 0.0,
+   "gold": 60.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "MONGOLS"
+  ],
+  "file": "MongolsUnits.ts"
+ },
+ "TRACTION_TREBUCHET": {
+  "name": "traction trebuchet",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 300.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE",
+   "MONGOLS"
+  ],
+  "file": "MongolsUnits.ts"
+ },
+ "SIPAHI": {
+  "name": "sipahi",
+  "time": 30.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 40.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "OTTOMANS"
+  ],
+  "file": "OttomansUnits.ts"
+ },
+ "MEHTER": {
+  "name": "mehter",
+  "time": 28.0,
+  "cost": {
+   "food": 100.0,
+   "wood": 0.0,
+   "gold": 80.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "OTTOMANS"
+  ],
+  "file": "OttomansUnits.ts"
+ },
+ "JANISSARY": {
+  "name": "janissary",
+  "time": 24.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 0.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "OTTOMANS"
+  ],
+  "file": "OttomansUnits.ts"
+ },
+ "AKINJI": {
+  "name": "akinji",
+  "time": 24.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 80.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "OTTOMANS"
+  ],
+  "file": "OttomansUnits.ts"
+ },
+ "GREAT_BOMBARD": {
+  "name": "great bombard",
+  "time": 60.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 450.0,
+   "gold": 800.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "OTTOMANS"
+  ],
+  "file": "OttomansUnits.ts"
+ },
+ "GRAND_GALLEY": {
+  "name": "grand galley",
+  "time": 50.0,
+  "cost": {
+   "food": 135.0,
+   "wood": 360.0,
+   "gold": 300.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "OTTOMANS"
+  ],
+  "file": "OttomansUnits.ts"
+ },
+ "WARRIOR_MONK": {
+  "name": "warrior monk",
+  "time": 35.0,
+  "cost": {
+   "food": 40.0,
+   "wood": 0.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "RUS"
+  ],
+  "file": "RusUnits.ts"
+ },
+ "STRELTSY": {
+  "name": "streltsy",
+  "time": 35.0,
+  "cost": {
+   "food": 90.0,
+   "wood": 0.0,
+   "gold": 90.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "RUS"
+  ],
+  "file": "RusUnits.ts"
+ },
+ "HORSE_ARCHER": {
+  "name": "horse archer",
+  "time": 22.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 40.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "RUS"
+  ],
+  "file": "RusUnits.ts"
+ },
+ "RUS_FISHING_BOAT": {
+  "name": "fishing boat",
+  "time": 46.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 150.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "RUS"
+  ],
+  "file": "RusUnits.ts"
+ },
+ "NAGINATA_SAMURAI": {
+  "name": "naginata samurai",
+  "time": 23.0,
+  "cost": {
+   "food": 100.0,
+   "wood": 0.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "SENGOKU_DAIMYO"
+  ],
+  "file": "SengokuDaimyoUnits.ts"
+ },
+ "KANABO_SAMURAI": {
+  "name": "kanabo samurai",
+  "time": 24.0,
+  "cost": {
+   "food": 130.0,
+   "wood": 0.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "SENGOKU_DAIMYO"
+  ],
+  "file": "SengokuDaimyoUnits.ts"
+ },
+ "TANEGASHIMA_ASHIGARU": {
+  "name": "tanegashima ashigaru",
+  "time": 24.0,
+  "cost": {
+   "food": 70.0,
+   "wood": 0.0,
+   "gold": 70.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "SENGOKU_DAIMYO"
+  ],
+  "file": "SengokuDaimyoUnits.ts"
+ },
+ "YARI_CAVALRY": {
+  "name": "yari cavalry",
+  "time": 23.0,
+  "cost": {
+   "food": 115.0,
+   "wood": 30.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "SENGOKU_DAIMYO"
+  ],
+  "file": "SengokuDaimyoUnits.ts"
+ },
+ "SENGOKU_MOUNTED_SAMURAI": {
+  "name": "mounted samurai",
+  "time": 35.0,
+  "cost": {
+   "food": 140.0,
+   "wood": 0.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "SENGOKU_DAIMYO"
+  ],
+  "file": "SengokuDaimyoUnits.ts"
+ },
+ "RAIDER_ELEPHANT": {
+  "name": "raider elephant",
+  "time": 25.0,
+  "cost": {
+   "food": 180.0,
+   "wood": 40.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "TughlaqDynastyUnits.ts"
+ },
+ "HEALER_ELEPHANT": {
+  "name": "healer elephant",
+  "time": 40.0,
+  "cost": {
+   "food": 150.0,
+   "wood": 0.0,
+   "gold": 220.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "TughlaqDynastyUnits.ts"
+ },
+ "BALLISTA_ELEPHANT": {
+  "name": "ballista elephant",
+  "time": 45.0,
+  "cost": {
+   "food": 300.0,
+   "wood": 0.0,
+   "gold": 350.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "TughlaqDynastyUnits.ts"
+ },
+ "VILLAGER": {
+  "name": "villager",
+  "time": 20.0,
+  "cost": {
+   "food": 50.0,
+   "wood": 0.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "BYZANTINES",
+   "CHINESE",
+   "DELHI",
+   "ENGLAND",
+   "FRENCH",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JAPANESE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MACEDONIAN_DYNASTY",
+   "MALIANS",
+   "MONGOLS",
+   "OTTOMANS",
+   "RUS",
+   "SENGOKU_DAIMYO",
+   "TUGHLAQ_DYNASTY",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "ARCHER": {
+  "name": "archer",
+  "time": 15.0,
+  "cost": {
+   "food": 30.0,
+   "wood": 50.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "BYZANTINES",
+   "CHINESE",
+   "DELHI",
+   "FRENCH",
+   "HRE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MALIANS",
+   "MONGOLS",
+   "OTTOMANS",
+   "RUS",
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "Units.ts"
+ },
+ "SPEARMAN": {
+  "name": "spearman",
+  "time": 15.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 20.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "CHINESE",
+   "DELHI",
+   "ENGLAND",
+   "FRENCH",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JAPANESE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MONGOLS",
+   "OTTOMANS",
+   "RUS",
+   "SENGOKU_DAIMYO",
+   "TUGHLAQ_DYNASTY",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "HORSEMAN": {
+  "name": "horseman",
+  "time": 22.5,
+  "cost": {
+   "food": 100.0,
+   "wood": 20.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "BYZANTINES",
+   "CHINESE",
+   "ENGLAND",
+   "FRENCH",
+   "HRE",
+   "JAPANESE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MACEDONIAN_DYNASTY",
+   "MONGOLS",
+   "RUS",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "LANCER": {
+  "name": "lancer",
+  "time": 35.0,
+  "cost": {
+   "food": 140.0,
+   "wood": 0.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "CHINESE",
+   "DELHI",
+   "TUGHLAQ_DYNASTY",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "KNIGHT": {
+  "name": "knight",
+  "time": 35.0,
+  "cost": {
+   "food": 140.0,
+   "wood": 0.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "OTTOMANS",
+   "RUS"
+  ],
+  "file": "Units.ts"
+ },
+ "JEANNES_RIDER": {
+  "name": "jeanne\\",
+  "time": 15.0,
+  "cost": {
+   "food": 180.0,
+   "wood": 0.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JEANNE_D_ARC"
+  ],
+  "file": "Units.ts"
+ },
+ "JEANNES_CHAMPION": {
+  "name": "jeanne\\",
+  "time": 15.0,
+  "cost": {
+   "food": 160.0,
+   "wood": 0.0,
+   "gold": 40.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "JEANNE_D_ARC"
+  ],
+  "file": "Units.ts"
+ },
+ "MAN_AT_ARMS": {
+  "name": "man at arms",
+  "time": 22.5,
+  "cost": {
+   "food": 100.0,
+   "wood": 0.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DELHI",
+   "ENGLAND",
+   "FRENCH",
+   "HRE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MONGOLS",
+   "OTTOMANS",
+   "RUS",
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "Units.ts"
+ },
+ "PALACE_GUARD": {
+  "name": "palace guard",
+  "time": 22.5,
+  "cost": {
+   "food": 100.0,
+   "wood": 0.0,
+   "gold": 25.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "GHULAM": {
+  "name": "ghulam",
+  "time": 26.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 0.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS"
+  ],
+  "file": "Units.ts"
+ },
+ "LANDSKNECHT": {
+  "name": "landsknecht",
+  "time": 22.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 0.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "HRE"
+  ],
+  "file": "Units.ts"
+ },
+ "CROSSBOWMAN": {
+  "name": "crossbowman",
+  "time": 22.5,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 40.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "BYZANTINES",
+   "CHINESE",
+   "DELHI",
+   "ENGLAND",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "KNIGHTS_TEMPLAR",
+   "MACEDONIAN_DYNASTY",
+   "MONGOLS",
+   "OTTOMANS",
+   "RUS",
+   "TUGHLAQ_DYNASTY",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "SERJEANT": {
+  "name": "serjeant",
+  "time": 23.0,
+  "cost": {
+   "food": 70.0,
+   "wood": 0.0,
+   "gold": 50.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "HOSPITALLER_KNIGHT": {
+  "name": "hospitaller knight",
+  "time": 21.0,
+  "cost": {
+   "food": 50.0,
+   "wood": 0.0,
+   "gold": 60.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "GENOESE_CROSSBOWMAN": {
+  "name": "genoese crossbowman",
+  "time": 26.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 90.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "HEAVY_SPEARMAN": {
+  "name": "heavy spearman",
+  "time": 19.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "CONDOTTIERO": {
+  "name": "condottiero",
+  "time": 19.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 0.0,
+   "gold": 120.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "TEUTONIC_KNIGHT": {
+  "name": "teutonic knight",
+  "time": 28.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 0.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "CHEVALIER_CONFRERE": {
+  "name": "chevalier confrere",
+  "time": 26.0,
+  "cost": {
+   "food": 90.0,
+   "wood": 0.0,
+   "gold": 80.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "GENITOUR": {
+  "name": "genitour",
+  "time": 23.0,
+  "cost": {
+   "food": 60.0,
+   "wood": 60.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "TEMPLAR_BROTHER": {
+  "name": "templar brother",
+  "time": 38.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 0.0,
+   "gold": 140.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "SZLACHTA_CAVALRY": {
+  "name": "szlachta cavalry",
+  "time": 40.0,
+  "cost": {
+   "food": 180.0,
+   "wood": 0.0,
+   "gold": 120.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "HANDCANNONEER": {
+  "name": "handcannoneer",
+  "time": 35.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 0.0,
+   "gold": 120.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "BYZANTINES",
+   "CHINESE",
+   "DELHI",
+   "ENGLAND",
+   "FRENCH",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JAPANESE",
+   "JEANNE_D_ARC",
+   "MACEDONIAN_DYNASTY",
+   "MONGOLS",
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "Units.ts"
+ },
+ "TRADER": {
+  "name": "trader",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 60.0,
+   "gold": 60.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE",
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "VENETIAN_TRADER": {
+  "name": "venetian trader",
+  "time": 20.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 80.0,
+   "gold": 120.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "CAMEL_ARCHER": {
+  "name": "camel archer",
+  "time": 35.0,
+  "cost": {
+   "food": 170.0,
+   "wood": 60.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID"
+  ],
+  "file": "Units.ts"
+ },
+ "CAMEL_RIDER": {
+  "name": "camel rider",
+  "time": 35.0,
+  "cost": {
+   "food": 130.0,
+   "wood": 45.0,
+   "gold": 45.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID"
+  ],
+  "file": "Units.ts"
+ },
+ "ZHUGE_NU": {
+  "name": "zhuge nu",
+  "time": 15.0,
+  "cost": {
+   "food": 30.0,
+   "wood": 30.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "GRENADIER": {
+  "name": "grenadier",
+  "time": 30.0,
+  "cost": {
+   "food": 100.0,
+   "wood": 60.0,
+   "gold": 60.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "FIRE_LANCER": {
+  "name": "fire lancer",
+  "time": 22.0,
+  "cost": {
+   "food": 120.0,
+   "wood": 20.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE"
+  ],
+  "file": "Units.ts"
+ },
+ "SCOUT": {
+  "name": "scout",
+  "time": 23.0,
+  "cost": {
+   "food": 65.0,
+   "wood": 0.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "BYZANTINES",
+   "CHINESE",
+   "DELHI",
+   "DRAGON_ORDER",
+   "ENGLAND",
+   "FRENCH",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JAPANESE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MONGOLS",
+   "OTTOMANS",
+   "RUS",
+   "TUGHLAQ_DYNASTY",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "FISHING_BOAT": {
+  "name": "fishing boat",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 75.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "RUS"
+  ],
+  "file": "Units.ts"
+ },
+ "RAM": {
+  "name": "ram",
+  "time": 35.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 200.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "CHINESE",
+   "DELHI",
+   "DRAGON_ORDER",
+   "ENGLAND",
+   "FRENCH",
+   "GOLDEN_HORDE",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JAPANESE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MALIANS",
+   "MONGOLS",
+   "OTTOMANS",
+   "RUS",
+   "SENGOKU_DAIMYO",
+   "TUGHLAQ_DYNASTY",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "SPRINGALD": {
+  "name": "springald",
+  "time": 20.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 150.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "Units.ts"
+ },
+ "MANGONEL": {
+  "name": "mangonel",
+  "time": 40.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 400.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "BYZANTINES",
+   "DELHI",
+   "DRAGON_ORDER",
+   "ENGLAND",
+   "FRENCH",
+   "GOLDEN_HORDE",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JAPANESE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MACEDONIAN_DYNASTY",
+   "MALIANS",
+   "MONGOLS",
+   "OTTOMANS",
+   "RUS",
+   "SENGOKU_DAIMYO",
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "Units.ts"
+ },
+ "NEST_OF_BEES": {
+  "name": "nest of bees",
+  "time": 40.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 300.0,
+   "gold": 300.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "COUNTERWEIGHT_TREBUCHET": {
+  "name": "counterweight trebuchet",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 400.0,
+   "gold": 150.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "BYZANTINES",
+   "CHINESE",
+   "DELHI",
+   "DRAGON_ORDER",
+   "ENGLAND",
+   "FRENCH",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JAPANESE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MACEDONIAN_DYNASTY",
+   "MALIANS",
+   "OTTOMANS",
+   "RUS",
+   "SENGOKU_DAIMYO",
+   "TUGHLAQ_DYNASTY",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "BOMBARD": {
+  "name": "bombard",
+  "time": 45.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 350.0,
+   "gold": 500.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "BYZANTINES",
+   "CHINESE",
+   "DELHI",
+   "DRAGON_ORDER",
+   "ENGLAND",
+   "FRENCH",
+   "GOLDEN_HORDE",
+   "HRE",
+   "JAPANESE",
+   "JEANNE_D_ARC",
+   "MACEDONIAN_DYNASTY",
+   "MALIANS",
+   "MONGOLS",
+   "RUS",
+   "SENGOKU_DAIMYO",
+   "TUGHLAQ_DYNASTY",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "IMPERIAL_OFFICIAL": {
+  "name": "imperial official",
+  "time": 20.0,
+  "cost": {
+   "food": 100.0,
+   "wood": 0.0,
+   "gold": 50.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "WYNGUARD_ARMY": {
+  "name": "wynguard army",
+  "time": 55.0,
+  "cost": {
+   "food": 100.0,
+   "wood": 100.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ENGLAND",
+   "HOUSE_OF_LANCASTER"
+  ],
+  "file": "Units.ts"
+ },
+ "TRADE_SHIP": {
+  "name": "trade ship",
+  "time": 30.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 100.0,
+   "gold": 100.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "GOLDEN_HORDE"
+  ],
+  "file": "Units.ts"
+ },
+ "DHOW": {
+  "name": "dhow",
+  "time": 25.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 150.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "DELHI",
+   "OTTOMANS",
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "Units.ts"
+ },
+ "GALLEY": {
+  "name": "galley",
+  "time": 25.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 150.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "BYZANTINES",
+   "DRAGON_ORDER",
+   "ENGLAND",
+   "FRENCH",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MACEDONIAN_DYNASTY",
+   "RUS"
+  ],
+  "file": "Units.ts"
+ },
+ "JUNK": {
+  "name": "junk",
+  "time": 25.0,
+  "cost": {
+   "food": 80.0,
+   "wood": 150.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE",
+   "GOLDEN_HORDE",
+   "JAPANESE",
+   "MONGOLS",
+   "SENGOKU_DAIMYO",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "HULK": {
+  "name": "hulk",
+  "time": 30.0,
+  "cost": {
+   "food": 110.0,
+   "wood": 200.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "DRAGON_ORDER",
+   "ENGLAND",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "KNIGHTS_TEMPLAR",
+   "MACEDONIAN_DYNASTY",
+   "OTTOMANS",
+   "RUS"
+  ],
+  "file": "Units.ts"
+ },
+ "BAGHLAH": {
+  "name": "baghlah",
+  "time": 30.0,
+  "cost": {
+   "food": 110.0,
+   "wood": 200.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "DELHI",
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "Units.ts"
+ },
+ "WAR_JUNK": {
+  "name": "war junk",
+  "time": 30.0,
+  "cost": {
+   "food": 110.0,
+   "wood": 200.0,
+   "gold": 30.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE",
+   "JAPANESE",
+   "MONGOLS",
+   "SENGOKU_DAIMYO",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "DEMOLITION_SHIP": {
+  "name": "demolition ship",
+  "time": 15.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 80.0,
+   "gold": 80.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "AYYUBIDS",
+   "BYZANTINES",
+   "DELHI",
+   "DRAGON_ORDER",
+   "ENGLAND",
+   "FRENCH",
+   "GOLDEN_HORDE",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JEANNE_D_ARC",
+   "KNIGHTS_TEMPLAR",
+   "MACEDONIAN_DYNASTY",
+   "MALIANS",
+   "OTTOMANS",
+   "RUS",
+   "TUGHLAQ_DYNASTY"
+  ],
+  "file": "Units.ts"
+ },
+ "EXPLOSIVE_JUNK": {
+  "name": "explosive junk",
+  "time": 15.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 80.0,
+   "gold": 80.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE",
+   "JAPANESE",
+   "MONGOLS",
+   "SENGOKU_DAIMYO",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "CARRACK": {
+  "name": "carrack",
+  "time": 45.0,
+  "cost": {
+   "food": 200.0,
+   "wood": 200.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ABBASID",
+   "BYZANTINES",
+   "DELHI",
+   "DRAGON_ORDER",
+   "ENGLAND",
+   "FRENCH",
+   "HOUSE_OF_LANCASTER",
+   "HRE",
+   "JEANNE_D_ARC",
+   "MACEDONIAN_DYNASTY",
+   "OTTOMANS"
+  ],
+  "file": "Units.ts"
+ },
+ "BAOCHUAN": {
+  "name": "baochuan",
+  "time": 45.0,
+  "cost": {
+   "food": 200.0,
+   "wood": 200.0,
+   "gold": 200.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "CHINESE",
+   "MONGOLS",
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "Units.ts"
+ },
+ "VENETIAN_GALLEY": {
+  "name": "venetian galley",
+  "time": 50.0,
+  "cost": {
+   "food": 0.0,
+   "wood": 360.0,
+   "gold": 300.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "KNIGHTS_TEMPLAR"
+  ],
+  "file": "Units.ts"
+ },
+ "YUAN_RAIDER": {
+  "name": "yuan raider",
+  "time": 22.5,
+  "cost": {
+   "food": 80.0,
+   "wood": 20.0,
+   "gold": 20.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "ZhuXisLegacyUnits.ts"
+ },
+ "SHAOLIN_MONK": {
+  "name": "shaolin monk",
+  "time": 20.0,
+  "cost": {
+   "food": 200.0,
+   "wood": 0.0,
+   "gold": 0.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "ZhuXisLegacyUnits.ts"
+ },
+ "IMPERIAL_GUARD": {
+  "name": "imperial guard",
+  "time": 35.0,
+  "cost": {
+   "food": 140.0,
+   "wood": 0.0,
+   "gold": 140.0,
+   "stone": 0.0
+  },
+  "civs": [
+   "ZHU_XIS_LEGACY"
+  ],
+  "file": "ZhuXisLegacyUnits.ts"
+ }
+}

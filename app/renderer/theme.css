@@ -1,0 +1,85 @@
+/* AoE4 Coach theme. Shared by every window.
+   Colors sampled from the reference dashboard shot. Fonts ship in fonts/ (SIL OFL). */
+@font-face{font-family:"Space Grotesk";font-weight:500;font-style:normal;font-display:swap;src:url("fonts/space-grotesk-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"Space Grotesk";font-weight:600;font-style:normal;font-display:swap;src:url("fonts/space-grotesk-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"Space Grotesk";font-weight:700;font-style:normal;font-display:swap;src:url("fonts/space-grotesk-latin-700-normal.woff2") format("woff2")}
+@font-face{font-family:"Manrope";font-weight:400;font-style:normal;font-display:swap;src:url("fonts/manrope-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"Manrope";font-weight:500;font-style:normal;font-display:swap;src:url("fonts/manrope-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"Manrope";font-weight:600;font-style:normal;font-display:swap;src:url("fonts/manrope-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"Manrope";font-weight:700;font-style:normal;font-display:swap;src:url("fonts/manrope-latin-700-normal.woff2") format("woff2")}
+
+:root{
+  /* surfaces */
+  --frame:#2d2f33;      /* outside the app (preview only) */
+  --base:#050909;       /* app background */
+  --base-2:#080d0e;     /* sidebar */
+  --card:#171b1f;       /* cards */
+  --card-2:#1f2326;     /* raised: chart card, keys */
+  --card-plum:#1c141b;  /* tinted card */
+  --card-olive:#1f1d19; /* tinted card */
+  --edge:rgba(255,255,255,.06);
+  --glow:#064557;       /* top-right radial */
+
+  /* text */
+  --ink:#ffffff;
+  --muted:#8b9293;
+  --dim:#6b7071;
+
+  /* accents */
+  --teal:#1c8aa5;       /* primary fill: savings card, active nav */
+  --teal-hi:#52b0c7;    /* light teal: highlights, focus */
+  --teal-deep:#19879d;
+  --pink:#c86ed6;
+  --green:#83c15e;
+  --yellow:#d3b546;
+  --lavender:#aa9dcd;
+  --sky:#97b8d1;
+  --orange:#c47343;
+  --line:#83b1af;       /* chart line */
+
+  /* resources, mapped onto the palette */
+  --food:var(--pink);
+  --wood:var(--green);
+  --gold:var(--yellow);
+  --stone:var(--sky);
+
+  /* the rainbow bar */
+  --spectrum:linear-gradient(90deg,#97b8d1 0%,#c58dd0 22%,#70bd7c 45%,#cdbe56 68%,#449194 100%);
+
+  --display:"Space Grotesk","Segoe UI Variable Display","Segoe UI",sans-serif;
+  --body:"Manrope","Segoe UI Variable Text","Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  color:var(--ink);font:15px/1.5 var(--body);-webkit-font-smoothing:antialiased;overflow:hidden;
+  background:
+    radial-gradient(ellipse 760px 520px at 100% 0%, rgba(6,69,87,.62) 0%, rgba(6,69,87,.22) 45%, transparent 75%),
+    var(--base);
+}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--teal-hi);outline-offset:2px;border-radius:8px}
+svg{display:block}
+.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+
+.btn{display:inline-flex;align-items:center;gap:9px;border:1px solid transparent;border-radius:999px;padding:11px 20px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--teal);color:#fff}
+.btn.primary:hover{background:#2095b1}
+.btn.quiet{background:var(--card-2);border-color:var(--edge)}
+.btn.quiet:hover{background:#262b2f}
+.btn:disabled{opacity:.5;cursor:default}
+.btn .i{width:17px;height:17px}
+
+.sw{appearance:none;width:38px;height:22px;border-radius:999px;background:#2a3033;position:relative;cursor:pointer;margin:0;flex:none;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw:checked{background:var(--teal-hi)}
+.sw:checked::after{transform:translateX(16px)}
+
+.range{width:100%;appearance:none;height:8px;border-radius:999px;background:var(--spectrum);outline-offset:6px}
+.range::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--base);cursor:pointer}
+
+/* rainbow progress: set --p from 0 to 1 */
+.spectrum{height:8px;border-radius:999px;background:#1f2326;position:relative;overflow:hidden}
+.spectrum::before{content:"";position:absolute;inset:0;background:var(--spectrum);clip-path:inset(0 calc((1 - var(--p,0)) * 100%) 0 0 round 999px);transition:clip-path .4s}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

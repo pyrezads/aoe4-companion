@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Your own settings and debug screenshots stay on your PC
+config.json
+debug/
+
+# Electron
+node_modules/
+dist/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# leftovers from file transfers
+.stage_tmp/

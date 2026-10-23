@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AoE4 Coach</title>
+<link rel="icon" href="img/icon.png">
+<link rel="stylesheet" href="theme.css">
+<style>
+/* ── window ─────────────────────────────────────────── */
+.app{display:grid;grid-template-columns:252px 1fr;height:100vh}
+.side{background:var(--base-2);display:flex;flex-direction:column;padding:26px 16px 22px}
+.brand{padding:4px 6px 0;margin-bottom:30px}
+.brand img{display:block;width:212px;height:auto}
+.grp{font-size:12px;color:var(--dim);padding:0 12px;margin:0 0 8px}
+.nav{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;border-radius:999px;padding:10px 14px;color:var(--muted);cursor:pointer;font-weight:500;font-size:14.5px;text-align:left}
+.nav:hover{color:var(--ink);background:var(--card)}
+.nav[aria-current="page"]{background:var(--teal);color:#fff}
+.nav .i{width:18px;height:18px}
+.navlist{display:grid;gap:4px;margin-bottom:26px}
+.side .spacer{flex:1}
+.side .foot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:var(--muted);font-size:14px}
+.side .foot span{display:flex;gap:12px;align-items:center}
+
+main{overflow:auto;padding:30px 36px 40px;position:relative}
+.view{display:none;max-width:1120px}
+.view.on{display:block}
+
+/* ── header ─────────────────────────────────────────── */
+.top{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:26px}
+h1{font:600 32px/1.1 var(--display);margin:0;letter-spacing:-.2px}
+.sub{color:var(--muted);margin:6px 0 0}
+.status{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--edge);border-radius:999px;padding:8px 16px 8px 13px;font-size:14px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.dot.live{background:var(--green);box-shadow:0 0 0 4px rgba(131,193,94,.18)}
+
+/* ── home: coach hero (teal) + screen ───────────────── */
+.hero{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;margin-bottom:34px}
+.coach{background:var(--teal);color:#fff;border-radius:22px;padding:26px;display:grid;grid-template-columns:1fr 268px;gap:24px}
+.coach h2{font:600 24px/1.1 var(--display);margin:0 0 8px}
+.coach p{color:rgba(255,255,255,.78);margin:0 0 18px;max-width:40ch}
+.picked{background:rgba(5,9,9,.16);border-radius:14px;padding:13px 15px;margin-bottom:18px}
+.picked .t{font-weight:700}
+.picked .m{color:rgba(255,255,255,.72);font-size:13px}
+.picked .chg{background:none;border:0;color:#fff;cursor:pointer;padding:0;font-weight:700;font-size:13px;margin-top:6px;text-decoration:underline;text-underline-offset:3px}
+.coach .btn.primary{background:var(--base);color:#fff}
+.coach .btn.primary:hover{background:#000}
+.coach .btn.quiet{background:rgba(255,255,255,.14);border-color:transparent;color:#fff}
+.coach .btn.quiet:hover{background:rgba(255,255,255,.22)}
+
+/* mini overlay preview */
+.mini{background:var(--base);border-radius:16px;padding:15px;display:flex;flex-direction:column;gap:12px;color:var(--ink)}
+.mini .clock{display:flex;justify-content:space-between;color:var(--muted);font:500 13px var(--display)}
+.mini .next{font:700 30px/1 var(--display);color:var(--wood);display:flex;align-items:center;gap:10px}
+.mini .next small{display:block;font:500 13px var(--body);color:var(--muted);margin-bottom:4px}
+.pips{display:grid;gap:7px}
+.pips .row{display:grid;grid-template-columns:44px 1fr;align-items:center;gap:8px;font-size:12px}
+.pips .p{display:flex;gap:3px;flex-wrap:wrap}
+.pips i{width:9px;height:9px;border-radius:3px;border:1.5px solid currentColor;display:block}
+.pips i.f{background:currentColor}
+.mini .bar{margin-top:auto}
+.mini .bar .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+
+.screen{background:var(--card);border:1px solid var(--edge);border-radius:22px;padding:24px;display:flex;flex-direction:column}
+.screen h3{font:600 17px var(--display);margin:0;color:var(--muted)}
+.screen .big{font:600 44px/1 var(--display);margin:12px 0 4px}
+.screen .big span{color:var(--dim);margin:0 6px;font-weight:500}
+.screen .note{color:var(--muted);font-size:14px;margin:0 0 16px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin-bottom:9px}
+.check .i{width:18px;height:18px;flex:none;margin-top:1px}
+.check.ok .i{color:var(--green)} .check.warn .i{color:var(--orange)}
+.screen .grow{flex:1}
+
+/* ── tools list ─────────────────────────────────────── */
+.section-h{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 12px}
+.section-h h2{font:600 20px var(--display);margin:0}
+.section-h p{margin:0;color:var(--muted);font-size:14px}
+.tools{border-radius:22px;overflow:hidden;background:var(--card);border:1px solid var(--edge)}
+.tool{display:grid;grid-template-columns:46px 1fr auto auto;align-items:center;gap:18px;padding:16px 20px;border-top:1px solid var(--edge)}
+.tool:first-child{border-top:0}
+.tool .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--tone);background:color-mix(in srgb,var(--tone) 16%,transparent)}
+.tool .ic .i{width:21px;height:21px}
+.tool .n{font-weight:700}
+.tool .d{color:var(--muted);font-size:14px}
+.tool .tag{font-size:12px;color:#141414;background:var(--yellow);border-radius:999px;padding:1px 9px;margin-left:8px;font-weight:700;vertical-align:2px}
+.auto{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
+.tool .open{padding:8px 16px}
+.tool[aria-disabled="true"] .n,.tool[aria-disabled="true"] .ic,.tool[aria-disabled="true"] .d{opacity:.55}
+
+/* ── build coach view ───────────────────────────────── */
+.two{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--edge);border-radius:22px;padding:22px}
+.field{display:grid;gap:7px;margin-bottom:16px}
+.field label,.field .lab{font-size:14px;font-weight:700}
+.field .hint{font-size:13px;color:var(--muted)}
+.sel{position:relative}
+.sel select,.inp{width:100%;appearance:none;background:var(--base);border:1px solid var(--edge);border-radius:12px;padding:11px 38px 11px 13px}
+.inp{padding-right:13px}
+.sel::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
+.chip{border:1px solid var(--edge);background:none;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--base);border-color:var(--ink)}
+.builds{display:grid;gap:8px}
+.b{display:grid;grid-template-columns:20px 1fr auto;gap:14px;align-items:center;background:var(--base);border:1px solid var(--edge);border-radius:16px;padding:13px 15px;cursor:pointer}
+.b:hover{border-color:#2c3438}
+.b input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.b:has(input:checked){border-color:var(--teal);background:#08161a}
+.b .t{font-weight:700}
+.b .m{font-size:13px;color:var(--muted)}
+.strat{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;color:#111}
+.strat.rush{background:var(--pink)} .strat.fc{background:var(--yellow)} .strat.boom{background:var(--green)} .strat.timing{background:var(--teal-hi)}
+.or{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:13px;margin:18px 0 12px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--edge)}
+
+/* ── settings ───────────────────────────────────────── */
+.set-grid{display:grid;gap:18px}
+.set{display:grid;grid-template-columns:240px 1fr;gap:32px;padding:24px;background:var(--card);border:1px solid var(--edge);border-radius:22px}
+.set h3{font:600 19px var(--display);margin:0 0 4px}
+.set .why{color:var(--muted);font-size:14px;margin:0}
+.monitors{position:relative;height:190px;background:var(--base);border-radius:16px;margin-bottom:16px}
+.mon{position:absolute;border:2px solid var(--edge);border-radius:10px;background:var(--card-2);display:grid;place-items:center;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;line-height:1.35}
+.mon>div{white-space:nowrap}
+button.mon{font:inherit;padding:0}
+.mon:not(.game):hover{border-color:var(--muted)}
+.mon b{display:block;font:600 16px var(--display);color:var(--ink)}
+.mon.game{border-color:var(--teal-hi)}
+.mon.coach{border-color:var(--pink)}
+.mon .role{font-size:11.5px;font-weight:700}
+.mon.game .role{color:var(--teal-hi)} .mon.coach .role{color:var(--pink)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.keys{display:grid;gap:10px}
+.key{display:flex;justify-content:space-between;align-items:center;background:var(--base);border:1px solid var(--edge);border-radius:12px;padding:10px 13px;font-size:14px}
+kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;border-bottom-width:2px;border-radius:7px;padding:2px 9px}
+
+/* app window: drag by the top edge; leave room for the macOS window buttons */
+.dragbar{display:none}
+.in-app .dragbar{display:block;position:fixed;top:0;left:0;right:0;height:30px;-webkit-app-region:drag;z-index:5}
+.platform-darwin .side{padding-top:46px}
+.in-app button,.in-app input,.in-app select,.in-app label{-webkit-app-region:no-drag}
+
+@media (max-width:1060px){
+  .hero,.two,.set{grid-template-columns:1fr}
+  .coach{grid-template-columns:1fr}
+  .tool{grid-template-columns:44px 1fr auto}
+  .tool .auto{display:none}
+}
+@media (max-width:760px){.app{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-keep" viewBox="0 0 24 24"><path d="M4 21V8h3V4h2.5v2.5h2V4h2.5v2.5h2V4H17v4h3v13z"/><path d="M10 21v-5a2 2 0 0 1 4 0v5"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><path d="M6 4a2 2 0 0 0-2 2v2h2"/><path d="m9.5 9 1.5 1.5L13.5 8M9.5 14.5h6M9.5 17h4"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-glass" viewBox="0 0 24 24"><path d="m3 13.5 11.5-6 2 3.8L5 17.2z"/><path d="m14.5 7.5 3.8-2 2.2 4.2-3.9 1.6"/><path d="M8.5 16.3 6.5 21M10.5 15.4l2 5.6"/></symbol>
+    <symbol id="i-swords" viewBox="0 0 24 24"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/><path d="M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></symbol>
+    <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.5L16 9.5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
+    <symbol id="i-log" viewBox="0 0 24 24"><ellipse cx="6.5" cy="12" rx="3" ry="5"/><path d="M6.5 7H18c1.7 0 3 2.2 3 5s-1.3 5-3 5H6.5"/><path d="M6.5 10.5v3"/></symbol>
+  </defs>
+</svg>
+
+<div class="dragbar"></div>
+<div class="app">
+  <nav class="side" aria-label="Main">
+    <div class="brand"><img src="img/logo.png" alt="AoE4 Coach" width="212" height="86"></div>
+    <p class="grp">Play</p>
+    <div class="navlist">
+      <button class="nav" data-go="home" aria-current="page"><svg class="i"><use href="#i-home"/></svg>Home</button>
+      <button class="nav" data-go="coach"><svg class="i"><use href="#i-scroll"/></svg>Build coach</button>
+      <button class="nav" data-tool="analyst"><svg class="i"><use href="#i-eye"/></svg>Live analyst</button>
+      <button class="nav" data-tool="scout"><svg class="i"><use href="#i-glass"/></svg>Opponent scout</button>
+      <button class="nav" data-tool="army"><svg class="i"><use href="#i-swords"/></svg>Army and counters</button>
+    </div>
+    <p class="grp">Setup</p>
+    <div class="navlist">
+      <button class="nav" data-go="settings"><svg class="i"><use href="#i-sliders"/></svg>Settings</button>
+    </div>
+    <span class="spacer"></span>
+    <label class="foot"><span><svg class="i" style="width:18px;height:18px"><use href="#i-monitor"/></svg>Start with Windows</span><input type="checkbox" class="sw"></label>
+  </nav>
+
+  <main>
+    <!-- ════════ HOME ════════ -->
+    <section class="view on" id="v-home" aria-label="Home">
+      <div class="top">
+        <div>
+          <h1 id="hello">Ready when you are</h1>
+          <p class="sub">Pick a build, start the coach, then launch Age of Empires IV.</p>
+        </div>
+        <div class="status" id="gameStatus"><span class="dot"></span>Waiting for Age of Empires IV</div>
+      </div>
+
+      <div class="hero">
+        <article class="coach">
+          <div>
+            <h2>Build coach</h2>
+            <p>Tells you where each new villager should go and what to build next, following the build you pick.</p>
+            <div class="picked">
+              <div class="t" id="pickedTitle">Zhuge Nu-Timing-Attack(10-14)</div>
+              <div class="m" id="pickedMeta">Zhu Xi's Legacy, timing attack, season 13</div>
+              <button class="chg" data-go="coach">Change build</button>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn primary" id="startCoach"><svg class="i" style="fill:currentColor;stroke:none"><use href="#i-play"/></svg>Start coach</button>
+              <button class="btn quiet" data-go="settings">Overlay position</button>
+            </div>
+          </div>
+          <div class="mini" aria-label="Preview of the coach overlay">
+            <div class="clock"><span>3:42</span><span>17 villagers</span></div>
+            <div class="next"><svg class="i" style="width:28px;height:28px"><use href="#i-log"/></svg><div><small>Next villager</small>Wood</div></div>
+            <div class="pips">
+              <div class="row" style="color:var(--food)"><span>Food</span><span class="p" data-have="9" data-want="9"></span></div>
+              <div class="row" style="color:var(--wood)"><span>Wood</span><span class="p" data-have="5" data-want="6"></span></div>
+              <div class="row" style="color:var(--gold)"><span>Gold</span><span class="p" data-have="3" data-want="3"></span></div>
+              <div class="row" style="color:var(--stone)"><span>Stone</span><span class="p" data-have="0" data-want="0"></span></div>
+            </div>
+            <div class="bar"><div class="spectrum" style="--p:.82"></div><div class="lab"><span>Dark Age</span><span>Feudal at 4:20</span></div></div>
+          </div>
+        </article>
+
+        <article class="screen">
+          <h3>Your screen</h3>
+          <div class="big" id="res">2560<span>×</span>1440</div>
+          <p class="note" id="resNote">Detected automatically from your game monitor.</p>
+          <div class="check ok" id="chkRes"><svg class="i"><use href="#i-check"/></svg><span>Reading regions set up for this size</span></div>
+          <div class="check ok" id="chkTwo"><svg class="i"><use href="#i-check"/></svg><span>Coach shows on your second monitor</span></div>
+          <div class="check warn"><svg class="i"><use href="#i-alert"/></svg><span>Use Borderless Windowed. Fullscreen can't be read.</span></div>
+          <div class="grow"></div>
+          <button class="btn quiet" data-go="settings" style="align-self:flex-start;margin-top:10px">Change display settings</button>
+        </article>
+      </div>
+
+      <div class="section-h">
+        <h2>Tools</h2>
+        <p>Turn on the ones you want to open by themselves when a game starts.</p>
+      </div>
+      <div class="tools">
+        <div class="tool" style="--tone:var(--teal-hi)">
+          <div class="ic"><svg class="i"><use href="#i-scroll"/></svg></div>
+          <div><div class="n">Build coach</div><div class="d">Next villager, next building and age-up timing, step by step.</div></div>
+          <label class="auto"><input type="checkbox" class="sw" checked>Open with game</label>
+          <button class="btn quiet open">Open</button>
+        </div>
+        <div class="tool" style="--tone:var(--green)">
+          <div class="ic"><svg class="i"><use href="#i-eye"/></svg></div>
+          <div><div class="n">Live analyst</div><div class="d">Economy, idle villagers, housing and resource alerts every second.</div></div>
+          <label class="auto"><input type="checkbox" class="sw" checked>Open with game</label>
+          <button class="btn quiet open">Open</button>
+        </div>
+        <div class="tool" style="--tone:var(--pink)">
+          <div class="ic"><svg class="i"><use href="#i-glass"/></svg></div>
+          <div><div class="n">Opponent scout</div><div class="d">Ranked opponents' rating, civ record, streaks and your head-to-head.</div></div>
+          <label class="auto"><input type="checkbox" class="sw">Open with game</label>
+          <button class="btn quiet open">Open</button>
+        </div>
+        <div class="tool" style="--tone:var(--yellow)">
+          <div class="ic"><svg class="i"><use href="#i-swords"/></svg></div>
+          <div><div class="n">Army and counters</div><div class="d">Your army by unit type, what beats the enemy's, and upgrades worth buying.</div></div>
+          <label class="auto"><input type="checkbox" class="sw">Open with game</label>
+          <button class="btn quiet open">Open</button>
+        </div>
+        <div class="tool" style="--tone:var(--lavender)" aria-disabled="true">
+          <div class="ic"><svg class="i"><use href="#i-hourglass"/></svg></div>
+          <div><div class="n">Game review <span class="tag">Planned</span></div><div class="d">After the game: where you fell behind your build and how long you were housed.</div></div>
+          <span></span>
+          <button class="btn quiet open" disabled>Soon</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ BUILD COACH ════════ -->
+    <section class="view" id="v-coach" aria-label="Build coach">
+      <div class="top">
+        <div>
+          <h1>Choose a build</h1>
+          <p class="sub">Builds come live from aoe4guides.com. The coach follows the one you choose.</p>
+        </div>
+      </div>
+      <div class="two">
+        <div class="panel">
+          <div class="row2">
+            <div class="field">
+              <label for="civ">Civilization</label>
+              <div class="sel"><select id="civ">
+                <option value="zhu_xis_legacy" selected>Zhu Xi's Legacy</option>
+                <option>Abbasid Dynasty</option><option>Ayyubids</option><option>Byzantines</option><option>Chinese</option>
+                <option>Delhi Sultanate</option><option>English</option><option>French</option><option>Golden Horde</option>
+                <option>Holy Roman Empire</option><option>House of Lancaster</option><option>Japanese</option>
+                <option>Jeanne d'Arc</option><option>Jin Dynasty</option><option>Knights Templar</option>
+                <option>Macedonian Dynasty</option><option>Malians</option><option>Mongols</option>
+                <option>Order of the Dragon</option><option>Ottomans</option><option>Rus</option>
+                <option>Sengoku Daimyo</option><option>Tughlaq Dynasty</option>
+              </select></div>
+            </div>
+            <div class="field">
+              <label for="sort">Sort by</label>
+              <div class="sel"><select id="sort"><option>Best for this patch</option><option>Most viewed</option><option>Newest</option></select></div>
+            </div>
+          </div>
+          <div class="filters" role="group" aria-label="Strategy">
+            <button class="chip" aria-pressed="true" data-f="all">All</button>
+            <button class="chip" aria-pressed="false" data-f="Rush">Rush</button>
+            <button class="chip" aria-pressed="false" data-f="Timing Attack">Timing attack</button>
+            <button class="chip" aria-pressed="false" data-f="Fast Castle">Fast castle</button>
+            <button class="chip" aria-pressed="false" data-f="Boom">Boom</button>
+          </div>
+          <div class="builds" id="builds"></div>
+          <div class="or">or use your own</div>
+          <div class="field" style="margin:0">
+            <label for="link">Paste an aoe4guides.com build link</label>
+            <input class="inp" id="link" placeholder="https://aoe4guides.com/builds/…">
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="field">
+            <span class="lab">When the game starts</span>
+            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw" checked>Re-pick when the enemy civs and map are known</label>
+            <span class="hint">Only switches builds in the first 2:30, and only if you haven't chosen one here.</span>
+          </div>
+          <div class="field">
+            <span class="lab">Follow the build by</span>
+            <div class="sel"><select><option>Villager count (recommended)</option><option>Game clock</option></select></div>
+            <span class="hint">By villager count, the coach stays in step even if you fall behind the build's times.</span>
+          </div>
+          <div class="field">
+            <span class="lab">Say it out loud</span>
+            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw">Speak "next villager to wood"</label>
+          </div>
+          <button class="btn primary" style="width:100%;justify-content:center" data-go="home" id="useBuild">Use this build</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ SETTINGS ════════ -->
+    <section class="view" id="v-settings" aria-label="Settings">
+      <div class="top"><div><h1>Settings</h1><p class="sub">Most of this is detected for you. Change it only if something reads wrong.</p></div></div>
+      <div class="set-grid">
+        <div class="set">
+          <div><h3>Display</h3><p class="why">The companion reads numbers off your HUD, so it needs to know your game's size and UI scale. Click a monitor to swap roles.</p></div>
+          <div>
+            <div class="monitors" id="monitors">
+            </div>
+            <div class="row2">
+              <div class="field"><label for="resSel">Game resolution</label>
+                <div class="sel"><select id="resSel"><option id="autoOpt">Auto (2560 × 1440)</option><option>1920 × 1080</option><option>2560 × 1440</option><option>3440 × 1440 (ultrawide)</option><option>3840 × 2160</option></select></div></div>
+              <div class="field"><label for="ui">In-game UI scale</label>
+                <div class="sel"><select id="ui"><option>Auto (100%)</option><option>100%</option><option>90%</option><option>80%</option><option>70%</option></select></div></div>
+            </div>
+            <button class="btn quiet">Run a reading check</button>
+            <p class="why" style="margin-top:8px">Start a skirmish, then run the check. It reads your clock, villagers and resources and says what it couldn't see.</p>
+          </div>
+        </div>
+        <div class="set">
+          <div><h3>Overlay</h3><p class="why">How the coach looks on your second monitor and on the game screen.</p></div>
+          <div>
+            <div class="row2">
+              <div class="field"><span class="lab">On the game screen</span>
+                <div class="sel"><select><option>Small strip, top centre</option><option>Small strip, below the minimap</option><option>Off</option></select></div></div>
+              <div class="field"><span class="lab">On the second monitor</span>
+                <div class="sel"><select><option>Full coach panel</option><option>Coach and live analyst</option><option>Off</option></select></div></div>
+            </div>
+            <div class="field"><label for="op">Strip opacity</label><input type="range" id="op" class="range" min="40" max="100" value="85"></div>
+          </div>
+        </div>
+        <div class="set">
+          <div><h3>Your account</h3><p class="why">Used for ranked scouting and win rates at your rating. Nothing is posted anywhere.</p></div>
+          <div class="field" style="margin:0"><label for="pid">aoe4world.com profile</label><input class="inp" id="pid" value="aoe4world.com/players/6979980"><span class="hint">Paste your profile link or your player ID.</span></div>
+        </div>
+        <div class="set">
+          <div><h3>Hotkeys</h3><p class="why">The game still receives these keys. The companion only listens.</p></div>
+          <div class="keys">
+            <div class="key">Read my army (your "select all military" key)<kbd>Ctrl + C</kbd></div>
+            <div class="key">Mark the selected units as enemy<kbd>F9</kbd></div>
+            <div class="key">Skip to the next build step<kbd>F10</kbd></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+document.querySelectorAll('.pips .p').forEach(el => {
+  const have = +el.dataset.have, want = +el.dataset.want, n = Math.max(have, want);
+  el.innerHTML = n ? Array.from({length:n}, (_, i) => `<i class="${i < have ? 'f' : ''}"></i>`).join('') : '<span style="color:var(--dim)">none</span>';
+});
+
+const views = {home:'v-home', coach:'v-coach', settings:'v-settings'};
+function go(name){
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === views[name]));
+  document.querySelectorAll('.nav').forEach(n => n.dataset.go === name ? n.setAttribute('aria-current','page') : n.removeAttribute('aria-current'));
+  document.querySelector('main').scrollTop = 0;
+  if (name === 'settings') renderScreens();
+}
+document.addEventListener('click', e => { const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go); });
+
+// ── Screens. In the app this comes from Electron (every monitor, in real pixels);
+//    opened in a browser it reads this one monitor so you can see the auto-detect work.
+const SUPPORTED = ['2560x1440'];
+const inApp = !!window.app;
+let displays = [];
+
+async function loadDisplays(){
+  if (inApp) displays = await window.app.displays();
+  else {
+    const w = Math.round(screen.width * devicePixelRatio), h = Math.round(screen.height * devicePixelRatio);
+    displays = [{id:1, width:w, height:h, bounds:{x:0, y:0, width:screen.width, height:screen.height}, game:true}];
+  }
+  renderScreens();
+}
+
+function renderScreens(){
+  const g = displays.find(d => d.game) || displays[0];
+  if (!g) return;
+  const others = displays.filter(d => d !== g);
+  document.getElementById('res').innerHTML = `${g.width}<span>×</span>${g.height}`;
+  document.getElementById('autoOpt').textContent = `Auto (${g.width} × ${g.height})`;
+  const ok = SUPPORTED.includes(`${g.width}x${g.height}`);
+  const chk = document.getElementById('chkRes');
+  chk.className = 'check ' + (ok ? 'ok' : 'warn');
+  chk.innerHTML = `<svg class="i"><use href="#i-${ok ? 'check' : 'alert'}"/></svg><span>${ok ? 'Reading regions set up for this size' : 'New size: run a reading check once in a skirmish'}</span>`;
+  const two = document.getElementById('chkTwo');
+  two.className = 'check ' + (others.length ? 'ok' : 'warn');
+  two.innerHTML = `<svg class="i"><use href="#i-${others.length ? 'check' : 'alert'}"/></svg><span>${others.length ? 'Coach shows on your second monitor' : 'One monitor: the coach sits on the right edge of the game'}</span>`;
+
+  // monitor map, laid out like Windows arranges them
+  const box = document.getElementById('monitors');
+  const xs = displays.flatMap(d => [d.bounds.x, d.bounds.x + d.bounds.width]);
+  const ys = displays.flatMap(d => [d.bounds.y, d.bounds.y + d.bounds.height]);
+  const minX = Math.min(...xs), minY = Math.min(...ys), W = Math.max(...xs) - minX, H = Math.max(...ys) - minY;
+  const cw = box.clientWidth || 600, ch = 190, gap = 8;
+  const k = Math.min(cw * 0.86 / W, ch * 0.8 / H);          // pixels on screen per monitor pixel
+  const ox = (cw - W * k) / 2, oy = (ch - H * k) / 2;
+  box.innerHTML = displays.map((d, i) => {
+    const role = d === g ? 'Game' : d === others[0] ? 'Coach and overlay' : 'Not used';
+    const cls = d === g ? 'game' : d === others[0] ? 'coach' : '';
+    const l = ox + (d.bounds.x - minX) * k, t = oy + (d.bounds.y - minY) * k;
+    const w = d.bounds.width * k - gap, h = d.bounds.height * k - gap;
+    return `<button class="mon ${cls}" data-id="${d.id}" style="left:${l + gap / 2}px;top:${t + gap / 2}px;width:${w}px;height:${h}px" title="${d === g ? '' : 'Use this monitor for the game'}">
+      <div><span class="role">${role}</span><b>${d.width} × ${d.height}</b>Monitor ${i + 1}</div></button>`;
+  }).join('');
+}
+
+document.getElementById('monitors').addEventListener('click', async e => {
+  const m = e.target.closest('.mon');
+  if (!m) return;
+  const id = +m.dataset.id;
+  if (inApp) displays = await window.app.setGameDisplay(id);
+  else displays.forEach(d => d.game = d.id === id);
+  renderScreens();
+});
+addEventListener('resize', renderScreens);
+loadDisplays();
+
+// ── Start / stop the coach windows
+const startBtn = document.getElementById('startCoach');
+function coachState(open){
+  startBtn.lastChild.textContent = open ? 'Stop coach' : 'Start coach';
+  const dot = document.querySelector('#gameStatus .dot');
+  document.getElementById('gameStatus').lastChild.textContent = open ? 'Coach running (demo game)' : 'Waiting for Age of Empires IV';
+  dot.classList.toggle('live', open);
+}
+if (inApp) {
+  window.app.onCoachState(coachState);
+  startBtn.addEventListener('click', () => window.app.toggleCoach());
+  document.body.classList.add('in-app', 'platform-' + window.app.platform);
+} else {
+  startBtn.addEventListener('click', () => window.open('overlay.html', '_blank'));
+}
+
+// Sample of real Zhu Xi builds from aoe4guides (titles, seasons and views from data/builds_fixture_zxl.txt).
+// In the app this list comes live from aoe4guides when you pick a civ.
+const BUILDS = [
+  {t:"Zhu Xi Legacy Fast Castle [Aussie Drongo]", s:"Fast Castle", season:6, views:18049},
+  {t:"2TC Mass Units and Eco", s:"Boom", season:6, views:9435},
+  {t:"Zhu Xi | Season 09 | Ladder", s:"Rush", season:9, views:5979},
+  {t:"Superfast Castle (2026)", s:"Fast Castle", season:12, views:5691},
+  {t:"Zhu Xi feudal aggression", s:"Rush", season:13, views:1566},
+  {t:"Zhuxi - Zugenu Feudal Rush", s:"Rush", season:13, views:1089},
+  {t:"Zhuge Nu-Timing-Attack(10-14)", s:"Timing Attack", season:13, views:894},
+  {t:"Zhu Xi All in Feudal", s:"Rush", season:13, views:379, map:"Open"},
+  {t:"VortiX Zhu Xi Build Order", s:"Timing Attack", season:13, views:214},
+];
+const cls = {"Rush":"rush","Fast Castle":"fc","Boom":"boom","Timing Attack":"timing"};
+let filter = 'all', chosen = "Zhuge Nu-Timing-Attack(10-14)";
+function renderBuilds(){
+  const list = BUILDS.filter(b => filter === 'all' || b.s === filter)
+    .sort((a, b) => (b.season - a.season) || (b.views - a.views));
+  document.getElementById('builds').innerHTML = list.map(b => `
+    <label class="b"><input type="radio" name="build" value="${b.t}" ${b.t === chosen ? 'checked' : ''}>
+      <div><div class="t">${b.t}</div><div class="m">Season ${b.season}${b.season === 13 ? ', current patch' : ''}, ${b.views.toLocaleString()} views${b.map ? ', ' + b.map.toLowerCase() + ' maps' : ''}</div></div>
+      <span class="strat ${cls[b.s]}">${b.s.charAt(0) + b.s.slice(1).toLowerCase()}</span></label>`).join('');
+}
+renderBuilds();
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  filter = c.dataset.f;
+  document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === c));
+  renderBuilds();
+}));
+document.getElementById('builds').addEventListener('change', e => { chosen = e.target.value; });
+document.getElementById('useBuild').addEventListener('click', () => {
+  const b = BUILDS.find(x => x.t === chosen);
+  document.getElementById('pickedTitle').textContent = b.t;
+  document.getElementById('pickedMeta').textContent = `Zhu Xi's Legacy, ${b.s.toLowerCase()}, season ${b.season}`;
+});
+
+
+const hr = new Date().getHours();
+document.getElementById('hello').textContent = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+document.getElementById('pickedTitle').textContent = chosen;
+</script>
+</body>
+</html>
