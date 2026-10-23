@@ -203,7 +203,7 @@ class GameRecorder:
             when = dt.datetime.now()
             civ = self.meta.get("civ") or "unknown"
             gid = f"{when:%Y-%m-%d-%H%M}-{civ}"
-            data = {"id": gid, "date": when.isoformat(timespec="minutes"), **self.meta,
+            data = {"id": gid, "date": when.isoformat(timespec="minutes"), "ended_at": int(when.timestamp()), **self.meta,
                     "summary": summ, "events": self.events, "steps": self.steps_reached,
                     "series": [[x["t"], x["vil"], x["idle"], x["pop"], x["cap"]] for x in self.samples]}
             try:
@@ -246,7 +246,7 @@ def tips(s: dict) -> List[str]:
 def listing(data: dict) -> dict:
     """The short version of a saved game, for the list."""
     s = data.get("summary") or {}
-    return {"id": data.get("id"), "date": data.get("date"), "civ": data.get("civ"), "enemies": data.get("enemies") or [],
+    return {"id": data.get("id"), "date": data.get("date"), "ended_at": data.get("ended_at"), "civ": data.get("civ"), "enemies": data.get("enemies") or [],
             "mode": data.get("mode") or data.get("kind"), "map": data.get("map"),
             "build": (data.get("build") or {}).get("title"), "length": s.get("length"),
             "villagers_10": ((s.get("villagers_at") or {}).get("10:00") or {}).get("you"),

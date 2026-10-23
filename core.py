@@ -22,6 +22,8 @@ In:
     {"cmd": "use_build", "id": "..."}  or  {"cmd": "use_build", "url": "https://aoe4guides.com/builds/..."}
     {"cmd": "build_detail", "id": "...", "civ": "..."}   everything aoe4guides has on one build
     {"cmd": "list_games"} / {"cmd": "game_detail", "id": "..."}   saved games for review
+    {"cmd": "list_matches", "refresh": false} / {"cmd": "match_detail", "id": ...} / {"cmd": "save_replay", "id": ...}
+    {"cmd": "find_steam", "text": "steamcommunity.com/profiles/7656..."}
     {"cmd": "auto_build"}                 go back to the automatic pick
     {"cmd": "coach_skip", "n": 1}         n = -1 goes back a step
     {"cmd": "set_monitor", "width": 2560, "height": 1440, "x": 0, "y": 0}
@@ -235,6 +237,67 @@ class Commands:
         if g is None:
             raise KeyError(f"no saved game {msg.get('id')!r}")
         self.emit.send("game_detail", data=g)
+
+    # ── match history (official Age of Empires service) ───────────────
+    def _history(self):
+        h = self.state.get("history")
+        if h is None:
+            from history import History
+            h = History(self.cfg.get("cache_dir"))
+            self.state.set(history=h)
+        return h
+
+    def _pid(self, msg):
+        pid = int(msg.get("profile_id") or self.cfg.get("aoe4world_profile_id") or 0)
+        if not pid:
+            raise ValueError("no profile yet: add your Steam or aoe4 profile in Settings")
+        return pid
+
+    def do_list_matches(self, msg):
+        """Recent games, with leaderboards and insights. Runs in the background: it can take a few seconds."""
+        def work():
+            from history import insights, slim
+            try:
+                pid = self._pid(msg)
+                d = self._history().load(pid, force=bool(msg.get("refresh")))
+                self.emit.send("matches", data={"profile": d["profile"], "leaderboards": d.get("leaderboards", []),
+                                                "matches": [slim(m) for m in d["matches"]], "insights": insights(d["matches"]),
+                                                "fetched_at": d.get("fetched_at"), "offline": d.get("offline", False)})
+            except Exception as e:
+                self.emit.send("error", data={"cmd": "list_matches", "message": f"{type(e).__name__}: {e}"})
+        threading.Thread(target=work, daemon=True).start()
+
+    def do_match_detail(self, msg):
+        m = self._history().match(self._pid(msg), msg.get("id"))
+        if m is None:
+            raise KeyError(f"no match {msg.get('id')!r}")
+        self.emit.send("match_detail", data=m)
+
+    def do_save_replay(self, msg):
+        def work():
+            from history import save_replay
+            try:
+                m = self._history().match(self._pid(msg), msg.get("id"))
+                if not m or not m.get("replay"):
+                    raise ValueError("this match has no replay to download")
+                path = save_replay(m["replay"], m["id"])
+                self.emit.send("replay_saved", data={"id": m["id"], "path": path,
+                                                     "launch": f"-dev -replay playback:AgeIV_Replay_{int(m['id'])}"})
+            except Exception as e:
+                self.emit.send("error", data={"cmd": "save_replay", "message": f"{type(e).__name__}: {e}"})
+        threading.Thread(target=work, daemon=True).start()
+
+    def do_find_steam(self, msg):
+        """A Steam profile link -> the player's Age of Empires IV profile."""
+        from history import profile_for_steam, steam_id_from
+        sid = steam_id_from(msg.get("text", ""))
+        if not sid:
+            self.emit.send("steam_profile", data={"ok": False, "message": "Paste the link from your Steam profile page "
+                                                  "(steamcommunity.com/profiles/7656…). Custom /id/ links don't carry the number."})
+            return
+        p = profile_for_steam(sid)
+        self.emit.send("steam_profile", data={"ok": bool(p), "steam": sid, **(p or {}),
+                                              "message": None if p else "No Age of Empires IV profile on that Steam account."})
 
     def do_auto_build(self, msg):
         self.state.set(build_locked=False, build_repick=True)

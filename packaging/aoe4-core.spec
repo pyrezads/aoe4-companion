@@ -6,7 +6,7 @@ ROOT = pathlib.Path(SPECPATH).parent
 
 # Modules imported inside functions; listed so they're always packed.
 hidden = ["core", "analyst", "coach", "combat", "tracker", "hud_reader", "scoreboard", "units",
-          "screen", "gamewindow", "review", "aoe4world", "buildorder", "production_math", "mss", "keyboard",
+          "screen", "gamewindow", "review", "history", "aoe4world", "buildorder", "production_math", "mss", "keyboard",
           "windows_capture", "windows_capture.windows_capture"]
 
 a = Analysis(
