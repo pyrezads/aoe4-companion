@@ -54,7 +54,7 @@ note(f"runner screen {mon['width']}x{mon['height']}")
 game = ps(f"""Add-Type -AssemblyName System.Windows.Forms;
 $f = New-Object Windows.Forms.Form; $f.Text = 'Age of Empires IV'; $f.FormBorderStyle = 'None';
 $f.StartPosition = 'Manual'; $f.Left = 0; $f.Top = 0; $f.Width = {W}; $f.Height = {H};
-$p = New-Object Windows.Forms.PictureBox; $p.Dock = 'Fill'; $p.Image = [Drawing.Image]::FromFile('{img}');
+$p = New-Object Windows.Forms.PictureBox; $p.Dock = 'Fill'; $p.SizeMode = 'StretchImage'; $p.Image = [Drawing.Image]::FromFile('{img}');
 $f.Controls.Add($p); $f.Add_Shown({{ $f.Activate() }}); [Windows.Forms.Application]::Run($f)""")
 cover = None
 try:
@@ -66,6 +66,14 @@ try:
             break
     if not gw:
         raise RuntimeError("stand-in window not found")
+    # GitHub's screen is small and Windows shrinks big windows to fit it; size it from code instead
+    import ctypes
+    from ctypes import wintypes
+    u = ctypes.windll.user32
+    u.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_uint]
+    u.SetWindowPos(gw["hwnd"], None, 0, 0, W, H, 0x0004)
+    time.sleep(1.5)
+    gw = find_game_window()
     note("window: " + json.dumps({k: gw[k] for k in ("title", "hwnd", "client")}))
 
     r = HudReader()
