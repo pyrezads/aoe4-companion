@@ -6,7 +6,7 @@ const path = require('path');
 const readline = require('readline');
 const fs = require('fs');
 
-const ALLOWED = new Set(['list_builds', 'use_build', 'auto_build', 'coach_skip', 'set_monitor', 'reading_check', 'pin']);
+const ALLOWED = new Set(['list_builds', 'use_build', 'auto_build', 'coach_skip', 'set_monitor', 'reading_check', 'pin', 'build_detail']);
 
 class Core {
   constructor({ root, configPath, logPath, onMessage, onState }) {

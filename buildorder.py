@@ -41,6 +41,50 @@ def _count(v: str) -> Optional[int]:
     return int(m.group(1)) if m else None
 
 
+# icon file names that read badly aloud
+ICON_WORDS = {"berrybush": "berries", "rally": "rally point", "food": "food", "gold": "gold", "wood": "wood",
+              "stone": "stone", "olive oil": "olive oil", "time": "time", "pop": "population"}
+
+CIV_WORDS = {"abbasid", "ayyubid", "ayyubids", "byzantine", "byzantines", "chinese", "delhi", "english", "french",
+             "hre", "japanese", "jin", "jeanne", "lancaster", "macedonian", "malian", "malians", "mongol", "mongols",
+             "dragon", "ottoman", "ottomans", "rus", "sengoku", "templar", "tughlaq", "zhuxi", "zxl", "vikings", "scots"}
+
+
+def icons_in(s: str) -> List[dict]:
+    """The in-game icons a step shows, as full image links with a name."""
+    out = []
+    for tag in re.findall(r"<img[^>]*>", s or ""):
+        src = re.search(r'src="([^"]+)"', tag)
+        if not src:
+            continue
+        url = src.group(1)
+        if url.startswith("/"):
+            url = "https://aoe4guides.com" + url
+        if not url.startswith("https://"):
+            continue
+        out.append({"src": url, "title": html_to_text(tag)})
+    return out
+
+
+def rich_text(s: str) -> List[dict]:
+    """A step's text as pieces: {"t": "text"} or {"icon": url, "title": name}, for showing icons inline."""
+    parts = []
+    for piece in re.split(r"(<img[^>]*>|<br\s*/?>)", s or ""):
+        if not piece:
+            continue
+        if piece.startswith("<img"):
+            ic = icons_in(piece)
+            if ic:
+                parts.append({"icon": ic[0]["src"], "title": ic[0]["title"]})
+        elif re.match(r"<br", piece):
+            parts.append({"br": True})
+        else:
+            t = html.unescape(re.sub(r"<[^>]+>", "", piece))
+            if t.strip():
+                parts.append({"t": re.sub(r"\s+", " ", t)})
+    return parts
+
+
 def html_to_text(s: str) -> str:
     """Replace icons with their name (from title or file name), drop the rest of the HTML."""
     def icon(m):
@@ -52,9 +96,15 @@ def html_to_text(s: str) -> str:
         if not src:
             return ""
         name = re.sub(r"^(resource_|age_)", "", src.group(1))
-        name = re.sub(r"-\d+$", "", name).replace("-", " ").replace("_", " ")
+        name = re.sub(r"-\d+$", "", name)
+        # "villager-abbasid" -> "villager": drop a civ name tacked on the end
+        parts = re.split(r"[-_]", name)
+        if len(parts) > 1 and parts[-1] in CIV_WORDS:
+            parts = parts[:-1]
+        name = " ".join(parts)
+        name = ICON_WORDS.get(name, name)
         return {"1": "Dark Age", "2": "Feudal", "3": "Castle", "4": "Imperial"}.get(name, name)
-    s = re.sub(r"<img[^>]*>", icon, s or "")
+    s = re.sub(r"<img[^>]*>", lambda m: " " + icon(m) + " ", s or "")   # "5<img>" -> "5 villager"
     s = re.sub(r"<br\s*/?>", " · ", s)
     s = re.sub(r"<[^>]+>", "", s)
     return re.sub(r"\s+", " ", html.unescape(s)).strip(" ·")
@@ -108,7 +158,15 @@ class BuildOrder:
         for k, v in (data.get("ageTimings") or {}).items():
             if isinstance(v, dict) and v.get("t"):
                 bo.age_times[k] = v["t"]
-        # No age-up times given: use the time of each age's first step.
+        # No age-up times given: use the step that shows an age-up icon (the click),
+        # else the time of each age's first step.
+        if not bo.age_times:
+            for sec in data.get("steps", []):
+                for st in sec.get("steps", []):
+                    m = re.search(r'/age/age_([234])\.\w+"', st.get("description") or "")
+                    t = _clock(st.get("time", ""))
+                    if m and t is not None and m.group(1) not in bo.age_times:
+                        bo.age_times[m.group(1)] = t
         have = {AGE_KEYS.get(str(k).lower(), int(k) if str(k).isdigit() else None) for k in bo.age_times}
         for s in bo.steps:
             if s.age > 1 and s.age not in have and s.seconds is not None:
@@ -140,6 +198,79 @@ class BuildOrder:
         parts = [f"+{g} {r}" for r, g in gaps.items() if g > 0] + [f"{-g} extra on {r}" for r, g in gaps.items() if g < 0]
         summary = ("On build." if not gaps else "Vs build: " + ", ".join(parts))
         return {"step": step, "next": nxt, "gaps": gaps, "summary": summary}
+
+
+# ── everything aoe4guides has on a build, for the details view ─────────
+
+def _clock_str(sec) -> Optional[str]:
+    if sec is None:
+        return None
+    try:
+        sec = int(sec)
+    except (TypeError, ValueError):
+        return str(sec)
+    return f"{sec // 60}:{sec % 60:02d}"
+
+
+def _date(v) -> Optional[str]:
+    """aoe4guides dates: Firestore {"seconds": ...}, epoch numbers or ISO strings -> YYYY-MM-DD."""
+    import datetime as _dt
+    if isinstance(v, dict):
+        v = v.get("seconds") or v.get("_seconds")
+    try:
+        if isinstance(v, (int, float)):
+            return _dt.datetime.utcfromtimestamp(v / 1000 if v > 1e11 else v).strftime("%Y-%m-%d")
+        if isinstance(v, str) and v:
+            return v[:10]
+    except (ValueError, OSError, OverflowError):
+        return None
+    return None
+
+
+def build_detail(b: dict) -> dict:
+    """The build in full: who made it, their notes, video, votes, age-up times and every step."""
+    sections, gameplans, alternatives = [], [], 0
+    for sec in b.get("steps") or []:
+        rows = []
+        for st in sec.get("steps") or []:
+            if st.get("kind") == "alternatives":
+                alternatives += 1
+                continue
+            if st.get("gameplan"):
+                gameplans.append({"age": sec.get("age"), "text": html_to_text(st["gameplan"]), "parts": rich_text(st["gameplan"])})
+            if not st.get("description") and not st.get("time"):
+                continue
+            rows.append({"time": st.get("time") or "", "villagers": _count(str(st.get("villagers") or "")),
+                         "builders": _count(str(st.get("builders") or "")),
+                         "split": {r: (str(st.get(r)).strip() if st.get(r) not in (None, "") else "") for r in RESOURCES},
+                         "text": html_to_text(st.get("description") or ""), "parts": rich_text(st.get("description") or "")})
+        sections.append({"age": sec.get("age"), "steps": rows})
+    ages = {}
+    for k, v in (b.get("ageTimings") or {}).items():
+        if isinstance(v, dict) and v.get("t"):
+            ages[str(k)] = _clock_str(v["t"])
+    desc = b.get("description") or ""
+    bid = b.get("id")
+    video = b.get("video") or None
+    if video:
+        m = re.search(r"(?:embed/|watch\?v=|youtu\.be/)([\w-]{6,})", str(video))
+        video = f"https://www.youtube.com/watch?v={m.group(1)}" if m else (
+            f"https://www.youtube.com/watch?v={video}" if not str(video).startswith("http") else str(video))
+    comments = b.get("comments")
+    return {
+        "id": bid, "title": b.get("title"), "civ": b.get("civ"),
+        "author": b.get("creatorName") or b.get("author"),
+        "url": f"https://aoe4guides.com/builds/{bid}" if bid else None,
+        "video": video,
+        "description": html_to_text(desc) if "<" in desc else desc.strip(),
+        "season": b.get("season"), "strategy": b.get("strategy") if b.get("strategy") not in (None, "-") else None,
+        "map": b.get("map") if b.get("map") not in (None, "-") else None,
+        "views": b.get("views"), "likes": b.get("likes"), "upvotes": b.get("upvotes"), "downvotes": b.get("downvotes"),
+        "score": b.get("score"), "comments": len(comments) if isinstance(comments, list) else comments,
+        "created": _date(b.get("timeCreated")), "updated": _date(b.get("timeUpdated")),
+        "remix_of": b.get("remixOf") or None,
+        "ages": ages, "gameplans": gameplans, "alternatives": alternatives, "sections": sections,
+    }
 
 
 # ── automatic build choice ─────────────────────────────────────────────

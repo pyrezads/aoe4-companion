@@ -110,6 +110,35 @@ h1{font:600 32px/1.1 var(--display);margin:0;letter-spacing:-.2px}
 .b .m{font-size:13px;color:var(--muted)}
 .strat{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;color:#111}
 .strat.rush{background:var(--pink)} .strat.fc{background:var(--yellow)} .strat.boom{background:var(--green)} .strat.timing{background:var(--teal-hi)}
+/* build rows with expandable details */
+.bw{background:var(--base);border:1px solid var(--edge);border-radius:16px}
+.bw:has(input:checked){border-color:var(--teal);background:#08161a}
+.bw .b{background:none;border:0;border-radius:16px;grid-template-columns:20px 1fr auto auto}
+.bw .b:hover{border-color:transparent}
+.more{border:1px solid var(--edge);background:var(--card-2);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--muted);white-space:nowrap}
+.more[aria-expanded="true"]{color:var(--ink);border-color:#3a4a52}
+.b .m .vid{color:var(--pink)}
+.bd{padding:2px 16px 16px 49px;display:grid;gap:14px}
+.bd[hidden]{display:none}
+.bd-meta{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--card-2);color:var(--muted)}
+.pill b{color:var(--ink);font-weight:700}
+.bd-desc{margin:0;color:var(--ink);font-size:14px;white-space:pre-line;max-height:7.5em;overflow:hidden;position:relative}
+.bd-desc.open{max-height:none}
+.bd-desc-more{background:none;border:0;color:var(--teal-hi);font-weight:700;font-size:13px;padding:0;cursor:pointer;justify-self:start}
+.bd-actions{display:flex;flex-wrap:wrap;gap:8px}
+.bd-actions .btn{padding:8px 14px;font-size:13.5px}
+.bd h4{font:600 15px var(--display);margin:0 0 6px}
+.bd-plan{margin:0;padding-left:18px;color:var(--ink);font-size:14px;display:grid;gap:4px}
+.age-h{font:600 13px var(--display);color:var(--teal-hi);margin:10px 0 4px}
+.st-row{display:grid;grid-template-columns:44px 190px 1fr;gap:10px;align-items:start;padding:7px 0;border-top:1px solid var(--edge);font-size:13.5px}
+.st-row .tm{color:var(--muted);font:600 13px var(--display)}
+.split{display:flex;flex-wrap:wrap;gap:4px}
+.split span{font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 6px;background:var(--card-2)}
+.st-txt{line-height:1.7}
+.st-txt img{width:22px;height:22px;vertical-align:-6px;border-radius:4px;margin:0 2px;background:var(--card-2)}
+.loading-row{color:var(--muted);font-size:13.5px}
+
 .or{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:13px;margin:18px 0 12px}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--edge)}
 
@@ -702,11 +731,99 @@ function renderBuilds(){
   if (sortSel.value === 'views') list = [...list].sort((a, b) => b.views - a.views);
   else if (sortSel.value === 'new') list = [...list].sort((a, b) => (b.season - a.season) || (b.views - a.views));
   else if (!inApp) list = [...list].sort((a, b) => (b.season - a.season) || (b.views - a.views));
-  document.getElementById('builds').innerHTML = list.length ? list.map(b => `
-    <label class="b"><input type="radio" name="build" value="${esc(b.id)}" ${b.id === chosen ? 'checked' : ''}>
-      <div><div class="t">${esc(b.title)}</div><div class="m">${b.season ? 'Season ' + b.season : 'Season ?'}${b.season === newest ? ', current patch' : ''}, ${(b.views || 0).toLocaleString()} views${b.map ? ', ' + esc(b.map.toLowerCase()) + ' maps' : ''}${b.author ? ', by ' + esc(b.author) : ''}</div></div>
-      ${b.strategy ? `<span class="strat ${cls[b.strategy] || ''}">${esc(b.strategy.charAt(0) + b.strategy.slice(1).toLowerCase())}</span>` : '<span></span>'}</label>`).join('')
+  document.getElementById('builds').innerHTML = list.length ? list.map(b => {
+    const meta = [
+      b.author ? 'by ' + esc(b.author) : null,
+      b.season ? 'Season ' + b.season + (b.season === newest ? ' (current)' : '') : null,
+      b.feudal ? 'Feudal ' + esc(b.feudal) : null,
+      (b.views || 0).toLocaleString() + ' views',
+      b.likes ? b.likes + ' likes' : null,
+      b.map ? esc(b.map.toLowerCase()) + ' maps' : null,
+      b.video ? '<span class="vid">video</span>' : null,
+    ].filter(Boolean).join(' · ');
+    const open = expanded.has(b.id);
+    return `<div class="bw" data-id="${esc(b.id)}">
+      <div class="b"><input type="radio" name="build" id="r-${esc(b.id)}" value="${esc(b.id)}" ${b.id === chosen ? 'checked' : ''}>
+        <label for="r-${esc(b.id)}" style="cursor:pointer"><div class="t">${esc(b.title)}</div><div class="m">${meta}</div></label>
+        ${b.strategy ? `<span class="strat ${cls[b.strategy] || ''}">${esc(b.strategy.charAt(0) + b.strategy.slice(1).toLowerCase())}</span>` : '<span></span>'}
+        <button class="more" data-more="${esc(b.id)}" aria-expanded="${open}">${open ? 'Hide' : 'Details'}</button></div>
+      <div class="bd" id="bd-${esc(b.id)}" ${open ? '' : 'hidden'}>${open ? detailHtml(details[b.id]) : ''}</div></div>`;
+  }).join('')
     : `<p style="color:var(--muted);margin:6px 2px">${filter === 'all' ? 'No builds for this civ yet.' : 'None of this kind. Try another filter.'}</p>`;
+}
+
+// ── Build details: everything aoe4guides has on a build
+const details = {}, expanded = new Set();
+const RCOL = {food: 'var(--food)', wood: 'var(--wood)', gold: 'var(--gold)', stone: 'var(--stone)'};
+const AGE_LABEL = {1: 'Dark Age', 2: 'Feudal Age', 3: 'Castle Age', 4: 'Imperial Age'};
+const AGE_KEY = {feudal: 'Feudal', castle: 'Castle', imperial: 'Imperial', 2: 'Feudal', 3: 'Castle', 4: 'Imperial'};
+const parts = ps => (ps || []).map(p => p.icon
+  ? `<img src="${esc(p.icon)}" alt="${esc(p.title)}" title="${esc(p.title)}" loading="lazy" onerror="this.replaceWith(document.createTextNode(this.alt))">`
+  : p.br ? '<br>' : esc(p.t)).join('');
+function detailHtml(d){
+  if (!d) return '<p class="loading-row">Loading the full build…</p>';
+  if (d.error) return `<p class="loading-row">${esc(d.error)}</p>`;
+  const pills = [
+    d.author && `By <b>${esc(d.author)}</b>`,
+    d.season && `<b>${esc(d.season)}</b>`,
+    d.updated && `Updated <b>${esc(d.updated)}</b>`,
+    d.created && !d.updated && `Made <b>${esc(d.created)}</b>`,
+    ...Object.entries(d.ages || {}).map(([k, v]) => `${AGE_KEY[k] || k} at <b>${esc(v)}</b>`),
+    d.views != null && `<b>${(d.views || 0).toLocaleString()}</b> views`,
+    d.likes && `<b>${d.likes}</b> likes`,
+    (d.upvotes || d.downvotes) && `<b>${d.upvotes || 0}</b> up · <b>${d.downvotes || 0}</b> down`,
+    d.comments && `<b>${d.comments}</b> comments`,
+    d.map && `<b>${esc(d.map)}</b> maps`,
+    d.alternatives && `<b>${d.alternatives}</b> alternative branches`,
+    d.remix_of && 'Remix of another build',
+  ].filter(Boolean).map(p => `<span class="pill">${p}</span>`).join('');
+  const steps = (d.sections || []).map(sec => `
+    <div class="age-h">${AGE_LABEL[sec.age] || 'Age ' + sec.age}</div>
+    ${sec.steps.map(s => `<div class="st-row"><span class="tm">${esc(s.time || '')}</span>
+      <span class="split">${['food','wood','gold','stone'].filter(r => s.split[r]).map(r => `<span style="color:${RCOL[r]}">${esc(s.split[r])} ${r}</span>`).join('')}${s.builders ? `<span>${s.builders} building</span>` : ''}</span>
+      <span class="st-txt">${parts(s.parts) || esc(s.text)}</span></div>`).join('')}`).join('');
+  return `<div class="bd-meta">${pills}</div>
+    ${d.description ? `<p class="bd-desc" id="desc-${esc(d.id)}">${esc(d.description)}</p>${d.description.length > 320 ? `<button class="bd-desc-more" data-desc="${esc(d.id)}">Show all</button>` : ''}` : ''}
+    <div class="bd-actions">
+      <button class="btn primary" data-use="${esc(d.id)}">Use this build</button>
+      ${d.video ? `<button class="btn quiet" data-url="${esc(d.video)}">Watch the video</button>` : ''}
+      ${d.url ? `<button class="btn quiet" data-url="${esc(d.url)}">Open on aoe4guides</button>` : ''}
+    </div>
+    ${d.gameplans && d.gameplans.length ? `<div><h4>Game plan</h4><ul class="bd-plan">${d.gameplans.map(g => `<li>${parts(g.parts) || esc(g.text)}</li>`).join('')}</ul></div>` : ''}
+    <div><h4>Every step</h4>${steps || '<p class="loading-row">No steps.</p>'}</div>`;
+}
+document.getElementById('builds').addEventListener('click', e => {
+  const more = e.target.closest('[data-more]');
+  if (more) {
+    const id = more.dataset.more;
+    if (expanded.has(id)) expanded.delete(id);
+    else {
+      expanded.add(id);
+      if (!details[id]) {
+        if (inApp && !core.demo) window.app.send({cmd: 'build_detail', id, civ: civSel.value});
+        else details[id] = SAMPLE_DETAIL(id);
+      }
+    }
+    return renderBuilds();
+  }
+  const url = e.target.closest('[data-url]');
+  if (url) return inApp ? window.app.openUrl(url.dataset.url) : window.open(url.dataset.url, '_blank');
+  const use = e.target.closest('[data-use]');
+  if (use) { chosen = use.dataset.use; document.getElementById('link').value = ''; return document.getElementById('useBuild').click(); }
+  const dm = e.target.closest('[data-desc]');
+  if (dm) { document.getElementById('desc-' + dm.dataset.desc).classList.toggle('open'); dm.textContent = dm.textContent === 'Show all' ? 'Show less' : 'Show all'; }
+});
+// what the details look like in a browser preview (no app, no internet)
+function SAMPLE_DETAIL(id){
+  const b = builds.find(x => x.id === id) || {};
+  return {id, title: b.title, author: 'Beastyqt', season: 'Season ' + (b.season || 13), updated: '2026-10-02', ages: {feudal: '4:20', castle: '11:05'},
+    views: b.views, likes: 41, upvotes: 38, downvotes: 3, comments: 6, video: 'https://www.youtube.com/watch?v=example', url: 'https://aoe4guides.com/builds/example',
+    description: 'Fast Zhuge Nu timing that hits at 10 minutes with 2 archery ranges.\nScout the opponent at 2:30: if they go fast castle, add a third range.',
+    gameplans: [{text: 'Push before their Castle landmark finishes; keep producing villagers the whole time.'}],
+    sections: [{age: 1, steps: [
+      {time: '0:00', split: {food: '6', wood: '', gold: '', stone: ''}, parts: [{t: '6 '}, {icon: 'https://aoe4guides.com/assets/pictures/unit_worker/villager.webp', title: 'villager'}, {t: ' to sheep, scout finds more'}]},
+      {time: '0:45', split: {food: '6', wood: '3', gold: '', stone: ''}, builders: 1, parts: [{t: 'Next 3 to wood, 1 builds a '}, {icon: 'https://aoe4guides.com/assets/pictures/building_economy/house.webp', title: 'House'}]}]},
+      {age: 2, steps: [{time: '4:20', split: {food: '9', wood: '7', gold: '6', stone: ''}, parts: [{t: 'Two archery ranges, start Zhuge Nu'}]}]}]};
 }
 function listBuilds(){
   if (!inApp) return renderBuilds();
@@ -779,9 +896,11 @@ if (inApp) {
       civSel.value = data.me.civ; listBuilds();      // your civ, read from the player list
     }
     else if (type === 'reading_check') showReadingCheck(data);
+    else if (type === 'build_detail' && data) { details[data.id] = data; if (expanded.has(data.id)) renderBuilds(); }
     else if (type === 'error') {
       if (data.cmd === 'use_build') document.getElementById('useNote').textContent = data.message;
       else if (data.cmd === 'list_builds') note("Couldn't load builds: " + data.message);
+      else if (data.cmd === 'build_detail') { for (const id of expanded) if (!details[id]) details[id] = {error: "Couldn't load this build: " + data.message}; renderBuilds(); }
     }
   });
   window.app.coreState().then(s => { core = s; renderStatus(); listBuilds(); });
@@ -947,6 +1066,12 @@ function say(clip, cooldown = 0){
   vPlay({clip});
 }
 const AGE_N = {Feudal: 2, Castle: 3, Imperial: 4};
+// Step text as it should sound: separators become pauses, "1 villager" style counts read naturally.
+function speakable(t){
+  return String(t).replace(/\s*[·|]+\s*/g, '. ').replace(/-{2,}/g, '. ').replace(/\+/g, ' plus ')
+    .replace(/\b(\d+) villager\b/g, (m, n) => n === '1' ? '1 villager' : n + ' villagers')
+    .replace(/\s+/g, ' ').replace(/(\. )+/g, '. ').trim().slice(0, 220);
+}
 function voiceCoach(c){
   if (!c) return;
   const v = vState;
@@ -954,7 +1079,7 @@ function voiceCoach(c){
   else if (v.next && c.next.resource !== v.next && c.villagers === v.villagers) say('vil_' + c.next.resource, 8);
   if (c.idle && c.idle > v.idle) say(c.idle === 1 ? 'idle_1' : c.idle === 2 ? 'idle_2' : 'idle_many', 20);
   const stepKey = c.step && c.step.index;
-  if (voice.steps && v.step != null && stepKey !== v.step && c.step.text) vPlay({text: c.step.text.slice(0, 180)});
+  if (voice.steps && v.step != null && stepKey !== v.step && c.step.text) vPlay({text: speakable(c.step.text)});
   if (c.age && c.age.progress >= 0.97 && !v.ageSaid[c.age.target] && AGE_N[c.age.target]) { v.ageSaid[c.age.target] = true; say('age_' + AGE_N[c.age.target]); }
   if (c.done && !v.done) say('build_done');
   Object.assign(v, {villagers: c.villagers, next: c.next.resource, idle: c.idle || 0, step: stepKey, done: !!c.done});

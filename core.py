@@ -20,6 +20,7 @@ Out, as {"type": ..., "data": {...}}. The live ones are only sent when they chan
 In:
     {"cmd": "list_builds", "civ": "zhu_xis_legacy"}
     {"cmd": "use_build", "id": "..."}  or  {"cmd": "use_build", "url": "https://aoe4guides.com/builds/..."}
+    {"cmd": "build_detail", "id": "...", "civ": "..."}   everything aoe4guides has on one build
     {"cmd": "auto_build"}                 go back to the automatic pick
     {"cmd": "coach_skip", "n": 1}         n = -1 goes back a step
     {"cmd": "set_monitor", "width": 2560, "height": 1440, "x": 0, "y": 0}
@@ -131,15 +132,24 @@ def _payloads(state) -> dict:
 
 
 def _build_row(choice) -> dict:
-    from buildorder import _season_num, _strategy
+    from buildorder import _date, _english, _season_num, _strategy
     b = choice.build
     return {
         "id": b.get("id") or b.get("title"), "title": b.get("title", "Build"),
         "strategy": _strategy(b), "season": _season_num(b), "views": b.get("views") or 0,
         "map": b.get("map") if b.get("map") not in (None, "-", "") else None,
-        "author": b.get("author") or b.get("authorName"),
+        "author": b.get("creatorName") or b.get("author") or b.get("authorName"),
         "score": round(choice.score, 2), "why": choice.reasons[:2],
+        "likes": b.get("likes"), "upvotes": b.get("upvotes"), "downvotes": b.get("downvotes"),
+        "video": bool(b.get("video")), "feudal": _feudal(b), "updated": _date(b.get("timeUpdated")),
+        "english": round(_english(b), 2),
     }
+
+
+def _feudal(b: dict):
+    t = ((b.get("ageTimings") or {}).get("feudal") or (b.get("ageTimings") or {}).get("2") or {})
+    t = t.get("t") if isinstance(t, dict) else None
+    return f"{int(t) // 60}:{int(t) % 60:02d}" if isinstance(t, (int, float)) else None
 
 
 # ── commands from the app ─────────────────────────────────────────────
@@ -197,6 +207,17 @@ class Commands:
         self.state.set(build=bo, build_why="your pick", build_note=None, build_locked=True,
                        build_choices=None, build_count=None, build_pick=None, build_compare=None)
         print(f"  Build chosen in the app: {bo.title} ({len(bo.steps)} steps)")
+
+    def do_build_detail(self, msg):
+        """Everything aoe4guides has on one build, for the expandable view in the picker."""
+        from buildorder import build_detail
+        raw = self.library().find(msg.get("id"))
+        if raw is None and msg.get("civ"):
+            self.library().builds_for(msg["civ"])
+            raw = self.library().find(msg.get("id"))
+        if raw is None:
+            raise KeyError(f"build {msg.get('id')!r} isn't in the list")
+        self.emit.send("build_detail", data=build_detail(raw))
 
     def do_auto_build(self, msg):
         self.state.set(build_locked=False, build_repick=True)

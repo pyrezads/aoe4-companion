@@ -127,7 +127,7 @@ function startCore() {
         if (b?.url) core.send({ cmd: 'use_build', url: b.url });
         else if (b?.id) core.send({ cmd: 'use_build', id: b.id, civ: b.civ });
       }
-      if (!['builds', 'reading_check', 'error'].includes(type)) latest[type] = data;
+      if (!['builds', 'build_detail', 'reading_check', 'error'].includes(type)) latest[type] = data;
       if (type === 'status' && data?.game_window) ensurePinned(data.game_window);
       broadcast(type, data);
     },
@@ -359,6 +359,14 @@ ipcMain.handle('coach:toggle', () => {
 });
 ipcMain.handle('core:state', () => coreState());
 ipcMain.handle('app:version', () => app.getVersion());
+// Links from build details open in the normal browser (only these sites).
+ipcMain.handle('app:open-url', (_e, url) => {
+  try {
+    const u = new URL(url);
+    if (u.protocol === 'https:' && /(^|\.)(aoe4guides\.com|youtube\.com|youtu\.be|aoe4world\.com|twitch\.tv)$/.test(u.hostname))
+      require('electron').shell.openExternal(u.toString());
+  } catch {}
+});
 ipcMain.handle('app:open-logs', () => require('electron').shell.openPath(userDir()));
 ipcMain.handle('core:send', (_e, cmd) => {
   if (cmd?.cmd === 'use_build') {             // remember it for next time
