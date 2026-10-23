@@ -1,7 +1,7 @@
 {
   "name": "aoe4-coach",
   "productName": "AoE4 Coach",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Build order coach and live analyst for Age of Empires IV. Reads your screen only.",
   "main": "electron/main.js",
   "private": true,
