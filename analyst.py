@@ -15,6 +15,7 @@ from typing import Dict, List, Optional, Tuple
 
 from aoe4world import civ_name
 from coach import Coach
+from review import GameRecorder
 from combat import TechAdvisor, best_counters, fight, needed_to_win, villagers_to_produce
 from hud_reader import HudReader
 from scoreboard import ScoreboardReader, TeamTracker
@@ -51,6 +52,11 @@ class Analyst:
         self.team_events: List[Tuple[float, str]] = []
         self.last_seconds: Optional[int] = None
         self.coach: Optional[Coach] = None
+        # games are saved for review next to the app's other data (or ./games for the old dashboard)
+        import pathlib
+        base = pathlib.Path(cfg["cache_dir"]).parent if cfg.get("cache_dir") else pathlib.Path(__file__).parent
+        self.games_dir = str(base / "games")
+        self.recorder = GameRecorder(self.games_dir, on_saved=self._game_saved)
         self.coach_for = None                                     # the BuildOrder the coach follows
 
     # ── who am I ──────────────────────────────────────────────────────
@@ -120,6 +126,13 @@ class Analyst:
             if self.coach:
                 age = (self.teams.summary().get("me") or {}).get("age")
                 self.state.set(coach=self.coach.update(snap.seconds, snap.villagers, snap.idle, age))
+        self.recorder.update(snap, now, coach=self.state.get("coach") if snap.live else None,
+                             teams=self.teams.summary(), build=self.state.get("build"), match=self.state.get("match"))
+
+    def _game_saved(self, row: dict) -> None:
+        emit = self.state.get("emit")
+        if emit:
+            emit.send("game_saved", data=row)
 
     def new_game(self):
         self.army.reset()

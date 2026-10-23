@@ -220,6 +220,40 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .panel .hint{color:var(--muted);font-size:13px}
 @media (max-width:1060px){.res-grid{grid-template-columns:repeat(2,1fr)}.an-row,.two-even{grid-template-columns:1fr}}
 
+/* game review */
+.rv{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+.rv-list{display:grid;gap:8px}
+.rv-item{text-align:left;width:100%;background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:12px 14px;cursor:pointer}
+.rv-item[aria-current="true"]{border-color:var(--teal);background:#08161a}
+.rv-item .t{font-weight:700;font-size:14px}
+.rv-item .m{color:var(--muted);font-size:12.5px}
+.rv-empty{color:var(--muted);background:var(--card);border:1px dashed #2c3438;border-radius:16px;padding:18px}
+.rv-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:14px}
+.rv-head h2{font:600 22px var(--display);margin:0}
+.rv-head .m{color:var(--muted);font-size:13px}
+.fix{background:var(--teal);color:#fff;border-radius:20px;padding:18px 20px;margin-bottom:14px}
+.fix h3{font:600 17px var(--display);margin:0 0 8px}
+.fix ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14.5px}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.tile{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:12px 14px}
+.tile .l{color:var(--muted);font-size:12.5px;font-weight:600}
+.tile .v{font:600 26px/1.15 var(--display);margin-top:2px}
+.tile .s{font-size:12.5px;color:var(--muted)}
+.tile .s.bad{color:var(--pink)} .tile .s.good{color:var(--green)}
+.chart-card{background:var(--card);border:1px solid var(--edge);border-radius:20px;padding:16px 18px;margin-bottom:14px;position:relative}
+.chart-card h3{font:600 16px var(--display);margin:0}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--muted);margin:6px 0 4px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:22px;height:0;border-top:2px solid}
+.chart{width:100%;height:240px;display:block}
+.chart text{font:500 11.5px var(--body);fill:var(--muted)}
+.tip{position:absolute;pointer-events:none;background:var(--card-2);border:1px solid #2c3438;border-radius:10px;padding:7px 10px;font-size:12.5px;white-space:nowrap;display:none}
+.tip b{font-weight:700}
+.late li{display:grid;grid-template-columns:52px 1fr auto;gap:10px}
+.late .d{color:var(--pink);font-weight:700;font-size:13px}
+@media (max-width:1200px){.tiles{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:1060px){.rv{grid-template-columns:1fr}}
+
 /* update banner */
 .update{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;padding:12px 14px 12px 18px;border-radius:16px;background:var(--card);border:1px solid var(--teal);font-size:14px}
 .update[hidden]{display:none}
@@ -301,6 +335,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
       <button class="nav" data-go="analyst"><svg class="i"><use href="#i-eye"/></svg>Live analyst</button>
       <button class="nav" data-go="scout"><svg class="i"><use href="#i-glass"/></svg>Opponent scout</button>
       <button class="nav" data-go="army"><svg class="i"><use href="#i-swords"/></svg>Army and counters</button>
+      <button class="nav" data-go="review"><svg class="i"><use href="#i-hourglass"/></svg>Game review</button>
     </div>
     <p class="grp">Setup</p>
     <div class="navlist">
@@ -392,11 +427,11 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
           <span></span>
           <button class="btn quiet open" data-go="army">Open</button>
         </div>
-        <div class="tool" style="--tone:var(--lavender)" aria-disabled="true">
+        <div class="tool" style="--tone:var(--lavender)">
           <div class="ic"><svg class="i"><use href="#i-hourglass"/></svg></div>
-          <div><div class="n">Game review <span class="tag">Planned</span></div><div class="d">After the game: where you fell behind your build and how long you were housed.</div></div>
+          <div><div class="n">Game review</div><div class="d">After each game: where you fell behind your build, idle and housed time, and what to fix next.</div></div>
           <span></span>
-          <button class="btn quiet open" disabled>Soon</button>
+          <button class="btn quiet open" data-go="review">Open</button>
         </div>
       </div>
     </section>
@@ -530,6 +565,15 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
         <p class="hint" style="margin:8px 0 0">It can't see what you've researched, so skip the ones you already have.</p></div>
     </section>
 
+    <!-- ════════ GAME REVIEW ════════ -->
+    <section class="view" id="v-review" aria-label="Game review">
+      <div class="top"><div><h1>Game review</h1><p class="sub">Every game you play with the app open, against the build you followed.</p></div></div>
+      <div class="rv">
+        <div class="rv-list" id="rvList"></div>
+        <div class="rv-detail" id="rvDetail"></div>
+      </div>
+    </section>
+
     <!-- ════════ SETTINGS ════════ -->
     <section class="view" id="v-settings" aria-label="Settings">
       <div class="top"><div><h1>Settings</h1><p class="sub">Most of this is detected for you. Change it only if something reads wrong.</p></div></div>
@@ -590,12 +634,13 @@ document.querySelectorAll('.pips .p').forEach(el => {
   el.innerHTML = n ? Array.from({length:n}, (_, i) => `<i class="${i < have ? 'f' : ''}"></i>`).join('') : '<span style="color:var(--dim)">none</span>';
 });
 
-const views = {home:'v-home', coach:'v-coach', analyst:'v-analyst', scout:'v-scout', army:'v-army', settings:'v-settings'};
+const views = {home:'v-home', coach:'v-coach', analyst:'v-analyst', scout:'v-scout', army:'v-army', review:'v-review', settings:'v-settings'};
 function go(name){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === views[name]));
   document.querySelectorAll('.nav').forEach(n => n.dataset.go === name ? n.setAttribute('aria-current','page') : n.removeAttribute('aria-current'));
   document.querySelector('main').scrollTop = 0;
   if (name === 'settings') renderScreens();
+  if (name === 'review') loadGames();
 }
 document.addEventListener('click', e => { const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go); });
 
@@ -896,6 +941,9 @@ if (inApp) {
       civSel.value = data.me.civ; listBuilds();      // your civ, read from the player list
     }
     else if (type === 'reading_check') showReadingCheck(data);
+    else if (type === 'games' && data) { games = data.games || []; renderGames(); if (!gameOpen && games.length) openGame(games[0].id); }
+    else if (type === 'game_detail' && data) { gameCache[data.id] = data; if (gameOpen === data.id) renderGame(data); }
+    else if (type === 'game_saved' && data) { games = [data, ...games.filter(g => g.id !== data.id)]; renderGames(); }
     else if (type === 'build_detail' && data) { details[data.id] = data; if (expanded.has(data.id)) renderBuilds(); }
     else if (type === 'error') {
       if (data.cmd === 'use_build') document.getElementById('useNote').textContent = data.message;
@@ -1098,6 +1146,125 @@ const vOn = document.getElementById('voiceOn'), vSteps = document.getElementById
 const saveVoice = () => { Object.assign(voice, {on: vOn.checked, steps: vSteps.checked, volume: +vVol.value}); if (inApp) window.app.setSettings({voice: {...voice}}); };
 [vOn, vSteps, vVol].forEach(el => el.addEventListener('change', saveVoice));
 document.getElementById('voiceTest').addEventListener('click', () => { voice.volume = +vVol.value; vPlay({clip: 'test', test: true}); });
+
+// ── Game review
+const YOU = '#2395ae', BUILD = '#b0922c';     // validated pair (dark surface, CVD-safe); build line also dashed
+let games = [], gameOpen = null;
+const gameCache = {};
+function loadGames(){
+  if (inApp && !core.demo) window.app.send({cmd: 'list_games'});
+  else if (!games.length) { games = [SAMPLE_GAME_ROW]; gameCache[SAMPLE_GAME.id] = SAMPLE_GAME; renderGames(); openGame(SAMPLE_GAME.id); }
+  else renderGames();
+}
+const fmtDate = d => { try { return new Date(d).toLocaleString([], {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'}); } catch { return d; } };
+function renderGames(){
+  document.getElementById('rvList').innerHTML = games.length ? games.map(g => `
+    <button class="rv-item" data-game="${esc(g.id)}" aria-current="${g.id === gameOpen}">
+      <div class="t">${esc(g.civ ? civName(g.civ) : 'Unknown civ')}${g.enemies && g.enemies.length ? ' vs ' + g.enemies.filter(Boolean).map(civName).map(esc).join(', ') : ''}</div>
+      <div class="m">${esc(fmtDate(g.date))} · ${esc(g.length || '?')}${g.feudal ? ' · Feudal ' + esc(g.feudal) : ''}${g.villagers_10 != null ? ' · ' + g.villagers_10 + ' villagers at 10:00' : ''}</div>
+    </button>`).join('')
+    : '<div class="rv-empty">No games yet. Play a game with the app open and it shows up here when the game ends.</div>';
+  if (!games.length) document.getElementById('rvDetail').innerHTML = '';
+}
+function openGame(id){
+  gameOpen = id;
+  renderGames();
+  if (gameCache[id]) return renderGame(gameCache[id]);
+  document.getElementById('rvDetail').innerHTML = '<p style="color:var(--muted)">Loading…</p>';
+  if (inApp) window.app.send({cmd: 'game_detail', id});
+}
+document.getElementById('rvList').addEventListener('click', e => { const b = e.target.closest('[data-game]'); if (b) openGame(b.dataset.game); });
+
+function renderGame(g){
+  const s = g.summary || {};
+  const ages = s.ages || {}, m10 = (s.villagers_at || {})['10:00'] || {};
+  const lateTxt = a => a && a.late != null ? (a.late > 0 ? `${a.late} s after the build's ${a.build}` : a.late < 0 ? `${-a.late} s ahead of the build` : 'on the build') : (a && a.build ? `build: ${a.build}` : 'no build time');
+  const tile = (l, v, sub, cls) => `<div class="tile"><div class="l">${l}</div><div class="v">${v}</div><div class="s ${cls || ''}">${sub || '&nbsp;'}</div></div>`;
+  const secs = n => n >= 60 ? `${Math.floor(n / 60)}m ${n % 60}s` : `${n || 0}s`;
+  const fe = ages.Feudal, ca = ages.Castle;
+  document.getElementById('rvDetail').innerHTML = `
+    <div class="rv-head"><h2>${esc(g.civ ? civName(g.civ) : 'Your game')}${(g.enemies || []).length ? ' vs ' + g.enemies.filter(Boolean).map(civName).map(esc).join(', ') : ''}</h2>
+      <span class="m">${esc(fmtDate(g.date))} · ${esc(s.length || '?')}${g.map ? ' · ' + esc(g.map) : ''}${g.build ? ' · ' + esc(g.build.title) : ' · no build followed'}</span></div>
+    <div class="fix"><h3>Fix next game</h3><ol>${(s.tips || []).map(t => `<li>${esc(t)}</li>`).join('')}</ol></div>
+    <div class="tiles">
+      ${tile('Feudal', fe ? esc(fe.you) : '–', lateTxt(fe), fe && fe.late > 20 ? 'bad' : fe && fe.late != null ? 'good' : '')}
+      ${tile('Castle', ca ? esc(ca.you) : '–', ca ? lateTxt(ca) : 'not reached', ca && ca.late > 30 ? 'bad' : '')}
+      ${tile('Villagers at 10:00', m10.you ?? '–', m10.build ? `build: ${m10.build}` : '', m10.build && m10.you < m10.build - 3 ? 'bad' : '')}
+      ${tile('Idle villagers', secs(s.idle_time), s.idle_villager_seconds ? `${s.idle_villager_seconds} villager-seconds lost` : 'none', s.idle_time >= 30 ? 'bad' : 'good')}
+      ${tile('No new villager', secs(s.longest_no_villager), s.longest_no_villager_at ? `longest, ${s.longest_no_villager_at[0]} to ${s.longest_no_villager_at[1]}` : '', s.longest_no_villager >= 45 ? 'bad' : 'good')}
+    </div>
+    <div class="chart-card"><h3>Villagers over time</h3>
+      <div class="legend"><span><i style="border-color:${YOU}"></i>You</span>${(g.build_curve || []).length ? `<span><i style="border-color:${BUILD};border-top-style:dashed"></i>Build</span>` : ''}
+        <span>Housed ${secs(s.housed_time)} · floating resources ${secs(s.floating_time)}</span></div>
+      <svg class="chart" id="rvChart" role="img" aria-label="Villagers over time, you against the build"></svg>
+      <div class="tip" id="rvTip"></div></div>
+    <div class="two-even">
+      <div class="panel"><h3 class="ph3">Steps you reached late</h3><ul class="lines late">${(s.late_steps || []).length
+        ? s.late_steps.map(r => `<li><span style="color:var(--muted)">${esc(r.at)}</span><span>${esc(r.text || '')}</span><span class="d">+${r.late}s</span></li>`).join('')
+        : `<li class="empty">${g.build ? 'None: you kept up with the build.' : 'No build was followed this game.'}</li>`}</ul></div>
+      <div class="panel"><h3 class="ph3">Timeline</h3><ul class="lines">${li((g.events || []).map(e => [`${Math.floor(e.t / 60)}:${String(e.t % 60).padStart(2, '0')}  ${e.text}`, e.kind === 'enemy_age' ? 'warn' : '']), 'Nothing recorded.')}</ul></div>
+    </div>`;
+  drawChart(g);
+}
+
+function drawChart(g){
+  const svg = document.getElementById('rvChart'), tip = document.getElementById('rvTip');
+  const W = svg.clientWidth || 800, H = 240, L = 34, R = 56, T = 10, B = 26;
+  const you = (g.series || []).filter(p => p[1] != null).map(p => [p[0], p[1]]);
+  const bc = g.build_curve || [];
+  const tMax = Math.max(60, ...you.map(p => p[0]), ...bc.map(p => p[0]));
+  const vMax = Math.max(10, ...you.map(p => p[1]), ...bc.map(p => p[1]));
+  const yTop = Math.ceil(vMax / 20) * 20;           // ticks every yTop/4: whole villagers
+  const x = t => L + (W - L - R) * t / tMax, y = v => T + (H - T - B) * (1 - v / yTop);
+  const path = pts => pts.map((p, i) => (i ? 'L' : 'M') + x(p[0]).toFixed(1) + ' ' + y(p[1]).toFixed(1)).join(' ');
+  const step = tMax > 1500 ? 300 : tMax > 600 ? 120 : 60;
+  let grid = '';
+  for (let v = 0; v <= yTop; v += yTop / 4) grid += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,.06)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  for (let t = 0; t <= tMax; t += step) grid += `<text x="${x(t)}" y="${H - 6}" text-anchor="middle">${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}</text>`;
+  const ages = (g.events || []).filter(e => e.kind === 'age').map(e =>
+    `<line x1="${x(e.t)}" x2="${x(e.t)}" y1="${T}" y2="${H - B}" stroke="rgba(255,255,255,.22)" stroke-dasharray="3 4"/><text x="${x(e.t) + 5}" y="${T + 12}">${esc(e.text.replace('You reached ', ''))}</text>`).join('');
+  const lastYou = you[you.length - 1], lastB = bc[bc.length - 1];
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = grid + ages
+    + (bc.length ? `<path d="${path(bc)}" fill="none" stroke="${BUILD}" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>` : '')
+    + (you.length ? `<path d="${path(you)}" fill="none" stroke="${YOU}" stroke-width="2" stroke-linejoin="round"/>` : '')
+    + (lastYou ? `<text x="${x(lastYou[0]) + 6}" y="${y(lastYou[1]) + 4}" style="fill:var(--ink)">You ${lastYou[1]}</text>` : '')
+    + (lastB ? `<text x="${x(lastB[0]) + 6}" y="${y(lastB[1]) - 6}" style="fill:var(--ink)">Build ${lastB[1]}</text>` : '')
+    + `<line id="rvX" y1="${T}" y2="${H - B}" stroke="rgba(255,255,255,.35)" visibility="hidden"/>`
+    + `<circle id="rvDot" r="4" fill="${YOU}" stroke="var(--card)" stroke-width="2" visibility="hidden"/>`
+    + `<rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent" id="rvHit"/>`;
+  const at = (pts, t) => { let best = null; for (const p of pts) { if (p[0] <= t) best = p; else break; } return best; };
+  const bAt = t => { for (let i = 0; i + 1 < bc.length; i++) if (bc[i][0] <= t && t <= bc[i + 1][0]) return Math.round(bc[i][1] + (bc[i + 1][1] - bc[i][1]) * (t - bc[i][0]) / Math.max(1, bc[i + 1][0] - bc[i][0])); return null; };
+  const hit = svg.querySelector('#rvHit'), xl = svg.querySelector('#rvX'), dot = svg.querySelector('#rvDot');
+  hit.addEventListener('mousemove', ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+    const t = Math.max(0, Math.min(tMax, Math.round((px - L) / (W - L - R) * tMax)));
+    const p = at(you, t), b = bAt(t);
+    xl.setAttribute('x1', x(t)); xl.setAttribute('x2', x(t)); xl.setAttribute('visibility', 'visible');
+    if (p) { dot.setAttribute('cx', x(p[0])); dot.setAttribute('cy', y(p[1])); dot.setAttribute('visibility', 'visible'); }
+    tip.style.display = 'block';
+    tip.innerHTML = `<b>${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}</b><br>You: <b>${p ? p[1] : '–'}</b> villagers${b != null ? `<br>Build: <b>${b}</b>` : ''}`;
+    const cx = (x(t) / W) * r.width;
+    tip.style.left = Math.min(r.width - 140, cx + 30) + 'px';
+    tip.style.top = '60px';
+  });
+  hit.addEventListener('mouseleave', () => { tip.style.display = 'none'; xl.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden'); });
+}
+addEventListener('resize', () => { if (gameOpen && gameCache[gameOpen] && document.getElementById('v-review').classList.contains('on')) drawChart(gameCache[gameOpen]); });
+
+// sample game for the browser preview
+const SAMPLE_GAME = (() => {
+  const series = []; let v = 6;
+  for (let t = 0; t <= 760; t += 5) { if (t && t % 20 === 0 && !(t >= 360 && t < 440)) v++; series.push([t, v, t >= 240 && t < 280 ? 2 : 0, v + 4, v + 10]); }
+  return {id: 'sample', date: new Date().toISOString(), civ: 'zhu_xis_legacy', enemies: ['french'], map: 'Dry Arabia',
+    build: {title: 'Zhuge Nu-Timing-Attack(10-14)'}, build_curve: [[0, 6], [45, 9], [90, 12], [140, 15], [195, 18], [260, 22], [420, 30], [600, 38], [760, 44]],
+    series, events: [{t: 300, kind: 'enemy_age', text: 'Enemy reached Feudal'}, {t: 330, kind: 'age', text: 'You reached Feudal'}],
+    summary: {length: '12:40', ages: {Feudal: {you: '5:30', build: '4:20', late: 70}}, villagers_at: {'10:00': {you: 32, build: 38}},
+      idle_time: 40, idle_villager_seconds: 80, housed_time: 30, floating_time: 100, longest_no_villager: 99, longest_no_villager_at: ['5:40', '7:19'],
+      late_steps: [{at: '5:30', due: '4:20', late: 70, text: 'Feudal. Build two archery ranges and start Zhuge Nu.'}, {at: '2:51', due: '2:20', late: 31, text: 'Three to berries. Build a mill.'}],
+      tips: ['No new villager for 99 s (5:40 to 7:19). Keep the Town Center producing.', "Housed for 30 s. Build a house when you're 3 or 4 population short.", 'Feudal at 5:30, 70 s after the build\'s 4:20.']}};
+})();
+const SAMPLE_GAME_ROW = {id: 'sample', date: SAMPLE_GAME.date, civ: 'zhu_xis_legacy', enemies: ['french'], length: '12:40', feudal: '5:30', villagers_10: 32};
 
 // ── Settings: reading check and profile
 document.getElementById('readCheck').addEventListener('click', async () => {

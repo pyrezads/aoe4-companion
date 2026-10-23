@@ -21,6 +21,7 @@ In:
     {"cmd": "list_builds", "civ": "zhu_xis_legacy"}
     {"cmd": "use_build", "id": "..."}  or  {"cmd": "use_build", "url": "https://aoe4guides.com/builds/..."}
     {"cmd": "build_detail", "id": "...", "civ": "..."}   everything aoe4guides has on one build
+    {"cmd": "list_games"} / {"cmd": "game_detail", "id": "..."}   saved games for review
     {"cmd": "auto_build"}                 go back to the automatic pick
     {"cmd": "coach_skip", "n": 1}         n = -1 goes back a step
     {"cmd": "set_monitor", "width": 2560, "height": 1440, "x": 0, "y": 0}
@@ -219,6 +220,21 @@ class Commands:
             raise KeyError(f"build {msg.get('id')!r} isn't in the list")
         self.emit.send("build_detail", data=build_detail(raw))
 
+    def _games_dir(self):
+        an = self.state.get("analyst")
+        return an.games_dir if an else None
+
+    def do_list_games(self, msg):
+        from review import list_games
+        self.emit.send("games", data={"games": list_games(self._games_dir())})
+
+    def do_game_detail(self, msg):
+        from review import load_game
+        g = load_game(self._games_dir(), msg.get("id"))
+        if g is None:
+            raise KeyError(f"no saved game {msg.get('id')!r}")
+        self.emit.send("game_detail", data=g)
+
     def do_auto_build(self, msg):
         self.state.set(build_locked=False, build_repick=True)
 
@@ -302,12 +318,21 @@ def run_core(cfg: dict, replay=None, stdin=None, stdout=None, publish_every: flo
                      lambda: state.get("analyst") and state.get("analyst").coach_skip())
 
     emit.send("ready", data={"version": 1, "replay": bool(replay)})
+    try:
+        _publish_loop(state, emit, stop, publish_every)
+    finally:                                          # quitting mid-game still saves the game
+        an = state.get("analyst")
+        if an and an.recorder.samples:
+            an.recorder.finish()
+
+
+def _publish_loop(state, emit, stop, publish_every):
+    from gamewindow import find_game_window
     sent = {}
     next_window_check = 0.0
     while not stop.is_set() and not emit.closed:
         if time.time() >= next_window_check:           # the game's window, for pinning the strip to it
             next_window_check = time.time() + 5
-            from gamewindow import find_game_window
             state.set(game_window=find_game_window())
         for k, v in _payloads(state).items():
             text = json.dumps(v, default=_jsonable, sort_keys=True)

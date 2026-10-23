@@ -87,3 +87,10 @@ core.py            core mode: no window; messages and commands are documented at
   `tools/make_voice.py` (Kokoro-82M, Apache 2.0). Build steps are read by Windows' own voice.
 - Logs: `core.log` (screen reader) and `logs/main.log` (the app) in the app's data folder.
   The reading check saves screens it can't read to `calibration/` there.
+
+## Game review
+- `review.py` records each game (one sample per game second: villagers, idle, pop, bank, coach step,
+  ages) and saves `games/<date>-<civ>.json` with a summary and tips when the game ends (HUD gone 90 s,
+  clock reset, or the app quits). Games under 2 minutes aren't kept.
+- Core commands `list_games` / `game_detail`; `game_saved` is sent when one is saved.
+- `python test_review.py` plays a scripted 12-minute game through the recorder.

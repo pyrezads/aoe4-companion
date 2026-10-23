@@ -127,7 +127,7 @@ function startCore() {
         if (b?.url) core.send({ cmd: 'use_build', url: b.url });
         else if (b?.id) core.send({ cmd: 'use_build', id: b.id, civ: b.civ });
       }
-      if (!['builds', 'build_detail', 'reading_check', 'error'].includes(type)) latest[type] = data;
+      if (!['builds', 'build_detail', 'reading_check', 'error', 'games', 'game_detail', 'game_saved'].includes(type)) latest[type] = data;
       if (type === 'status' && data?.game_window) ensurePinned(data.game_window);
       broadcast(type, data);
     },
