@@ -44,11 +44,15 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const find = (s) => BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().includes(s));
 let ok = true;
 const GH = process.env.GITHUB_ACTIONS === 'true';
+const passed = [];
 const check = (cond, msg) => {
   console.log((cond ? 'PASS ' : 'FAIL ') + msg);
-  if (GH) process.stdout.write(`::${cond ? 'notice' : 'warning'} title=App test (${process.platform})::${cond ? 'PASS' : 'FAIL'} ${msg}\n`);
+  if (cond) passed.push(msg);
+  else if (GH) process.stdout.write(`::warning title=App test (${process.platform})::FAIL ${msg}\n`);
   if (!cond) ok = false;
 };
+// GitHub shows only a few notes per step: the passes go in one
+const summary = () => GH && process.stdout.write(`::notice title=App test (${process.platform})::${passed.length} passed: ${passed.join('; ')}\n`);
 async function until(fn, ms = 10000) {
   const end = Date.now() + ms;
   while (Date.now() < end) { try { const v = await fn(); if (v) return v; } catch {} await wait(250); }
@@ -91,7 +95,7 @@ app.whenReady().then(async () => {
       try {
         const pinned = await until(() => find('pinned=1'), 30000);
         check(pinned, 'strip pinned to the game window');
-        check(await until(() => !find('mode=strip&') && !BrowserWindow.getAllWindows().some((w) => /mode=strip$/.test(w.webContents.getURL())), 15000), 'floating strip replaced by the pinned one');
+        check(await until(() => !BrowserWindow.getAllWindows().some((w) => /mode=strip$/.test(w.webContents.getURL())), 15000), 'floating strip replaced by the pinned one');
         const shown = pinned && await until(() => pinned.webContents.executeJavaScript(
           "!document.body.classList.contains('waiting') && getComputedStyle(document.getElementById('strip')).visibility === 'visible' && /^\\d+$/.test(document.getElementById('sv').textContent) && document.getElementById('sv').textContent !== '7'"), 15000);
         check(shown, 'pinned strip shows the live villager call');
@@ -99,7 +103,12 @@ app.whenReady().then(async () => {
     }
 
     await js("stripPos.value='off'; saveOverlay()");
-    check(await until(() => !find('mode=strip')), 'strip turns off from settings');
+    // the floating strip closes; the pinned one stays for the session and hides
+    check(await until(async () => {
+      const floating = BrowserWindow.getAllWindows().some((w) => /mode=strip$/.test(w.webContents.getURL()));
+      const p = find('pinned=1');
+      return !floating && (!p || await p.webContents.executeJavaScript("document.body.classList.contains('inactive')"));
+    }), 'strip turns off from settings');
 
     check(await js("new Promise(r => { const a = new Audio('voice/vil_wood.ogg'); a.oncanplaythrough = () => r(true); a.onerror = () => r(false); })"), 'voice clips load');
 
@@ -128,6 +137,7 @@ app.whenReady().then(async () => {
   } catch (e) {
     check(false, 'crashed: ' + (e && e.stack || e));
   }
+  summary();
   fs.writeFileSync(path.join(ROOT, 'e2e_result.txt'), ok ? 'OK' : 'FAIL');
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   app.exit(ok ? 0 : 1);
