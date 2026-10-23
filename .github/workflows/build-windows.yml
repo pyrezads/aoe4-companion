@@ -103,21 +103,27 @@ jobs:
           v=$(node -p "require('./package.json').version")
           [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} but package.json says $v"; exit 1; }
 
-      - name: Check this version isn't published yet
-        if: ${{ github.event.inputs.publish == 'true' }}
+      # Build first, then upload with GitHub's own tool. A release that exists but is missing
+      # files (an upload cut short) is completed; a complete one is never overwritten.
+      - name: Build and publish release
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish == 'true' }}
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           v=$(node -p "require('./package.json').version")
-          if gh release view "v$v" >/dev/null 2>&1; then echo "::error::v$v is already released: raise the version in package.json first"; exit 1; fi
-          echo "::notice::Publishing v$v"
+          have=$(gh release view "v$v" --json assets -q '[.assets[].name] | join(" ")' 2>/dev/null || echo "none")
+          if [[ "$have" == *latest.yml* ]]; then echo "::error::v$v is already released: raise the version in package.json first"; exit 1; fi
+          npx electron-builder --win nsis --publish never
+          ls -la dist
+          files=(dist/*.exe dist/latest.yml dist/*.blockmap)
+          if [ "$have" = "none" ]; then
+            gh release create "v$v" "${files[@]}" --target "$GITHUB_SHA" --title "AoE4 Coach $v" --notes "Installed apps update to this by themselves. New install: download AoE4-Coach-Setup-$v.exe."
+          else
+            gh release upload "v$v" "${files[@]}" --clobber
+          fi
+          gh release view "v$v" --json assets -q '"::notice::v'"$v"' files: " + ([.assets[].name] | join(", "))'
 
-      - name: Build and publish release
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish == 'true' }}
-        run: npx electron-builder --win nsis --publish always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-artifact@v5
         with:
