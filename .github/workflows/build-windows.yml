@@ -56,7 +56,6 @@ jobs:
         run: npm ci
 
       - name: Check pinning to the game window (stand-in window)
-        continue-on-error: true
         run: npx electron packaging/pin_test.js
 
       - name: Build installer
