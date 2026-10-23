@@ -1,0 +1,18 @@
+# One-off look at what aoe4world.com has on finished games (tools/probe_aoe4world.py). Run by hand.
+name: Probe aoe4world
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["tools/probe_aoe4world.py"]
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python tools/probe_aoe4world.py
