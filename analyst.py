@@ -20,7 +20,7 @@ from combat import TechAdvisor, best_counters, fight, needed_to_win, villagers_t
 from hud_reader import HudReader
 from scoreboard import ScoreboardReader, TeamTracker
 from tracker import ArmyTracker, EcoTracker
-from units import CARD, CARD_STEP, CARD_X0, CARD_Y0, UnitDB, UnitRecognizer
+from units import UnitDB, UnitRecognizer, card_at
 import production_math as pm
 
 AGE_NAME = {1: "Dark", 2: "Feudal", 3: "Castle", 4: "Imperial"}
@@ -189,8 +189,9 @@ class Analyst:
             return
         found = []
         for i, n in enumerate(h.selection_counts):
-            x = CARD_X0 + i * CARD_STEP
-            card = frame[CARD_Y0:CARD_Y0 + CARD, x:x + CARD]
+            card = card_at(frame, i)
+            if card is None:
+                break
             icon_e, s_e = self.rec.classify_card(card, enemies or None)
             icon_m, s_m = self.rec.classify_card(card, [mine]) if mine else (None, -1.0)
             if s_e < 0.8:

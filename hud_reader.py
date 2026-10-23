@@ -115,6 +115,24 @@ def segment(mask: np.ndarray, min_h: int = 8, max_h: int = 30) -> List[np.ndarra
     return glyphs, tallest
 
 
+def _split_wide(g: np.ndarray, line_h: int) -> List[np.ndarray]:
+    """On small screens neighbouring characters can touch ("/5" in "12/50"). A shape
+    wider than any single digit is cut at its thinnest column, then trimmed."""
+    h, w = g.shape
+    if w <= 0.9 * line_h or w < 6:
+        return [g]
+    ink = g.sum(0)
+    lo, hi = int(w * 0.3), int(w * 0.7) + 1
+    cut = lo + int(np.argmin(ink[lo:hi]))
+    out = []
+    for part in (g[:, :cut], g[:, cut + 1:] if ink[cut] == 0 else g[:, cut:]):
+        rows = np.where(part.sum(1) > 0)[0]
+        cols = np.where(part.sum(0) > 0)[0]
+        if len(rows) and len(cols):
+            out.extend(_split_wide(part[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1], line_h))
+    return out or [g]
+
+
 def normalise(g: np.ndarray, line_h: int) -> np.ndarray:
     """Resize a glyph into a fixed box, keeping its height relative to the line."""
     from PIL import Image
@@ -172,13 +190,22 @@ class HudReader:
     def __init__(self, matcher: Optional[GlyphMatcher] = None, min_similarity: float = 0.80):
         self.matcher = matcher or GlyphMatcher.load()
         self.min_sim = min_similarity
+        self.k = 1.0          # screen height / 1440: pixel sizes below were tuned at 2560x1440
+
+    # Smaller screens draw thinner, softer text: scale sizes and ease the brightness cut.
+    BRIGHT_EASE = 30.0
+    def _b(self, bright: int) -> int:
+        return int(bright - max(0.0, 1 - self.k) * self.BRIGHT_EASE)
+
+    def _seg(self, mask):
+        return segment(mask, min_h=max(4, int(8 * self.k)), max_h=int(30 * self.k) + 2)
 
     def read_text(self, rgb: np.ndarray, box, bright: int = 165, allowed: Optional[str] = None,
                   max_aspect: Optional[float] = None) -> Tuple[str, float]:
         h, w = rgb.shape[:2]
         x0, y0, x1, y1 = _scale_box(box, w, h)
         crop = rgb[y0:y1, x0:x1]
-        res = segment(text_mask(crop, bright))
+        res = self._seg(text_mask(crop, self._b(bright)))
         if not res or not res[0]:
             return "", 0.0
         glyphs, line_h = res
@@ -191,6 +218,8 @@ class HudReader:
             glyphs = kept
             if not glyphs:
                 return "", 0.0
+        if max_aspect is None:
+            glyphs = [part for g in glyphs for part in _split_wide(g, line_h)]
         chars, sims = [], []
         for g in glyphs:
             label, sim = self.matcher.classify(normalise(g, line_h), allowed)
@@ -213,18 +242,18 @@ class HudReader:
         h, w = rgb.shape[:2]
         x0, y0, x1, y1 = _scale_box(box, w, h)
         crop = rgb[y0:y1, x0:x1]
-        bright = text_mask(crop, 165).sum()
+        bright = text_mask(crop, self._b(165)).sum()
         dim = text_mask(crop, 85).sum()
-        return 0 if bright == 0 and dim >= 15 else None
+        return 0 if bright == 0 and dim >= 15 * self.k * self.k else None
 
     def read_clock(self, rgb) -> Optional[str]:
         h, w = rgb.shape[:2]
         x0, y0, x1, y1 = _scale_box(REGIONS["clock_band"], w, h)
         band = rgb[y0:y1, x0:x1]
-        mask = text_mask(band, 200)
+        mask = text_mask(band, self._b(200))
         best = None
         for a, b in _runs(mask.sum(1), gap=2):
-            if not (12 <= b - a + 1 <= 20):
+            if not (int(12 * self.k) - 1 <= b - a + 1 <= int(20 * self.k + 0.999) + 1):
                 continue
             sub = (x0 * BASE_W / w, (y0 + a - 2) * BASE_H / h, x1 * BASE_W / w, (y0 + b + 3) * BASE_H / h)
             text, sim = self.read_text(rgb, sub, 200, allowed="0123456789:")
@@ -237,7 +266,7 @@ class HudReader:
         # "ALL (193)": skip the three letters and the brackets, read only the digits.
         h, w = rgb.shape[:2]
         x0, y0, x1, y1 = _scale_box(REGIONS["sel_all"], w, h)
-        res = segment(text_mask(rgb[y0:y1, x0:x1], 200))
+        res = self._seg(text_mask(rgb[y0:y1, x0:x1], self._b(200)))
         total = None
         if res and len(res[0]) >= 6:
             glyphs, line_h = res
@@ -263,6 +292,7 @@ class HudReader:
         return total, counts
 
     def read(self, rgb: np.ndarray) -> HudState:
+        self.k = rgb.shape[0] / BASE_H
         s = HudState()
         ok = 0
         total = 0

@@ -22,8 +22,9 @@ dashboard.py  Tkinter window on the second monitor, redraws from AppState
 Threads: reader_loop (screen), match_loop (network), Tk main thread (UI). They only share AppState.
 
 ## Screen reading
-- Fixed regions for **2560x1440, default UI scale** (hud_reader.REGIONS, scoreboard constants, units.CARD_*).
-  Other resolutions or UI scales need new regions and recalibration.
+- Regions are written for 2560x1440 and scaled to the screen; pixel sizes (line heights, brightness)
+  scale too. `python test_sizes.py` checks 1080p, 4K and 900p on resized calibration shots: 1080p and
+  4K read everything, 900p ~80%, never a wrong number. Ultrawide and other UI scales still need real shots.
 - Digits: text mask → column runs → glyph vectors, matched by cosine against data/glyphs.json.
   `build_templates.py` builds the templates from the labelled screenshots in calib/
   (`--holdout` = leave-one-out test; currently 148/148).
@@ -94,3 +95,9 @@ core.py            core mode: no window; messages and commands are documented at
   clock reset, or the app quits). Games under 2 minutes aren't kept.
 - Core commands `list_games` / `game_detail`; `game_saved` is sent when one is saved.
 - `python test_review.py` plays a scripted 12-minute game through the recorder.
+
+## Tests
+`test_coach.py`, `test_core.py`, `test_review.py`, `test_sizes.py`, `test_live.py`, `test_builds.py`,
+`test_production_math.py` (Python), `tests/e2e_app.js` (the whole app, GitHub "Test the app"),
+`packaging/smoke_core.py` and `packaging/pin_test.js` (Windows build), `tools/check_real_builds.py`
+(the coach on real aoe4guides builds, weekly).

@@ -584,8 +584,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
             <div class="monitors" id="monitors">
             </div>
             <div class="row2">
-              <div class="field"><label for="resSel">Game resolution</label>
-                <div class="sel"><select id="resSel"><option id="autoOpt">Auto (2560 × 1440)</option><option>1920 × 1080</option><option>2560 × 1440</option><option>3440 × 1440 (ultrawide)</option><option>3840 × 2160</option></select></div></div>
+              <div class="field"><label for="resSel">Game resolution</label><span class="hint" style="order:3">Read from the game monitor. 1080p, 1440p and 4K are supported; other sizes may miss some numbers.</span>
+                <div class="sel"><select id="resSel"><option id="autoOpt">Auto (2560 × 1440)</option></select></div></div>
               <div class="field"><label for="ui">In-game UI scale</label>
                 <div class="sel"><select id="ui"><option>Auto (100%)</option><option>100%</option><option>90%</option><option>80%</option><option>70%</option></select></div></div>
             </div>
@@ -646,7 +646,7 @@ document.addEventListener('click', e => { const t = e.target.closest('[data-go]'
 
 // ── Screens. In the app this comes from Electron (every monitor, in real pixels);
 //    opened in a browser it reads this one monitor so you can see the auto-detect work.
-const SUPPORTED = ['2560x1440'];
+const SUPPORTED = ['2560x1440', '1920x1080', '3840x2160'];   // 1080p and 4K: tested on resized screenshots
 const inApp = !!window.app;
 let displays = [];
 

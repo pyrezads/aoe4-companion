@@ -1,0 +1,33 @@
+# Clicks through the whole app (tests/e2e_app.js) with the real Python core reading a
+# calibration screenshot: setup, build picker and details, coach windows, settings,
+# voice, reading check, live analyst and game review.
+name: Test the app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q xvfb
+          pip install -r requirements.txt
+          npm ci
+      - name: Click through the app
+        env:
+          AOE4_PYTHON: python
+        run: |
+          xvfb-run -a -s "-screen 0 1920x1080x24" npx electron --no-sandbox tests/e2e_app.js || true
+          grep -qx OK e2e_result.txt

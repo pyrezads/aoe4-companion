@@ -43,6 +43,23 @@ def _norm(v: np.ndarray) -> np.ndarray:
     return v / max(float(np.linalg.norm(v)), 1e-6)
 
 
+def card_at(rgb: np.ndarray, i: int) -> Optional[np.ndarray]:
+    """Selection card i, cut out at this screen's size and resized to the 50x50 the icons use."""
+    h, w = rgb.shape[:2]
+    sx, sy = w / 2560, h / 1440
+    x = CARD_X0 + i * CARD_STEP
+    x0, y0 = int(round(x * sx)), int(round(CARD_Y0 * sy))
+    x1, y1 = int(round((x + CARD) * sx)), int(round((CARD_Y0 + CARD) * sy))
+    crop = rgb[y0:y1, x0:x1]
+    if crop.shape[0] < 10 or crop.shape[1] < 10 or x1 > w or y1 > h:
+        return None
+    if crop.shape[:2] == (CARD, CARD):
+        return crop
+    from PIL import Image
+    im = Image.fromarray(np.clip(crop, 0, 255).astype(np.uint8)).resize((CARD, CARD), Image.BILINEAR)
+    return np.asarray(im).astype(rgb.dtype)
+
+
 @dataclass
 class UnitMatch:
     unit_id: str          # e.g. "zhuge-nu-3"
@@ -183,9 +200,8 @@ class UnitRecognizer:
                    min_score: float = 0.55) -> List[UnitMatch]:
         out = []
         for i, n in enumerate(counts):
-            x = CARD_X0 + i * CARD_STEP
-            card = rgb[CARD_Y0:CARD_Y0 + CARD, x:x + CARD]
-            if card.shape[:2] != (CARD, CARD):
+            card = card_at(rgb, i)
+            if card is None:
                 break
             icon, score = self.classify_card(card, civs)
             uid = self.unit_for_icon(icon, civs)
