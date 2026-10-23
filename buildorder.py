@@ -22,6 +22,9 @@ USER_AGENT = "AOE4-Live-Analyst/1.0 (personal coaching tool)"
 RESOURCES = ("food", "wood", "gold", "stone")
 
 
+AGE_KEYS = {"feudal": 2, "castle": 3, "imperial": 4}
+
+
 def build_id_from(url_or_id: str) -> str:
     m = re.search(r"/builds/([A-Za-z0-9]+)", url_or_id)
     return m.group(1) if m else url_or_id.strip()
@@ -65,6 +68,7 @@ class Step:
     text: str
     villagers: Optional[int] = None    # total villagers at this step, when the build gives it
     builders: Optional[int] = None     # villagers building (not counted on any resource)
+    blank: Dict[str, bool] = field(default_factory=dict)   # resource left empty (usually 0), not "+"
 
 
 @dataclass
@@ -99,10 +103,17 @@ class BuildOrder:
                                      targets={r: _count(st.get(r, "")) for r in RESOURCES},
                                      text=html_to_text(st.get("description", "")),
                                      villagers=_count(str(st.get("villagers") or "")),
-                                     builders=_count(str(st.get("builders") or ""))))
+                                     builders=_count(str(st.get("builders") or "")),
+                                     blank={r: not str(st.get(r) or "").strip() for r in RESOURCES}))
         for k, v in (data.get("ageTimings") or {}).items():
             if isinstance(v, dict) and v.get("t"):
                 bo.age_times[k] = v["t"]
+        # No age-up times given: use the time of each age's first step.
+        have = {AGE_KEYS.get(str(k).lower(), int(k) if str(k).isdigit() else None) for k in bo.age_times}
+        for s in bo.steps:
+            if s.age > 1 and s.age not in have and s.seconds is not None:
+                bo.age_times[str(s.age)] = s.seconds
+                have.add(s.age)
         return bo
 
     # ── live comparison ───────────────────────────────────────────────
@@ -172,6 +183,22 @@ def _strategy(b: dict) -> str:
     return ""
 
 
+ENGLISH = {"villager", "villagers", "vills", "vils", "build", "builds", "to", "on", "the", "and", "send", "sheep",
+           "wood", "food", "gold", "stone", "house", "age", "up", "berries", "farm", "farms", "with", "next", "first",
+           "scout", "mill", "camp", "get", "make", "go", "then", "into", "start", "keep", "for", "at", "of"}
+
+
+def _english(b: dict) -> float:
+    """Share of a build's step texts that read as English (icons left out)."""
+    texts = [st.get("description") or "" for sec in b.get("steps") or [] for st in sec.get("steps") or []]
+    texts = [re.sub(r"<[^>]+>", " ", html.unescape(t)) for t in texts]
+    texts = [t for t in texts if re.search(r"[^\W\d_]{3,}", t)]
+    if not texts:
+        return 1.0
+    hits = sum(1 for t in texts if set(re.findall(r"[a-z]+", t.lower())) & ENGLISH)
+    return hits / len(texts)
+
+
 def _season_num(b: dict) -> int:
     m = re.search(r"(\d+)", b.get("season") or "")
     return int(m.group(1)) if m else 0
@@ -199,6 +226,8 @@ def rank_builds(builds: List[dict], kind: Optional[str], map_name: Optional[str]
         strat = _strategy(b)
         title = (b.get("title") or "").lower()
         sc, why = 0.0, []
+        if _english(b) < 0.4:                    # the coach reads steps aloud: prefer ones in English
+            sc -= 6
         age = newest - _season_num(b)
         sc += 3.0 if age == 0 else 2.0 if age == 1 else 0.5 if age <= 3 else -1.5     # balance changes every season
         sc += min(float(b.get("score") or 0), 8) * 0.3 + math.log10(float(b.get("views") or 0) + 1) * 0.6

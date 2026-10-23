@@ -41,6 +41,31 @@ st = coach_steps(build)
 check([s.villagers for s in st] == [6, 9, 12, 15, 18, 22], "villager totals read from the build")
 check(coach_steps(BuildOrder.from_json(NO_COUNTS))[2].villagers == 12, "totals added up when the build has no counts")
 
+print("Real aoe4guides data: the whole split on every step, empty = 0")
+REAL = {"title": "Real shape", "civ": "ABB", "ageTimings": {}, "steps": [
+    {"age": 1, "steps": [
+        {"time": "0:00", "villagers": "", "builders": "", "food": "6", "wood": "", "gold": "", "stone": "", "description": "6 on berries"},
+        {"time": "0:20", "villagers": "", "builders": "", "food": "6", "wood": "", "gold": "1", "stone": "", "description": "first to gold"},
+        {"time": "1:00", "villagers": "", "builders": "", "food": "6", "wood": "", "gold": "3", "stone": "", "description": "next 2 to gold"},
+        {"time": "1:40", "villagers": "", "builders": "", "food": "6", "wood": "4", "gold": "3", "stone": "", "description": "4 to wood"}]},
+    {"age": 2, "steps": [
+        {"time": "4:50", "villagers": "", "builders": "", "food": "8", "wood": "6", "gold": "3", "stone": "", "description": "Feudal"}]}]}
+st = coach_steps(BuildOrder.from_json(REAL))
+check([s.villagers for s in st] == [6, 7, 9, 13, 17], f"totals 6, 7, 9, 13, 17 (got {[s.villagers for s in st]})")
+check(st[1].targets["wood"] == 0, "an empty resource is 0, not the step before's number")
+real = BuildOrder.from_json(REAL)
+check(real.age_times.get("2") == 290, "no age-up times given: Feudal from the age's first step (4:50)")
+m = feed(Coach(real), 30, V(6, 0, 1))
+check(m["next"]["resource"] == "gold", "7 villagers (6 food, 1 gold): next goes to gold")
+
+print("Builds that only write what changed")
+CHANGES = {"title": "Changes only", "civ": "ENG", "steps": [{"age": 1, "steps": [
+    {"time": "0:00", "food": "6", "wood": "", "gold": "", "stone": "", "description": "sheep"},
+    {"time": "0:40", "food": "", "wood": "3", "gold": "", "stone": "", "description": "3 to wood"},
+    {"time": "1:20", "food": "", "wood": "", "gold": "3", "stone": "", "description": "3 to gold"}]}]}
+st = coach_steps(BuildOrder.from_json(CHANGES))
+check([s.villagers for s in st] == [6, 9, 12], f"blanks keep the old numbers when zero would lose villagers (got {[s.villagers for s in st]})")
+
 print("Age timings as aoe4guides names them")
 named = BuildOrder.from_json({**BUILD_JSON, "ageTimings": {"feudal": {"e": False, "t": 280}}})
 m = feed(Coach(named), 0, V(6))

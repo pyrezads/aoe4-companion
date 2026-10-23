@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import time
 from collections import Counter
@@ -65,13 +66,16 @@ def simulate(bo: BuildOrder) -> dict:
     out["reached_villagers"] = msg["villagers"] if msg else 0
     out["final_villagers"] = final
     out["steps_seen"] = len(seen_steps)
+    out["english"] = None
     out["calls"] = dict(calls)
     out["age"] = msg.get("age") if msg else None
     if msg and msg["upcoming"] is not None:
         out["problems"].append(f"stuck at {msg['villagers']} villagers, step {msg['step']['index']} of {len(bo.steps)}")
-    skipped = len(steps) - len(seen_steps)
-    if skipped > max(2, len(steps) // 3):
-        out["problems"].append(f"{skipped} of {len(steps)} steps never shown")
+    # steps that share a villager count with the next one pass by time, not villagers: don't count those
+    distinct = {s.index for i, s in enumerate(steps) if i + 1 == len(steps) or steps[i + 1].villagers != s.villagers}
+    skipped = len(distinct - seen_steps)
+    if skipped > max(1, len(distinct) // 5):
+        out["problems"].append(f"{skipped} of {len(distinct)} steps never shown")
     if not bo.age_times:
         out["problems"].append("no age-up times")
     return out
@@ -84,8 +88,14 @@ def main():
     args = ap.parse_args()
     lib = BuildLibrary(API)
     results, raw_sample, fetch_fail = [], None, []
+    fields, icon_dirs, extra_sample = Counter(), Counter(), None
     for slug in GUIDES_CIV:
-        builds = lib.builds_for(slug)
+        builds = []
+        for attempt in range(3):                          # aoe4guides slows down quick callers
+            builds = lib.builds_for(slug)
+            if builds:
+                break
+            time.sleep(8 * (attempt + 1))
         if not builds:
             fetch_fail.append(slug)
             continue
@@ -95,13 +105,30 @@ def main():
                 raw_sample = {"keys": sorted(b.keys()), "ageTimings": b.get("ageTimings"),
                               "step_keys": sorted({k for sec in b["steps"] for st in sec.get("steps", []) for k in st}),
                               "first_steps": b["steps"][0].get("steps", [])[:3]}
+            fields["builds"] += 1
+            for k in ("video", "description", "author", "creatorName", "remixOf", "comments", "map", "strategy"):
+                if b.get(k) not in (None, "", "-", [], 0):
+                    fields[k] += 1
+            all_steps = [st for sec in b.get("steps") or [] for st in sec.get("steps") or []]
+            if any(st.get("gameplan") for st in all_steps):
+                fields["gameplan"] += 1
+            if any(st.get("kind") == "alternatives" for st in all_steps):
+                fields["alternatives"] += 1
+            for st in all_steps:
+                for icon in re.findall(r'src="[^"]*/([a-z_\-]+)/[^"/]+"', st.get("description") or ""):
+                    icon_dirs[icon] += 1
+            if extra_sample is None and b.get("description") and b.get("video"):
+                extra_sample = {"description": str(b["description"])[:400], "video": b["video"], "comments": str(b.get("comments"))[:120],
+                                "author": b.get("author"), "creatorName": b.get("creatorName"),
+                                "gameplan": next((st.get("gameplan") for st in all_steps if st.get("gameplan")), None),
+                                "alt": next((json.dumps(st)[:400] for st in all_steps if st.get("kind") == "alternatives"), None)}
             try:
                 r = simulate(BuildOrder.from_json(b))
             except Exception as e:
                 r = {"title": b.get("title"), "civ": slug, "problems": [f"crash: {type(e).__name__}: {e}"]}
             r["civ"] = slug
             results.append(r)
-        time.sleep(0.3)                                   # be gentle with aoe4guides
+        time.sleep(3)                                     # be gentle with aoe4guides
 
     bad = [r for r in results if r["problems"]]
     probs = Counter(p.split(" at ")[0].split(",")[0] for r in bad for p in r["problems"])
@@ -113,6 +140,9 @@ def main():
         note("no builds for: " + ", ".join(fetch_fail), "warning")
     if raw_sample:
         note("data shape: " + json.dumps(raw_sample)[:3500])
+    note("fields filled in: " + json.dumps(dict(fields)) + " | icon folders: " + json.dumps(dict(icon_dirs.most_common(20))))
+    if extra_sample:
+        note("extras sample: " + json.dumps(extra_sample)[:3500])
     for r in bad[:8]:
         note(f"{r['civ']} | {r['title']} | {'; '.join(r['problems'])} | steps {r.get('steps')} "
              f"coach {r.get('coach_steps')} seen {r.get('steps_seen')} vil {r.get('reached_villagers')}/{r.get('final_villagers')}",

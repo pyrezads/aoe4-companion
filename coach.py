@@ -57,16 +57,25 @@ def coach_steps(build: BuildOrder) -> List[CoachStep]:
     """The build's steps with a villager total each.
 
     Uses the step's own villager count when aoe4guides has one, otherwise
-    adds up its resource targets and builders. Each step keeps the targets of
-    the step before for any resource it leaves blank ("+" means "keep adding",
-    no fixed number). Totals never go down, so a "move 3 from sheep to wood"
-    step stays on the same villager count.
+    adds up its resource targets and builders. An empty resource usually means
+    zero; "+" means "keep adding" (no fixed number) and keeps the step before's
+    number. Totals never go down, so a "move 3 from sheep to wood" step stays
+    on the same villager count.
     """
     out: List[CoachStep] = []
     prev = {r: 0 for r in RES}
     last_total = 0
     for i, s in enumerate(build.steps):
-        t = {r: (s.targets.get(r) if s.targets.get(r) is not None else prev[r]) for r in RES}
+        carry = {r: (s.targets.get(r) if s.targets.get(r) is not None else prev[r]) for r in RES}
+        t = carry
+        if any(s.targets.get(r) is not None for r in RES) and s.blank:
+            # Most builds write the whole split on every step and leave a resource empty
+            # for zero. Some only write what changed. Read blanks as zero unless that
+            # would make the villager count drop.
+            zero = {r: (s.targets.get(r) if s.targets.get(r) is not None else (0 if s.blank.get(r) else prev[r]))
+                    for r in RES}
+            if sum(zero.values()) + (s.builders or 0) >= last_total:
+                t = zero
         total = s.villagers if s.villagers else sum(t.values()) + (s.builders or 0)
         total = max(total, last_total)
         if total == 0:                       # a note with no numbers at all
