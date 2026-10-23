@@ -119,6 +119,7 @@ def _payloads(state) -> dict:
             "match_note": state.get("match_note"), "build_note": state.get("build_note"),
             "screen": {"width": mon.get("width"), "height": mon.get("height")},
             "game_window": state.get("game_window"),
+            "capture": state.get("capture"),
         },
         "hud": dataclasses.asdict(snap) if snap else None,
         "coach": state.get("coach"),

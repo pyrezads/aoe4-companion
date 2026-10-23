@@ -33,6 +33,8 @@ def find_game_window() -> Optional[dict]:
     user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
     user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
     user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
+    user32.GetClientRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
+    user32.ClientToScreen.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.POINT)]
     kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
     kernel32.OpenProcess.restype = wintypes.HANDLE
     kernel32.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
@@ -70,8 +72,14 @@ def find_game_window() -> Optional[dict]:
             if exe in GAME_EXES or title.startswith(TITLE_PREFIX):
                 r = wintypes.RECT()
                 user32.GetWindowRect(hwnd, ctypes.byref(r))
+                c = wintypes.RECT()                    # the game picture, without a title bar or borders
+                user32.GetClientRect(hwnd, ctypes.byref(c))
+                p = wintypes.POINT(0, 0)
+                user32.ClientToScreen(hwnd, ctypes.byref(p))
                 found.append({"title": title, "exe": exe, "left": r.left, "top": r.top,
                               "width": r.right - r.left, "height": r.bottom - r.top,
+                              "hwnd": int(hwnd or 0),
+                              "client": {"left": p.x, "top": p.y, "width": c.right, "height": c.bottom},
                               "by_exe": exe in GAME_EXES})
         except Exception:
             pass

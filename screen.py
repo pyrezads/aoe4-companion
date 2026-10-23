@@ -1,5 +1,12 @@
 """
-Screen capture for the game monitor only.
+Screen capture.
+
+WindowScreen (Windows 10 1903+): Windows Graphics Capture of the game's own window, the
+API OBS uses. Fast, works on any monitor, and only sees the game: our strip and other
+windows on top of it never get in. Used whenever the game window is found.
+
+GameScreen: a plain grab of the game monitor (mss). The fallback, and what runs on
+other systems or before the game starts.
 
 Picks the monitor that is 2560x1440 (or the largest one) as the game screen,
 and reports the other monitor so the dashboard can open there.
@@ -62,3 +69,85 @@ class GameScreen:
     def save(self, path: str):
         from PIL import Image
         Image.fromarray(self.grab().astype(np.uint8)).save(path)
+
+
+def _import_windows_capture():
+    """windows_capture imports OpenCV only to save images, which we never do. The installer
+    leaves OpenCV out (it's large), so stand in a tiny placeholder when it's missing."""
+    import importlib
+    import types
+    try:
+        import cv2  # noqa: F401
+    except ImportError:
+        sys.modules.setdefault("cv2", types.ModuleType("cv2"))
+    return importlib.import_module("windows_capture")
+
+
+class WindowScreen:
+    """Frames from the game's window via Windows Graphics Capture, cropped to the game picture."""
+
+    def __init__(self, game_window: dict, max_fps: int = 10):
+        import threading
+        wc = _import_windows_capture()
+        self.window = game_window
+        self._lock = threading.Lock()
+        self._frame = None            # latest BGRA frame (a copy)
+        self._new = threading.Event()
+        self.closed = False
+        cap = wc.WindowsCapture(cursor_capture=False, draw_border=False,
+                                minimum_update_interval=int(1000 / max_fps),
+                                window_hwnd=game_window["hwnd"])
+
+        @cap.event
+        def on_frame_arrived(frame, control):
+            if self.closed:
+                control.stop()
+                return
+            buf = frame.frame_buffer
+            with self._lock:
+                self._frame = buf.copy()          # the mapped buffer is only valid inside this call
+            self._new.set()
+
+        @cap.event
+        def on_closed():
+            self.closed = True                    # the game window went away
+            self._new.set()
+
+        self._control = cap.start_free_threaded()
+
+    def grab(self, timeout: float = 1.5) -> np.ndarray:
+        if self._frame is None:
+            self._new.wait(timeout)
+        with self._lock:
+            f = self._frame
+        if f is None:
+            raise RuntimeError("no frame from the game window yet")
+        # Windowed mode: the capture includes the title bar and borders; keep the game picture.
+        c = (self.window or {}).get("client") or {}
+        cw, ch = c.get("width") or f.shape[1], c.get("height") or f.shape[0]
+        if 0 < cw < f.shape[1] or 0 < ch < f.shape[0]:
+            side = max(0, (f.shape[1] - cw) // 2)
+            top = max(0, f.shape[0] - ch - side)
+            f = f[top:top + ch, side:side + cw]
+        return f[:, :, [2, 1, 0]].astype(np.int16)
+
+    def save(self, path: str):
+        from PIL import Image
+        Image.fromarray(self.grab().astype(np.uint8)).save(path)
+
+    def stop(self):
+        self.closed = True
+        try:
+            self._control.stop()
+        except Exception:
+            pass
+
+
+def window_capture_available() -> bool:
+    if sys.platform != "win32":
+        return False
+    try:
+        _import_windows_capture()
+        return True
+    except Exception:
+        return False

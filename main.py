@@ -27,7 +27,7 @@ DEFAULT_CONFIG = {
     "aoe4world_profile_id": 6979980,
     "hotkey": "f9",
     "army_key": "ctrl+c",
-    "read_every_seconds": 1.0,
+    "read_every_seconds": 0.5,
     "game_monitor": "auto",
     "builds": {
         "_how": "Paste an aoe4guides.com build link per civ, e.g. \"zhu_xis_legacy\": \"https://aoe4guides.com/builds/XXXX\"",
@@ -79,8 +79,14 @@ def reader_loop(state: AppState, cfg: dict, monitor: dict, stop: threading.Event
     from screen import GameScreen
     from analyst import Analyst
 
+    replaying = make_screen is not None
     make_screen = make_screen or GameScreen
     screen = make_screen(monitor)     # mss must be created in the thread that uses it
+    state.set(capture="replay" if replaying else "screen")
+    # Windows: capture the game's own window when it's running (faster, nothing on top gets in)
+    from screen import WindowScreen, window_capture_available
+    use_window = not replaying and cfg.get("window_capture", True) and window_capture_available()
+    next_window_check, failed_hwnd = 0.0, None
     an = Analyst(state, cfg)
     state.set(analyst=an)
     interval = float(cfg.get("read_every_seconds", 1.0))
@@ -92,7 +98,34 @@ def reader_loop(state: AppState, cfg: dict, monitor: dict, stop: threading.Event
         t0 = time.time()
         want = state.get("game_monitor")
         if want and want != monitor:                 # the app picked another monitor for the game
-            monitor, screen = want, make_screen(want)
+            monitor = want
+            if not isinstance(screen, WindowScreen):
+                screen = make_screen(want)
+        if use_window and t0 >= next_window_check:
+            next_window_check = t0 + 3
+            from gamewindow import find_game_window
+            gw = find_game_window()
+            hwnd = (gw or {}).get("hwnd")
+            if isinstance(screen, WindowScreen) and (screen.closed or not hwnd or screen.window.get("hwnd") != hwnd):
+                screen.stop()
+                screen = make_screen(monitor)
+                state.set(capture="screen")
+                print("  Capture: back to the monitor grab")
+            if hwnd and not isinstance(screen, WindowScreen) and hwnd != failed_hwnd:
+                try:
+                    screen = WindowScreen(gw)
+                    screen.grab()
+                    state.set(capture="window")
+                    print(f"  Capture: the game window ({gw['client']['width']}x{gw['client']['height']})")
+                except Exception as e:
+                    print(f"  Capture: game window capture failed ({e}); using the monitor grab")
+                    failed_hwnd = hwnd
+                    if isinstance(screen, WindowScreen):
+                        screen.stop()
+                    screen = make_screen(monitor)
+                    state.set(capture="screen")
+            elif isinstance(screen, WindowScreen):
+                screen.window = gw                    # the window moved or resized
         try:
             frame = screen.grab()
             an.on_frame(frame, t0)
@@ -131,7 +164,13 @@ def reader_loop(state: AppState, cfg: dict, monitor: dict, stop: threading.Event
         except Exception as e:
             import traceback
             print(f"  [reader] {type(e).__name__}: {e}")
-            traceback.print_exc()
+            if isinstance(screen, WindowScreen):          # window capture broke: fall back at once
+                failed_hwnd = screen.window.get("hwnd")
+                screen.stop()
+                screen = make_screen(monitor)
+                state.set(capture="screen")
+            else:
+                traceback.print_exc()
         # Sleep until the next read, but react at once to Ctrl+C (army) or F9 (enemy pin).
         deadline = t0 + interval
         while not stop.is_set() and time.time() < deadline:

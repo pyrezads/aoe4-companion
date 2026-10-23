@@ -49,6 +49,12 @@ jobs:
       - name: Check the packed screen reader runs
         run: python packaging/smoke_core.py dist-core/aoe4-core/aoe4-core.exe
 
+      - name: Check the game-window capture (stand-in game window)
+        shell: bash
+        run: |
+          python packaging/capture_test.py dist-core/aoe4-core/aoe4-core.exe || true
+          grep -qx OK capture_result.txt
+
       - uses: actions/setup-node@v5
         with:
           node-version: 22
