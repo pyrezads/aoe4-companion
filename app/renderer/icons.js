@@ -64,5 +64,26 @@ const GameIcons = (() => {
       <text x="20" y="${n === 3 ? 28.5 : 29}" text-anchor="middle">${AGE_NUM[n]}</text></svg></span>`;
   }
   const landmarks = (civ, a) => ((idx.landmarks[civ] || {})[String(a)] || []).map(item).filter(Boolean);
-  return {ready, byName, fromGuides, find, html, step, key: key_of, age, landmarks, item};
+  // A build step as clear actions: [{it, verb, text, builders}] ("Build a Mining Camp", 1 villager).
+  // From the build's own icons, else from the units/buildings/techs its text names. Villagers,
+  // scouts, sheep and resources aren't actions (the villager call covers them).
+  const SKIP = /^(villager|scout|sheep|berry bush|berries|deer|boar|wolf|fish)$/i;
+  const VERB = {b: 'Build', t: 'Research', g: 'Research', u: 'Train'};
+  const article = n => /s$/.test(n) && !/(ss|us)$/.test(n) ? '' : /^[aeiou]/i.test(n) ? 'an ' : 'a ';
+  function actions(st, max = 2){
+    if (!st) return [];
+    const seen = new Set(), out = [];
+    const add = it => {
+      if (!it || !it.k || it.k === 'x' || SKIP.test(it.n) || seen.has(it.id)) return;
+      seen.add(it.id);
+      const verb = VERB[it.k] || 'Make';
+      out.push({it, verb, text: `${verb} ${verb === 'Research' ? '' : article(it.n)}${it.n}`});
+    };
+    for (const ic of st.icons || []) if (!/resource_/.test(ic.src || '')) add(fromGuides(ic));
+    if (!out.length) for (const it of find(st.text, 6)) add(it);
+    const b = out.find(a => a.it.k === 'b');
+    if (b && st.builders) b.builders = st.builders;
+    return out.slice(0, max);
+  }
+  return {ready, byName, fromGuides, find, html, step, key: key_of, age, landmarks, item, actions};
 })();

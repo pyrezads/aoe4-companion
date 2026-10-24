@@ -52,6 +52,7 @@ class CoachStep:
     age: int
     text: str
     icons: list = None         # the build step's in-game icons
+    builders: int = 0          # villagers the step puts on building
 
 
 def coach_steps(build: BuildOrder) -> List[CoachStep]:
@@ -81,7 +82,7 @@ def coach_steps(build: BuildOrder) -> List[CoachStep]:
         total = max(total, last_total)
         if total == 0:                       # a note with no numbers at all
             continue
-        out.append(CoachStep(i, total, t, s.seconds, s.age, s.text, getattr(s, 'icons', None) or []))
+        out.append(CoachStep(i, total, t, s.seconds, s.age, s.text, getattr(s, 'icons', None) or [], s.builders or 0))
         prev, last_total = t, total
     return out
 
@@ -185,7 +186,7 @@ class Coach:
             "next": {"resource": nxt, "then": then},
             "short": short,
             "step": {"text": step.text, "at": _clock(step.seconds), "villagers": step.villagers, "index": step.index,
-                     "icons": step.icons or []},
+                     "icons": step.icons or [], "builders": step.builders or 0},
             "upcoming": ({"text": upcoming.text, "at": _clock(upcoming.seconds), "villagers": upcoming.villagers,
                           "icons": upcoming.icons or []}
                          if upcoming else None),

@@ -153,6 +153,24 @@ body.preview .strip{display:inline-flex}
 .strip .b{display:inline-flex;align-items:center;gap:8px}
 @media (prefers-reduced-motion:reduce){.strip .k.slide{animation:none}}
 
+/* actions: what a step asks you to build, research or train */
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.acts:empty{display:none}
+.act{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:12px;font-size:13.5px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.act small{color:var(--muted);font-weight:600}
+.vb{font:700 11.5px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--yellow);margin-right:2px}
+.acts.small .act{font-size:12.5px;opacity:.7}
+.acts.small .gi.sm{width:22px;height:22px}
+body.callout .st.now{border-color:rgba(211,181,70,.55);box-shadow:0 0 28px -8px rgba(211,181,70,.6);animation:calloutpulse 1.2s ease-in-out 3}
+body.callout .st.now .act{border-color:rgba(211,181,70,.5);background:rgba(211,181,70,.12)}
+@keyframes calloutpulse{50%{box-shadow:0 0 36px -4px rgba(211,181,70,.75)}}
+.strip .k small{color:var(--muted);font-weight:600;font-family:var(--body)}
+body.callout .strip{border-color:rgba(211,181,70,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 22px -4px rgba(211,181,70,.7)}
+body.callout .strip .k{font-size:18px}
+body.callout .strip .k .gi{width:34px;height:34px;animation:gipop .5s cubic-bezier(.2,1.5,.4,1) both}
+@media (prefers-reduced-motion:reduce){body.callout .st.now{animation:none}}
+
 /* game start */
 .start{margin:0 12px 10px;padding:14px 16px;border-radius:18px;background:var(--glass-sheen),linear-gradient(140deg,rgba(131,193,94,.32),rgba(131,193,94,.1));
   border:1px solid rgba(131,193,94,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.2);animation:startin .6s cubic-bezier(.2,1.3,.4,1) both}
@@ -187,15 +205,15 @@ body.starting .strip .ss{display:inline-block;vertical-align:bottom;max-width:46
     </div>
     <div class="start" id="start" hidden><div class="st-t">Game on</div><div class="st-x" id="startX"></div></div>
     <div class="hero">
-      <div class="lead">Villager <b id="vnum">7</b> goes to</div>
+      <div class="lead">Next villager <span id="vnum" hidden>7</span>goes to</div>
       <div class="word" id="word"><span class="badge"><svg class="i"><use id="wordIcon" href="#r-wood"/></svg></span><span class="big" id="wordTxt">Wood</span></div>
       <div class="then" id="then"></div>
     </div>
     <div class="split" id="split"></div>
     <div class="alert" id="alert" hidden></div>
     <div class="steps">
-      <div class="st now"><div class="w" id="nowW">Now</div><div class="x"><span id="nowX"></span><div class="sti" id="nowI"></div></div><div class="key" id="nowK"></div></div>
-      <div class="st later"><div class="w" id="nextW"></div><div class="x"><span id="nextX"></span><div class="sti" id="nextI"></div></div><div class="key"></div></div>
+      <div class="st now"><div class="w" id="nowW">Now</div><div class="x"><span id="nowX"></span><div class="acts" id="nowA"></div></div><div class="key" id="nowK"></div></div>
+      <div class="st later"><div class="w" id="nextW"></div><div class="x"><span id="nextX"></span><div class="acts small" id="nextA"></div></div><div class="key"></div></div>
     </div>
     <div class="agewrap">
       <div class="spectrum" id="af"></div>
@@ -209,7 +227,7 @@ body.starting .strip .ss{display:inline-block;vertical-align:bottom;max-width:46
   <div class="gameshot">
     <div class="strip" id="strip">
       <span class="badge"><svg class="i"><use id="stripIcon" href="#r-wood"/></svg></span>
-      <span class="a"><span class="ns">Villager <span id="sv">7</span> to <span id="sr">wood</span></span><span class="ss" id="sstart"></span></span>
+      <span class="a"><span class="ns">Next villager to <span id="sr">wood</span><span id="sv" hidden>7</span></span><span class="ss" id="sstart"></span></span>
       <span class="k" id="sk" hidden></span>
       <span class="b"><span id="sa"></span><span id="sb">Feudal at 4:20</span></span>
     </div>
@@ -243,14 +261,6 @@ if (!mode) document.body.classList.add('preview');
 let lastWord = null, lastStep = null, lastAge = null;
 const AGE_N = {Dark: 1, Feudal: 2, Castle: 3, Imperial: 4};
 GameIcons.ready.then(() => { lastStep = lastAge = null; });
-// a step's icons: the build's own in-game icons, else the units/buildings/techs its text names
-function stepIcons(st){
-  if (!st) return {all: [], key: null};
-  const tags = (st.icons || []).map(ic => GameIcons.step(ic, 'sm')).filter(Boolean);
-  const named = tags.length ? [] : GameIcons.find(st.text, 4);
-  const key = GameIcons.key(st.icons) || named.find(it => !/^(villager|scout)$/i.test(it.n)) || null;
-  return {all: tags.length ? tags : named.map(it => GameIcons.html(it, 'sm')), key};
-}
 function pops(el, list){ el.innerHTML = list.join(''); el.querySelectorAll('.gi').forEach((g, i) => { g.classList.add('pop'); g.style.setProperty('--d', i); }); }
 
 // ── Game start: what to do with your first villagers, said once at the start of each game
@@ -261,7 +271,19 @@ function startLine(c){
   const split = Object.entries(c.want || {}).filter(([, n]) => n > 0).map(([r, n]) => `${n} on ${RES_WORD[r]}`).join(', ');
   return t || (split ? `Put ${split}` : 'Send them to food');
 }
-let startSeen = false, lastSecs = null, startUntil = -1;
+let startSeen = false, lastSecs = null, startUntil = -1, calloutTimer = null;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+// "[icon] Build a Mining Camp · 1 villager"
+function actionChip(a){
+  return `<span class="act">${GameIcons.html(a.it, 'sm')}<span><b class="vb">${a.verb}</b> ${esc(a.text.slice(a.verb.length + 1))}${a.builders ? `<small> · ${a.builders} villager${a.builders > 1 ? 's' : ''}</small>` : ''}</span></span>`;
+}
+// a step that asks you to build or research something: make it the loudest thing for 8 seconds
+function callout(){
+  document.body.classList.remove('callout'); void document.body.offsetWidth;
+  document.body.classList.add('callout');
+  clearTimeout(calloutTimer);
+  calloutTimer = setTimeout(() => document.body.classList.remove('callout'), 8000);
+}
 function render(m){
   // the first 25 seconds of a game: a "game on" card with what to do with your first villagers
   const secs = clockSecs(m.clock);
@@ -299,15 +321,21 @@ function render(m){
 
   $('nowX').textContent = m.step.text;
   const stepKey = m.step.text + '|' + (m.upcoming ? m.upcoming.text : '');
-  if (stepKey !== lastStep) {                  // new step: icons pop in, the strip's key icon slides in
+  if (stepKey !== lastStep) {                  // new step: what to build / research / train, called out for 8 s
+    const first = lastStep === null;
     lastStep = stepKey;
-    const now = stepIcons(m.step), nxt = stepIcons(m.upcoming);
-    pops($('nowI'), now.all.filter(h => !now.key || !h.includes(now.key.src)));
-    pops($('nowK'), now.key ? [GameIcons.html(now.key, 'lg', 'glow')] : []);
-    $('nextI').innerHTML = nxt.all.join('');
+    const acts = GameIcons.actions(m.step), nxt = GameIcons.actions(m.upcoming);
+    pops($('nowA'), acts.map(actionChip));
+    pops($('nowK'), acts[0] ? [GameIcons.html(acts[0].it, 'lg', 'glow')] : []);
+    $('nextA').innerHTML = nxt.map(actionChip).join('');
     const sk = $('sk');
-    sk.hidden = !now.key;
-    if (now.key) { sk.innerHTML = GameIcons.html(now.key, 'sm') + `<span>${now.key.n}</span>`; sk.classList.remove('slide'); void sk.offsetWidth; sk.classList.add('slide'); }
+    sk.hidden = !acts.length;
+    if (acts.length) {
+      const a = acts[0];
+      sk.innerHTML = GameIcons.html(a.it, 'sm') + `<span><b class="vb">${a.verb}</b> ${esc(a.text.slice(a.verb.length + 1))}${a.builders ? ` <small>· ${a.builders} villager${a.builders > 1 ? 's' : ''}</small>` : ''}</span>`;
+      sk.classList.remove('slide'); void sk.offsetWidth; sk.classList.add('slide');
+      if (!first) callout();
+    }
   }
   $('nextW').textContent = !m.upcoming ? '' : m.upcoming.at !== '--:--' ? m.upcoming.at : `${m.upcoming.villagers} vil`;
   $('nextX').textContent = m.upcoming ? m.upcoming.text : 'End of the build. Keep villagers coming.';

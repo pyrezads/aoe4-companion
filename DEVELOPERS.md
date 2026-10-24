@@ -84,8 +84,16 @@ core.py            core mode: no window; messages and commands are documented at
   game's window (RelicCardinal.exe) and the core reports its exact title in `status.game_window`.
   The plain strip stays until the add-on reports "attach", so nothing disappears if pinning fails.
   `packaging/pin_test.js` checks it on GitHub's Windows machine with a stand-in window.
-- Spoken calls: fixed phrases are recorded ahead of time in `app/renderer/voice/` with
-  `tools/make_voice.py` (Kokoro-82M, Apache 2.0). Build steps are read by Windows' own voice.
+- Every coach window gets every live message (`coachWindows()` in main.js: panel, floating strip and the
+  pinned strip). The whole-app test checks the pinned strip shows a live call on Windows.
+- The live coach is on the Home tab (`renderLive` in home.html); the floating panel is optional (off by default).
+- Steps become actions with `GameIcons.actions(step)`: "Build a Mining Camp · 1 villager", "Research
+  Wheelbarrow", "Train a Scout" (verb from the item's kind). A new step with an action is called out for 8 s.
+- Spoken calls, all recorded ahead of time in one voice (`tools/make_voice.py`, Kokoro-82M, Apache 2.0,
+  bm_george, Opus): `voice/*.ogg` for fixed calls, `voice/do/<id>.ogg` for every item's action.
+  `speak(clip, priority)` in home.html plays one call at a time: problems (5) > game start / age up (4) >
+  step actions (3) > next villager (2, only when it changes, plus a reminder each minute) > nice to know (1).
+  Stale calls are dropped, not played late. The Windows voice is only used if "read the full step" is on.
 - Logs: `core.log` (screen reader) and `logs/main.log` (the app) in the app's data folder.
   The reading check saves screens it can't read to `calibration/` there.
 

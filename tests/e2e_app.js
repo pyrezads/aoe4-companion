@@ -80,9 +80,17 @@ app.whenReady().then(async () => {
     await js("document.querySelector('[data-use=\"test-1\"]').click()");
     check(await until(() => js("document.getElementById('pickedTitle').textContent === 'Test timing attack'")), 'build chosen from details');
 
+    check(await js("document.getElementById('panelMode').value === 'off'"), 'floating panel off by default');
+    await js("document.getElementById('startCoach').click()");
+    check(await until(() => js("document.getElementById('live').classList.contains('on') && document.getElementById('lvTag').textContent === 'Live' && /^(Food|Wood|Gold|Stone)$/.test(document.getElementById('lvWord').textContent)")), 'home tab shows the live coach');
+    check(!find('mode=panel'), 'no floating panel unless turned on');
+    await js("document.getElementById('startCoach').click()");          // stop, turn the panel on, start again
+    await until(() => js("!document.getElementById('startCoach').textContent.includes('Stop')"));
+    await js("panelMode.value = 'on'; saveOverlay()");
+    await wait(500);
     await js("document.getElementById('startCoach').click()");
     const panel = await until(() => find('mode=panel'));
-    check(panel, 'coach panel opens');
+    check(panel, 'coach panel opens when turned on');
     check(await until(() => panel.webContents.executeJavaScript("!document.body.classList.contains('waiting') && document.getElementById('wordTxt').textContent.length > 2")), 'coach panel shows a live call');
     check(find('mode=strip'), 'game strip opens');
 
@@ -110,7 +118,8 @@ app.whenReady().then(async () => {
       return !floating && (!p || await p.webContents.executeJavaScript("document.body.classList.contains('inactive')"));
     }), 'strip turns off from settings');
 
-    check(await js("new Promise(r => { const a = new Audio('voice/vil_wood.ogg'); a.oncanplaythrough = () => r(true); a.onerror = () => r(false); })"), 'voice clips load');
+    for (const clip of ['next_wood', 'start_sheep', 'do/house'])                  // recorded calls, Opus, one voice
+      check(await js(`new Promise(r => { const a = new Audio('voice/${clip}.ogg'); a.oncanplaythrough = () => r(true); a.onerror = () => r(false); })`), 'voice clip plays: ' + clip);
 
     await js("document.querySelector('.nav[data-go=settings]').click(); document.getElementById('readCheck').click()");
     check(await until(() => js("document.getElementById('readResult').textContent.includes('All good')")), 'reading check reads the HUD');

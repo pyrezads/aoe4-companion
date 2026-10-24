@@ -37,8 +37,8 @@ h1{font:600 32px/1.1 var(--display);margin:0;letter-spacing:-.2px}
 .dot.live{background:var(--green);box-shadow:0 0 0 4px rgba(131,193,94,.18)}
 
 /* ── home: coach hero (teal) + screen ───────────────── */
-.hero{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;margin-bottom:34px}
-.coach{background:var(--teal);color:#fff;border-radius:22px;padding:26px;display:grid;grid-template-columns:1fr 268px;gap:24px}
+.hero{display:grid;grid-template-columns:2.3fr 1fr;gap:18px;margin-bottom:34px}
+.coach{background:var(--teal);color:#fff;border-radius:22px;padding:26px;display:grid;grid-template-columns:minmax(220px,.8fr) minmax(330px,1.35fr);gap:24px}
 .coach h2{font:600 24px/1.1 var(--display);margin:0 0 8px}
 .coach p{color:rgba(255,255,255,.78);margin:0 0 18px;max-width:40ch}
 .picked{background:rgba(5,9,9,.16);border-radius:14px;padding:13px 15px;margin-bottom:18px}
@@ -486,6 +486,62 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .uchip small{display:block;color:var(--muted);font-size:12.5px;font-weight:600}
 .uchip.enemy{border-color:rgba(200,110,214,.35);background:rgba(200,110,214,.07)}
 .uchip.enemy b{font:700 14px var(--body)}
+
+/* live coach on the home card */
+.live{background:rgba(5,9,9,.55);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;color:var(--ink);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);transition:box-shadow .4s,border-color .4s}
+.lv-top{display:flex;align-items:center;gap:10px}
+.lv-tag{font:700 11px var(--display);letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:3px 9px;background:rgba(255,255,255,.1);color:var(--muted)}
+.live.on .lv-tag{background:rgba(131,193,94,.2);color:var(--green)}
+.live.on .lv-tag::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:1px;animation:livedot 1.6s ease-in-out infinite}
+@keyframes livedot{50%{opacity:.3}}
+.lv-clock{font:600 22px/1 var(--display);margin-left:auto}
+.live .pace{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;color:#111}
+.live .pace.behind{background:var(--orange)} .live .pace.ahead{background:var(--green)} .live .pace.on{background:rgba(255,255,255,.1);color:var(--muted)}
+.lv-start{padding:10px 12px;border-radius:14px;background:linear-gradient(140deg,rgba(131,193,94,.3),rgba(131,193,94,.08));border:1px solid rgba(131,193,94,.45);font-size:14px;animation:rise .5s cubic-bezier(.2,1.3,.4,1) both}
+.lv-start[hidden]{display:none}
+.lv-start b{display:block;font:700 18px var(--display);color:var(--green)}
+.lv-next{display:flex;align-items:center;gap:14px}
+.lv-badge{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--tone,var(--wood));color:#0b1112;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px -6px rgba(0,0,0,.6)}
+.lv-badge .i{width:28px;height:28px;stroke-width:1.9}
+.lv-next small{display:block;font:600 13px var(--body);color:var(--muted)}
+.lv-next b{display:block;font:700 40px/1 var(--display);letter-spacing:-.5px;color:var(--tone,var(--wood))}
+.lv-next.bump{animation:bump .5s ease-out}
+@keyframes bump{0%{transform:translateY(6px);opacity:.2}100%{transform:none;opacity:1}}
+.lv-then{margin-left:auto;font-size:12.5px;color:var(--muted);text-align:right}
+.lv-then b{color:var(--ink)}
+.lv-alert{padding:8px 12px;border-radius:12px;background:rgba(200,110,214,.14);border:1px solid rgba(200,110,214,.35);color:var(--pink);font-weight:700;font-size:13.5px}
+.lv-alert[hidden]{display:none}
+.lv-split{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lv-res{border-radius:12px;padding:7px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.lv-res .n{font-size:11.5px;font-weight:700}
+.lv-res .v{font:600 18px/1.15 var(--display);color:var(--ink)}
+.lv-res .v small{font:500 12px var(--body);color:var(--muted)}
+.lv-res.short{border-color:currentColor}
+.lv-res .pp{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px;min-height:7px}
+.lv-res .pp i{width:6px;height:6px;border-radius:2px;border:1.2px solid currentColor}
+.lv-res .pp i.f{background:currentColor}
+.lv-step{display:grid;grid-template-columns:46px 1fr;gap:10px;font-size:14px;border-radius:14px;padding:8px 10px;margin:0 -6px}
+.lv-step .w{font:600 13.5px var(--display);color:var(--muted);padding-top:1px}
+.lv-step.now{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.lv-step.now .w{color:var(--teal-hi)}
+.lv-step.now .tx{font-weight:600}
+.lv-step.later .tx{color:var(--muted)}
+.lv-age .lab{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-top:7px}
+.live.callout{border-color:rgba(211,181,70,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 34px -8px rgba(211,181,70,.65)}
+.live.callout .lv-step.now{border-color:rgba(211,181,70,.55);background:rgba(211,181,70,.1)}
+.live.callout .act{border-color:rgba(211,181,70,.5);background:rgba(211,181,70,.14)}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.acts:empty{display:none}
+.act{display:inline-flex;align-items:center;gap:8px;padding:3px 11px 3px 3px;border-radius:12px;font-size:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+.act small{color:var(--muted);font-weight:600}
+.vb{font:700 11px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--yellow);margin-right:2px}
+.acts.small .act{opacity:.7;font-size:12px}
+.acts.small .gi.sm{width:22px;height:22px}
+.ag{display:inline-flex;align-items:center;gap:7px}
+@media (max-width:1200px){.hero{grid-template-columns:1fr}}
+@media (max-width:900px){.coach{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.live.on .lv-tag::before,.lv-start,.lv-next.bump{animation:none}}
 </style>
 </head>
 <body>
@@ -503,6 +559,10 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
     <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.5L16 9.5"/></symbol>
     <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
+    <symbol id="r-food" viewBox="0 0 24 24"><circle cx="9" cy="14" r="4"/><circle cx="15.5" cy="14.5" r="3.5"/><circle cx="12" cy="8.5" r="3.5"/><path d="M12 5c0-1.5 1-2.5 2.5-2.5"/></symbol>
+    <symbol id="r-wood" viewBox="0 0 24 24"><ellipse cx="6.5" cy="12" rx="3" ry="5"/><path d="M6.5 7H18c1.7 0 3 2.2 3 5s-1.3 5-3 5H6.5"/><path d="M6.5 10.5v3"/></symbol>
+    <symbol id="r-gold" viewBox="0 0 24 24"><path d="M3 18h8l-1.5-5h-5zM13 18h8l-1.5-5h-5zM8 11.5h8L14.5 6.5h-5z"/></symbol>
+    <symbol id="r-stone" viewBox="0 0 24 24"><path d="M4 17.5 7 9l5-3.5 5.5 2.5 3 9.5-7.5 2.5z"/><path d="M7 9l5 3 5.5-4M12 12l1 8.5"/></symbol>
     <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 14v3.5M8.5 20.5h7M9.5 17.5h5"/></symbol>
     <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4"/></symbol>
     <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
@@ -568,7 +628,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
         <article class="coach">
           <div>
             <h2>Build coach</h2>
-            <p>Tells you where each new villager should go and what to build next, following the build you pick.</p>
+            <p>Where each new villager goes and what to build next, live, following the build you pick.</p>
             <div class="picked">
               <div class="t" id="pickedTitle">Zhuge Nu-Timing-Attack(10-14)</div>
               <div class="m" id="pickedMeta">Zhu Xi's Legacy, timing attack, season 13</div>
@@ -579,16 +639,17 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
               <button class="btn quiet" data-go="settings">Overlay position</button>
             </div>
           </div>
-          <div class="mini" aria-label="Preview of the coach overlay">
-            <div class="clock"><span id="miniClock">3:42</span><span id="miniVils">17 villagers</span></div>
-            <div class="next" id="miniNext"><svg class="i" style="width:28px;height:28px"><use href="#i-log"/></svg><div><small>Next villager</small><span id="miniWord">Wood</span></div></div>
-            <div class="pips">
-              <div class="row" style="color:var(--food)"><span>Food</span><span class="p" data-have="9" data-want="9"></span></div>
-              <div class="row" style="color:var(--wood)"><span>Wood</span><span class="p" data-have="5" data-want="6"></span></div>
-              <div class="row" style="color:var(--gold)"><span>Gold</span><span class="p" data-have="3" data-want="3"></span></div>
-              <div class="row" style="color:var(--stone)"><span>Stone</span><span class="p" data-have="0" data-want="0"></span></div>
-            </div>
-            <div class="bar"><div class="spectrum" id="miniBar" style="--p:.82"></div><div class="lab"><span>Dark Age</span><span id="miniAge">Feudal at 4:20</span></div></div>
+          <div class="live" id="live" aria-live="polite" aria-label="Live coach">
+            <div class="lv-top"><span class="lv-tag" id="lvTag">Preview</span><span class="lv-clock" id="lvClock">3:42</span><span class="pace on" id="lvPace">On pace</span></div>
+            <div class="lv-start" id="lvStart" hidden><b>Game on</b><span id="lvStartX"></span></div>
+            <div class="lv-next" id="lvNext"><span class="lv-badge"><svg class="i"><use id="lvIcon" href="#r-wood"/></svg></span>
+              <div><small>Next villager to</small><b id="lvWord">Wood</b></div><span class="lv-then" id="lvThen"></span></div>
+            <div class="lv-alert" id="lvAlert" hidden></div>
+            <div class="lv-split" id="lvSplit"></div>
+            <div class="lv-step now"><span class="w">Now</span><div><div class="tx" id="lvNowX"></div><div class="acts" id="lvNowA"></div></div></div>
+            <div class="lv-step later"><span class="w" id="lvNextW"></span><div><div class="tx" id="lvNextX"></div><div class="acts small" id="lvNextA"></div></div></div>
+            <div class="lv-age"><div class="spectrum" id="lvBar" style="--p:.5"></div>
+              <div class="lab"><span class="ag" id="lvFrom"></span><span class="ag"><span id="lvAge">Feudal at 4:20</span><span id="lvTo"></span></span></div></div>
           </div>
         </article>
 
@@ -723,8 +784,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
           </div>
           <div class="field">
             <span class="lab">Spoken calls</span>
-            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw" id="voiceOn">Say where each villager goes, idle villagers, housed and age-up time</label>
-            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw" id="voiceSteps" checked>Read each new build step</label>
+            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw" id="voiceOn">Coach me out loud: game start, where villagers go, what to build, idle, housed, age-up</label>
+            <label class="auto" style="color:var(--ink);font-size:14px"><input type="checkbox" class="sw" id="voiceSteps">Also read each step's full text (uses the Windows voice)</label>
             <div style="display:flex;align-items:center;gap:12px;margin-top:4px"><input type="range" id="voiceVol" class="range" min="10" max="100" value="80" aria-label="Voice volume"><button class="btn quiet" id="voiceTest" style="padding:7px 14px">Test</button></div>
           </div>
           <button class="btn primary" style="width:100%;justify-content:center" id="useBuild">Use this build</button>
@@ -825,7 +886,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
                 <div class="sel"><select id="stripPos"><option value="top">Small strip, top centre</option><option value="left">Small strip, top left</option><option value="off">Off</option></select></div>
                 <span class="hint">It sticks to the game window and hides when you Alt-Tab away.</span></div>
               <div class="field"><span class="lab">On the second monitor</span>
-                <div class="sel"><select id="panelMode"><option value="on">Coach panel</option><option value="off">Off</option></select></div></div>
+                <div class="sel"><select id="panelMode"><option value="off">Off (the coach is on the Home tab)</option><option value="on">Floating coach panel</option></select></div></div>
             </div>
             <div class="field"><label for="op">Strip opacity</label><input type="range" id="op" class="range" min="40" max="100" value="88"></div>
           </div>
@@ -857,11 +918,6 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 </div>
 
 <script>
-document.querySelectorAll('.pips .p').forEach(el => {
-  const have = +el.dataset.have, want = +el.dataset.want, n = Math.max(have, want);
-  el.innerHTML = n ? Array.from({length:n}, (_, i) => `<i class="${i < have ? 'f' : ''}"></i>`).join('') : '<span style="color:var(--dim)">none</span>';
-});
-
 const views = {home:'v-home', coach:'v-coach', analyst:'v-analyst', scout:'v-scout', army:'v-army', review:'v-review', history:'v-history', settings:'v-settings'};
 function go(name){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === views[name]));
@@ -954,7 +1010,7 @@ function renderStatus(){
   startBtn.lastChild.textContent = coachOpen ? 'Stop coach' : 'Start coach';
   startBtn.querySelector('svg').style.display = coachOpen ? 'none' : '';
 }
-function coachState(open){ coachOpen = open; renderStatus(); }
+function coachState(open){ coachOpen = open; renderStatus(); if (!open && lv.live) showPreview(); }
 
 if (inApp) {
   window.app.onCoachState(coachState);
@@ -1159,8 +1215,8 @@ if (inApp) {
   window.app.onMessage((type, data) => {
     tools(type, data);
     hxMessage(type, data);
-    if (type === 'status') { status = data || {}; renderStatus(); renderAccount(); }
-    else if (type === 'coach' && data) { renderMini(data); voiceCoach(data); }
+    if (type === 'status') { status = data || {}; renderStatus(); renderAccount(); if (lv.live && !status.live) showPreview(); }
+    else if (type === 'coach' && data) { renderLive(data, false); voiceCoach(data); }
     else if (type === 'hud') voiceHud(data);
     else if (type === 'build') showPicked(data);
     else if (type === 'builds' && data.civ === waitingFor) {
@@ -1187,20 +1243,70 @@ if (inApp) {
 showPicked(inApp ? null : {title: "Zhuge Nu-Timing-Attack(10-14)", civ: 'ZXL', why: 'your pick'});
 renderBuilds();
 
-// The small preview on the home card follows the live coach once there is one.
-function renderMini(c){
-  const r = c.next.resource, NAME = {food:'Food', wood:'Wood', gold:'Gold', stone:'Stone'};
-  document.getElementById('miniClock').textContent = c.clock;
-  document.getElementById('miniVils').textContent = `${c.villagers} villagers`;
-  document.getElementById('miniWord').textContent = NAME[r];
-  document.getElementById('miniNext').style.color = `var(--${r})`;
-  document.querySelectorAll('.pips .p').forEach((el, i) => {
-    const k = ['food','wood','gold','stone'][i], have = c.have[k], want = c.want[k], n = Math.max(have, want);
-    el.innerHTML = n ? Array.from({length:n}, (_, j) => `<i class="${j < have ? 'f' : ''}"></i>`).join('') : '<span style="color:var(--dim)">none</span>';
-  });
-  document.getElementById('miniBar').style.setProperty('--p', c.age ? c.age.progress : 1);
-  document.getElementById('miniAge').textContent = c.age ? `${c.age.target} at ${c.age.at}` : 'Build complete';
+// ── The live coach on the home card: what the floating panel used to show.
+//    Until a game is being read it shows a preview of what it will look like.
+const RNAME = {food: 'Food', wood: 'Wood', gold: 'Gold', stone: 'Stone'};
+const SAMPLE_COACH = {clock: '3:42', villagers: 16, have: {food: 9, wood: 5, gold: 2, stone: 0}, want: {food: 9, wood: 6, gold: 3, stone: 0},
+  next: {resource: 'wood', then: 'gold'}, idle: 0, pace_seconds: 0,
+  step: {index: 3, text: 'Three to gold. Build a mining camp next to the gold.', icons: [], builders: 1},
+  upcoming: {text: 'Feudal: build the Imperial Academy with two villagers.', at: '4:20', icons: []},
+  age: {target: 'Feudal', at: '4:20', progress: .82}};
+const lv = {word: null, step: null, startSeen: false, secs: null, startUntil: -1, timer: null, live: false};
+const actionChip = a => `<span class="act">${GameIcons.html(a.it, 'sm')}<span><b class="vb">${a.verb}</b> ${esc(a.text.slice(a.verb.length + 1))}${a.builders ? `<small> · ${a.builders} villager${a.builders > 1 ? 's' : ''}</small>` : ''}</span></span>`;
+function renderLive(c, preview){
+  const $ = id => document.getElementById(id), live = $('live');
+  lv.live = !preview;
+  live.classList.toggle('on', !preview);
+  $('lvTag').textContent = preview ? 'Preview' : 'Live';
+  const r = c.next.resource;
+  live.style.setProperty('--tone', `var(--${r})`);
+  $('lvClock').textContent = c.clock;
+  const p = c.pace_seconds || 0, pace = $('lvPace');
+  pace.className = 'pace ' + (Math.abs(p) < 5 ? 'on' : p > 0 ? 'behind' : 'ahead');
+  pace.textContent = Math.abs(p) < 5 ? 'On pace' : `${Math.abs(p)} s ${p > 0 ? 'behind' : 'ahead'}`;
+  $('lvWord').textContent = RNAME[r];
+  $('lvIcon').setAttribute('href', '#r-' + r);
+  if (lv.word !== r) { const n = $('lvNext'); n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump'); lv.word = r; }
+  $('lvThen').innerHTML = c.next.then ? `then <b>${esc(c.next.then)}</b>` : '';
+  // the first seconds of a game
+  const secs = clockSecs(c.clock);
+  if (preview) { lv.startSeen = false; lv.secs = null; }
+  if (secs != null && lv.secs != null && secs + 30 < lv.secs) lv.startSeen = false;
+  if (secs != null && !preview) lv.secs = secs;
+  if (!preview && secs != null && secs <= 25 && !lv.startSeen) { lv.startSeen = true; lv.startUntil = 25; $('lvStartX').textContent = `Your first ${c.villagers} villagers: ${startLine(c)}.`; }
+  $('lvStart').hidden = preview || !(secs != null && secs <= lv.startUntil);
+  const al = $('lvAlert');
+  al.hidden = !c.idle;
+  al.textContent = c.idle ? `${c.idle} idle villager${c.idle > 1 ? 's' : ''}: send ${c.idle > 1 ? 'them' : 'it'} to ${[...new Set(c.idle_to && c.idle_to.length ? c.idle_to : [r])].join(' and ')}` : '';
+  $('lvSplit').innerHTML = ['food', 'wood', 'gold', 'stone'].map(k => {
+    const h = c.have[k], w = c.want[k], n = Math.min(14, Math.max(h, w)), short = c.short ? c.short[k] : h < w;
+    return `<div class="lv-res ${short ? 'short' : ''}" style="color:var(--${k})"><div class="n">${RNAME[k]}</div><div class="v">${h}<small> / ${w}</small></div>
+      <div class="pp">${Array.from({length: n}, (_, i) => `<i class="${i < h ? 'f' : ''}"></i>`).join('')}</div></div>`;
+  }).join('');
+  $('lvNowX').textContent = c.step ? c.step.text : '';
+  const key = (c.step && c.step.text) + '|' + (c.upcoming ? c.upcoming.text : '');
+  if (key !== lv.step) {
+    const first = lv.step === null;
+    lv.step = key;
+    const acts = GameIcons.actions(c.step), nxt = GameIcons.actions(c.upcoming);
+    const na = $('lvNowA');
+    na.innerHTML = acts.map(actionChip).join('');
+    na.querySelectorAll('.gi').forEach((g, i) => { g.classList.add('pop'); g.style.setProperty('--d', i); });
+    $('lvNextA').innerHTML = nxt.map(actionChip).join('');
+    if (acts.length && !first && !preview) {             // a step that asks you to build or research: call it out for 8 s
+      live.classList.remove('callout'); void live.offsetWidth; live.classList.add('callout');
+      clearTimeout(lv.timer); lv.timer = setTimeout(() => live.classList.remove('callout'), 8000);
+    }
+  }
+  $('lvNextW').textContent = !c.upcoming ? '' : c.upcoming.at && c.upcoming.at !== '--:--' ? c.upcoming.at : `${c.upcoming.villagers} vil`;
+  $('lvNextX').textContent = c.upcoming ? c.upcoming.text : 'End of the build. Keep villagers coming.';
+  $('lvBar').style.setProperty('--p', c.age ? Math.min(1, c.age.progress) : 1);
+  $('lvAge').textContent = c.age ? `${c.age.target} at ${c.age.at}` : 'Build complete';
+  const to = c.age ? AGE_N[c.age.target] || 2 : null, from = to ? to - 1 : 4;
+  $('lvFrom').innerHTML = GameIcons.age(from, 16) + ['', 'Dark Age', 'Feudal Age', 'Castle Age', 'Imperial Age'][from];
+  $('lvTo').innerHTML = to ? GameIcons.age(to, 18, c.age.progress >= .9 ? 'soon' : '') : '';
 }
+function showPreview(){ lv.step = null; renderLive(SAMPLE_COACH, true); }
 
 // ── Tool pages: live analyst, opponent scout, army and counters
 const T = {hud: null, coach: null, teams: null, match: null, scout: null, army: null, advice: null, status: null};
@@ -1339,52 +1445,57 @@ stripPos.addEventListener('change', saveOverlay);
 panelMode.addEventListener('change', saveOverlay);
 opIn.addEventListener('change', saveOverlay);
 
-// ── Spoken calls. Fixed calls are recorded ahead of time (voice/*.ogg, see tools/make_voice.py);
-//    build steps differ per build, so they're read by the computer's own voice.
-const voice = {on: false, steps: true, volume: 80};
-const vq = [];
-let vBusy = false, vLast = {}, vState = {villagers: null, next: null, idle: 0, step: null, ageSaid: {}, done: false, alerts: {}};
-function vPlay(item){
-  if (!voice.on && !item.test) return;
-  if (vq.length > 2) vq.splice(0, vq.length - 2);         // never fall far behind the game
-  vq.push(item);
-  vRun();
+// ── Spoken calls: a tutor, not a commentator.
+//    Every line is recorded ahead of time in one voice (voice/*.ogg, tools/make_voice.py), so it
+//    never switches voices. One call at a time; urgent ones go first; calls that have gone stale
+//    while waiting are dropped instead of played late; the same advice isn't repeated too soon.
+//      5 problems   housed, idle villagers
+//      4 game start / age up now
+//      3 what the build step asks you to build, research or train
+//      2 where the next villager goes (only when that changes, plus a reminder now and then)
+//      1 nice to know: enemy aged up, floating resources
+const voice = {on: false, volume: 80, readSteps: false};
+const VQ = [], vLast = {};
+let vNow = null, vEnd = 0;
+let vState = {villagers: null, next: null, idle: 0, step: null, ageSaid: {}, done: false, alerts: {}, startSaid: false, lastSecs: null, nextAt: 0, startAt: 0};
+function speak(clip, prio, {ttl = 8, cooldown = 0, key = clip, test = false} = {}){
+  if (!voice.on && !test) return;
+  const now = Date.now();
+  if (cooldown && vLast[key] && now - vLast[key] < cooldown * 1000) return;
+  vLast[key] = now;
+  const group = key.startsWith('next_') ? 'next_' : key;              // a newer villager call replaces an older one
+  for (let i = VQ.length - 1; i >= 0; i--) if (VQ[i].key === key || (group === 'next_' && VQ[i].key.startsWith('next_'))) VQ.splice(i, 1);
+  VQ.push({clip, prio, key, at: now, until: now + ttl * 1000});
+  VQ.sort((a, b) => b.prio - a.prio || a.at - b.at);
+  VQ.splice(3);                                                       // never fall far behind the game
+  vPump();
 }
-function vRun(){
-  if (vBusy || !vq.length) return;
-  const item = vq.shift();
-  vBusy = true;
-  const done = () => { vBusy = false; setTimeout(vRun, 150); };
-  if (item.clip) {
-    const a = new Audio(`voice/${item.clip}.ogg`);
-    a.volume = voice.volume / 100;
-    a.onended = a.onerror = done;
-    a.play().catch(done);
-  } else if (item.text && 'speechSynthesis' in window) {
-    const u = new SpeechSynthesisUtterance(item.text);
-    u.volume = voice.volume / 100;
-    u.rate = 1.05;
+function vPump(){
+  if (vNow) return;
+  const now = Date.now();
+  while (VQ.length && VQ[0].until < now) VQ.shift();
+  if (!VQ.length) return;
+  const wait = 350 - (now - vEnd);                                     // a breath between calls
+  if (wait > 0) return void setTimeout(vPump, wait);
+  const it = vNow = VQ.shift();
+  const done = () => { if (vNow !== it) return; vNow = null; vEnd = Date.now(); vPump(); };
+  if (it.clip.startsWith('tts:')) {                                    // optional: full step text, Windows voice
+    if (!('speechSynthesis' in window)) return done();
+    const u = new SpeechSynthesisUtterance(it.clip.slice(4));
+    u.volume = voice.volume / 100; u.rate = 1.05;
     const en = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
     u.voice = en.find(v => /GB|UK/i.test(v.lang + v.name)) || en[0] || null;
     u.onend = u.onerror = done;
     speechSynthesis.speak(u);
-  } else done();
-}
-function say(clip, cooldown = 0){
-  const now = Date.now();
-  if (cooldown && vLast[clip] && now - vLast[clip] < cooldown * 1000) return;
-  vLast[clip] = now;
-  vPlay({clip});
+  } else {
+    const a = new Audio(`voice/${it.clip}.ogg`);
+    a.volume = voice.volume / 100;
+    a.onended = a.onerror = done;
+    a.play().catch(done);
+  }
+  setTimeout(done, 9000);                                             // never get stuck on one call
 }
 const AGE_N = {Feudal: 2, Castle: 3, Imperial: 4};
-// Step text as it should sound: separators become pauses, "1 villager" style counts read naturally.
-function speakable(t){
-  return String(t).replace(/\s*[·|]+\s*/g, '. ').replace(/-{2,}/g, '. ').replace(/\+/g, ' plus ')
-    .replace(/\b(\d+) villager\b/g, (m, n) => n === '1' ? '1 villager' : n + ' villagers')
-    .replace(/\s+/g, ' ').replace(/(\. )+/g, '. ').trim().slice(0, 220);
-}
-
-// ── Game start: what to do with your first villagers, said once at the start of each game
 const clockSecs = c => { const m = String(c || '').match(/(\d+):(\d{2})$/); return m ? +m[1] * 60 + +m[2] : null; };
 const RES_WORD = {food: 'food', wood: 'wood', gold: 'gold', stone: 'stone'};
 function startLine(c){
@@ -1392,39 +1503,61 @@ function startLine(c){
   const split = Object.entries(c.want || {}).filter(([, n]) => n > 0).map(([r, n]) => `${n} on ${RES_WORD[r]}`).join(', ');
   return t || (split ? `Put ${split}` : 'Send them to food');
 }
+// which recorded opening fits the build's first step
+function startClip(c){
+  const t = ((c.step && c.step.text) || '') + ' ' + ((c.step && c.step.icons) || []).map(i => i.title + ' ' + i.src).join(' ');
+  if (/sheep/i.test(t)) return 'start_sheep';
+  if (/berr/i.test(t)) return 'start_berries';
+  const top = Object.entries(c.want || {}).sort((a, b) => b[1] - a[1])[0];
+  return top && top[1] > 0 ? 'start_' + top[0] : 'start';
+}
 function voiceCoach(c){
   if (!c) return;
-  const v = vState;
-  const secs = clockSecs(c.clock);
-  if (secs != null && v.lastSecs != null && secs + 30 < v.lastSecs) v.startSaid = false;      // a new game
+  const v = vState, now = Date.now(), secs = clockSecs(c.clock);
+  if (secs != null && v.lastSecs != null && secs + 30 < v.lastSecs) Object.assign(v, {startSaid: false, step: null, next: null, ageSaid: {}, done: false});
   if (secs != null) v.lastSecs = secs;
+  // game start: one clear opening, then quiet for a few seconds
   if (secs != null && secs <= 25 && !v.startSaid) {
-    v.startSaid = true;
-    vPlay({text: `Game on. Your first ${c.villagers} villagers: ${speakable(startLine(c))}.`});
+    v.startSaid = true; v.startAt = now; v.next = c.next.resource;
+    speak(startClip(c), 4, {ttl: 20});
   }
-  if (v.villagers != null && c.villagers > v.villagers) say('vil_' + (v.next || c.next.resource));   // the one that just came out goes where the coach said
-  else if (v.next && c.next.resource !== v.next && c.villagers === v.villagers) say('vil_' + c.next.resource, 8);
-  if (c.idle && c.idle > v.idle) say(c.idle === 1 ? 'idle_1' : c.idle === 2 ? 'idle_2' : 'idle_many', 20);
+  const settling = now - v.startAt < 9000;
+  // a new build step: what it asks you to build, research or train
   const stepKey = c.step && c.step.index;
-  if (voice.steps && v.step != null && stepKey !== v.step && c.step.text) vPlay({text: speakable(c.step.text)});
-  if (c.age && c.age.progress >= 0.97 && !v.ageSaid[c.age.target] && AGE_N[c.age.target]) { v.ageSaid[c.age.target] = true; say('age_' + AGE_N[c.age.target]); }
-  if (c.done && !v.done) say('build_done');
-  Object.assign(v, {villagers: c.villagers, next: c.next.resource, idle: c.idle || 0, step: stepKey, done: !!c.done});
+  if (v.step != null && stepKey !== v.step && !settling) {
+    for (const a of GameIcons.actions(c.step)) speak('do/' + a.it.id, 3, {ttl: 15, cooldown: 40, key: 'do_' + a.it.id});
+    if (voice.readSteps && c.step.text) speak('tts:' + speakable(c.step.text), 1, {ttl: 12, key: 'step'});
+  }
+  // where the next villager goes: when that changes, and a reminder every minute or so
+  const r = c.next.resource, more = v.villagers != null && c.villagers > v.villagers;
+  if (!settling && (r !== v.next || (more && now - v.nextAt > 55000))) {
+    speak('next_' + r, 2, {ttl: 6});
+    v.nextAt = now;
+  }
+  if (c.idle && c.idle > v.idle) speak(c.idle === 1 ? 'idle_1' : c.idle === 2 ? 'idle_2' : 'idle_many', 5, {ttl: 8, cooldown: 20, key: 'idle'});
+  if (c.age && c.age.progress >= 0.97 && !v.ageSaid[c.age.target] && AGE_N[c.age.target]) { v.ageSaid[c.age.target] = true; speak('age_' + AGE_N[c.age.target], 4, {ttl: 15}); }
+  if (c.done && !v.done) speak('build_done', 2, {ttl: 15});
+  Object.assign(v, {villagers: c.villagers, next: r, idle: c.idle || 0, step: stepKey, done: !!c.done});
 }
 function voiceHud(s){
   if (!s || !s.live) return;
   for (const a of s.alerts || []) {
-    if (/^Housed/.test(a.text)) say('housed', 45);
-    else if (/^Floating/.test(a.text)) say('floating', 120);
-    else if (/^Population flat/.test(a.text)) say('pop_flat', 60);
+    if (/^Housed/.test(a.text)) speak('housed', 5, {ttl: 8, cooldown: 45});
+    else if (/^Floating/.test(a.text)) speak('floating', 1, {ttl: 6, cooldown: 150});
+    else if (/^Population flat/.test(a.text)) speak('pop_flat', 2, {ttl: 8, cooldown: 90});
     const m = a.text.match(/^Enemy .*reached (Feudal|Castle|Imperial)/);
-    if (m && !vState.alerts[a.text]) { vState.alerts[a.text] = true; say('enemy_' + AGE_N[m[1]]); }
+    if (m && !vState.alerts[a.text]) { vState.alerts[a.text] = true; speak('enemy_' + AGE_N[m[1]], 1, {ttl: 20}); }
   }
 }
+// full step text for the optional Windows voice: separators become pauses
+function speakable(t){
+  return String(t).replace(/\s*[·|]+\s*/g, '. ').replace(/-{2,}/g, '. ').replace(/\+/g, ' plus ')
+    .replace(/\s+/g, ' ').replace(/(\. )+/g, '. ').trim().slice(0, 220);
+}
 const vOn = document.getElementById('voiceOn'), vSteps = document.getElementById('voiceSteps'), vVol = document.getElementById('voiceVol');
-const saveVoice = () => { Object.assign(voice, {on: vOn.checked, steps: vSteps.checked, volume: +vVol.value}); if (inApp) window.app.setSettings({voice: {...voice}}); };
+const saveVoice = () => { Object.assign(voice, {on: vOn.checked, readSteps: vSteps.checked, volume: +vVol.value}); if (inApp) window.app.setSettings({voice: {...voice}}); };
 [vOn, vSteps, vVol].forEach(el => el.addEventListener('change', saveVoice));
-document.getElementById('voiceTest').addEventListener('click', () => { voice.volume = +vVol.value; vPlay({clip: 'test', test: true}); });
+document.getElementById('voiceTest').addEventListener('click', () => { voice.volume = +vVol.value; speak('test', 9, {test: true, ttl: 5}); });
 
 // ── Game review
 const YOU = '#2395ae', BUILD = '#b0922c';     // validated pair (dark surface, CVD-safe); build line also dashed
@@ -2066,8 +2199,8 @@ document.getElementById('setupDone').addEventListener('click', async () => {
   acct.profileId = s.profileId || null; acct.steam = s.steam || null;
   if (s.steam) document.getElementById('steam').value = `https://steamcommunity.com/profiles/${s.steam}`;
   if (s.followBy) document.getElementById('followBy').value = s.followBy;
-  if (s.overlay) { stripPos.value = s.overlay.strip || 'top'; panelMode.value = s.overlay.panel || 'on'; opIn.value = s.overlay.opacity || 88; }
-  if (s.voice) { Object.assign(voice, s.voice); vOn.checked = !!voice.on; vSteps.checked = voice.steps !== false; vVol.value = voice.volume || 80; }
+  if (s.overlay) { stripPos.value = s.overlay.strip || 'top'; panelMode.value = s.overlay.panel || 'off'; opIn.value = s.overlay.opacity || 88; }
+  if (s.voice) { Object.assign(voice, {on: !!s.voice.on, volume: s.voice.volume || 80, readSteps: !!s.voice.readSteps}); vOn.checked = voice.on; vSteps.checked = voice.readSteps; vVol.value = voice.volume; }
   if (s.auto === false) autoPick.checked = false;
   if (s.build && s.build.civ) civSel.value = s.build.civ;
   if (!s.setupDone) { await loadDisplays(); setup.hidden = false; setupStep(1); document.getElementById('setupPid').focus(); }
@@ -2076,6 +2209,8 @@ document.getElementById('setupDone').addEventListener('click', async () => {
 function calm(){ document.body.classList.toggle('calm', document.hidden || !document.hasFocus() || !!(status && status.live)); }
 addEventListener('focus', calm); addEventListener('blur', calm); document.addEventListener('visibilitychange', calm);
 setInterval(calm, 3000); calm();
+
+GameIcons.ready.then(() => { if (!lv.live) showPreview(); });
 
 const hr = new Date().getHours();
 document.getElementById('hello').textContent = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';

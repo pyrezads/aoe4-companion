@@ -49,13 +49,15 @@ const latest = {};            // last message of each type from the core, for wi
 // ── settings (kept in the app's own folder, e.g. %APPDATA%/AoE4 Coach) ──
 const userDir = () => app.getPath('userData');
 const settingsPath = () => path.join(userDir(), 'settings.json');
-let settings = { setupDone: false, profileId: null, gameDisplayId: null, build: null, auto: true, followBy: 'villagers',
-  overlay: { strip: 'top', panel: 'on', opacity: 88 }, voice: { on: false, volume: 80, steps: true } };
+let settings = { v: 2, setupDone: false, profileId: null, gameDisplayId: null, build: null, auto: true, followBy: 'villagers',
+  overlay: { strip: 'top', panel: 'off', opacity: 88 }, voice: { on: false, volume: 80, readSteps: false } };
 
 function loadSettings() {
   try {
     const saved = JSON.parse(fs.readFileSync(settingsPath(), 'utf8'));
     settings = { ...settings, ...saved, overlay: { ...settings.overlay, ...saved.overlay }, voice: { ...settings.voice, ...saved.voice } };
+    // 0.1.2: the live coach moved onto the Home tab, so the floating panel starts off (it's still in Settings)
+    if (!saved.v || saved.v < 2) { settings.overlay.panel = 'off'; settings.v = 2; saveSettings(); }
   } catch {}
 }
 function saveSettings() {
@@ -196,6 +198,7 @@ const webPreferences = (demo) => ({
   preload: path.join(__dirname, 'preload.js'),
   contextIsolation: true,
   sandbox: true,
+  backgroundThrottling: false,      // the coach and its voice keep time while the game has focus
   additionalArguments: demo ? ['--aoe4-demo'] : [],
 });
 
