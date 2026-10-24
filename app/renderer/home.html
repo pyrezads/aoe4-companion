@@ -502,8 +502,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .lv-start[hidden]{display:none}
 .lv-start b{display:block;font:700 18px var(--display);color:var(--green)}
 .lv-next{display:flex;align-items:center;gap:14px}
-.lv-badge{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--tone,var(--wood));color:#0b1112;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px -6px rgba(0,0,0,.6)}
-.lv-badge .i{width:28px;height:28px;stroke-width:1.9}
+.lv-badge{width:58px;height:58px}
+.ri.big{width:26px;height:26px;vertical-align:-7px}
 .lv-next small{display:block;font:600 13px var(--body);color:var(--muted)}
 .lv-next b{display:block;font:700 40px/1 var(--display);letter-spacing:-.5px;color:var(--tone,var(--wood))}
 .lv-next.bump{animation:bump .5s ease-out}
@@ -642,7 +642,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
           <div class="live" id="live" aria-live="polite" aria-label="Live coach">
             <div class="lv-top"><span class="lv-tag" id="lvTag">Preview</span><span class="lv-clock" id="lvClock">3:42</span><span class="pace on" id="lvPace">On pace</span></div>
             <div class="lv-start" id="lvStart" hidden><b>Game on</b><span id="lvStartX"></span></div>
-            <div class="lv-next" id="lvNext"><span class="lv-badge"><svg class="i"><use id="lvIcon" href="#r-wood"/></svg></span>
+            <div class="lv-next" id="lvNext"><span class="lv-badge res-badge" id="lvBadge"><img id="lvImg" src="img/res/wood.webp" alt=""></span>
               <div><small>Next villager to</small><b id="lvWord">Wood</b></div><span class="lv-then" id="lvThen"></span></div>
             <div class="lv-alert" id="lvAlert" hidden></div>
             <div class="lv-split" id="lvSplit"></div>
@@ -1265,7 +1265,7 @@ function renderLive(c, preview){
   pace.className = 'pace ' + (Math.abs(p) < 5 ? 'on' : p > 0 ? 'behind' : 'ahead');
   pace.textContent = Math.abs(p) < 5 ? 'On pace' : `${Math.abs(p)} s ${p > 0 ? 'behind' : 'ahead'}`;
   $('lvWord').textContent = RNAME[r];
-  $('lvIcon').setAttribute('href', '#r-' + r);
+  if (!$('lvImg').src.endsWith(`/${r}.webp`)) { $('lvImg').src = `img/res/${r}.webp`; const b = $('lvBadge'); b.classList.remove('swap'); void b.offsetWidth; b.classList.add('swap'); }
   if (lv.word !== r) { const n = $('lvNext'); n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump'); lv.word = r; }
   $('lvThen').innerHTML = c.next.then ? `then <b>${esc(c.next.then)}</b>` : '';
   // the first seconds of a game
@@ -1280,7 +1280,7 @@ function renderLive(c, preview){
   al.textContent = c.idle ? `${c.idle} idle villager${c.idle > 1 ? 's' : ''}: send ${c.idle > 1 ? 'them' : 'it'} to ${[...new Set(c.idle_to && c.idle_to.length ? c.idle_to : [r])].join(' and ')}` : '';
   $('lvSplit').innerHTML = ['food', 'wood', 'gold', 'stone'].map(k => {
     const h = c.have[k], w = c.want[k], n = Math.min(14, Math.max(h, w)), short = c.short ? c.short[k] : h < w;
-    return `<div class="lv-res ${short ? 'short' : ''}" style="color:var(--${k})"><div class="n">${RNAME[k]}</div><div class="v">${h}<small> / ${w}</small></div>
+    return `<div class="lv-res ${short ? 'short' : ''}" style="color:var(--${k})"><div class="n"><img class="ri" src="img/res/${k}.webp" alt="">${RNAME[k]}</div><div class="v">${h}<small> / ${w}</small></div>
       <div class="pp">${Array.from({length: n}, (_, i) => `<i class="${i < h ? 'f' : ''}"></i>`).join('')}</div></div>`;
   }).join('');
   $('lvNowX').textContent = c.step ? c.step.text : '';
@@ -1353,7 +1353,7 @@ function renderAnalyst(){
   document.getElementById('anRes').innerHTML = ['food','wood','gold','stone'].map(r => {
     const v = live ? s.villagers[r] : null, inc = live ? s.income_est[r] : null, bank = live ? s.bank[r] : null;
     const want = c && c.want ? c.want[r] : null, short = c && c.short ? c.short[r] : false;
-    return `<div class="rcard"><div class="n" style="color:var(--${r})">${RESN[r]}</div>
+    return `<div class="rcard"><div class="n" style="color:var(--${r})"><img class="ri big" src="img/res/${r}.webp" alt="">${RESN[r]}</div>
       <div class="v">${v ?? '–'}</div>
       <div class="m">${[inc ? '~' + Math.round(inc) + ' a minute' : null, bank != null && bank < 50000 ? bank + ' banked' : null].filter(Boolean).join(' · ') || '&nbsp;'}</div>
       ${want != null ? `<span class="want ${short ? 'short' : v === want ? 'ok' : ''}">build wants ${want}</span>` : ''}</div>`;

@@ -57,8 +57,7 @@ body.mode-strip .panel{display:none}
 .hero .lead b{color:#fff;font-weight:700}
 .word{display:flex;align-items:center;gap:14px;margin-top:2px}
 .word .big{font:700 80px/0.95 var(--display);letter-spacing:-1.5px}
-.word .badge{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:var(--tone);color:#0b1112;flex:none}
-.word .badge .i{width:34px;height:34px;stroke-width:1.9}
+.word .badge{width:68px;height:68px}
 .word.bump{animation:bump .5s ease-out}
 @keyframes bump{0%{transform:translateY(6px);opacity:.2}100%{transform:none;opacity:1}}
 .then{font-size:14px;margin-top:8px;color:rgba(255,255,255,.8)}
@@ -100,8 +99,7 @@ body.waiting .strip{visibility:hidden}
   border-radius:999px;padding:6px 16px 6px 6px;backdrop-filter:blur(6px);white-space:nowrap}
 body.mode-panel .strip{display:none}
 body.preview .strip{display:inline-flex}
-.strip .badge{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--tone);color:#0b1112}
-.strip .badge .i{width:18px;height:18px;stroke-width:2}
+.strip .badge{width:36px;height:36px}
 .strip .a{font:700 19px/1 var(--display)}
 .strip .a span{color:var(--tone)}
 .strip .b{color:var(--muted);font-size:13px;border-left:1px solid rgba(255,255,255,.12);padding-left:12px}
@@ -120,7 +118,6 @@ body.preview .strip{display:inline-flex}
 .hero{position:relative;overflow:hidden;background:var(--glass-sheen),var(--glass-teal);border:1px solid rgba(255,255,255,.22);
   -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 18px 40px -22px rgba(28,138,165,.9)}
-.word .badge{box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px -6px rgba(0,0,0,.5)}
 .then b{background:rgba(5,9,9,.26);border:1px solid rgba(255,255,255,.14)}
 .res{background:var(--glass-bg);border:1px solid rgba(255,255,255,.1);
   -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
@@ -135,7 +132,6 @@ body.preview .strip{display:inline-flex}
   border:1px solid rgba(255,255,255,.18);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(255,255,255,.04),0 6px 18px -8px rgba(0,0,0,.7);
   -webkit-backdrop-filter:blur(8px) saturate(160%);backdrop-filter:blur(8px) saturate(160%)}
-.strip .badge{box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
 
 /* game icons in the coach */
 .st{grid-template-columns:54px 1fr auto}
@@ -206,7 +202,7 @@ body.starting .strip .ss{display:inline-block;vertical-align:bottom;max-width:46
     <div class="start" id="start" hidden><div class="st-t">Game on</div><div class="st-x" id="startX"></div></div>
     <div class="hero">
       <div class="lead">Next villager <span id="vnum" hidden>7</span>goes to</div>
-      <div class="word" id="word"><span class="badge"><svg class="i"><use id="wordIcon" href="#r-wood"/></svg></span><span class="big" id="wordTxt">Wood</span></div>
+      <div class="word" id="word"><span class="badge res-badge" id="wordBadge"><img id="wordImg" src="img/res/wood.webp" alt=""></span><span class="big" id="wordTxt">Wood</span></div>
       <div class="then" id="then"></div>
     </div>
     <div class="split" id="split"></div>
@@ -226,7 +222,7 @@ body.starting .strip .ss{display:inline-block;vertical-align:bottom;max-width:46
   <div class="cap">Game screen: small strip, top centre, clicks pass through it</div>
   <div class="gameshot">
     <div class="strip" id="strip">
-      <span class="badge"><svg class="i"><use id="stripIcon" href="#r-wood"/></svg></span>
+      <span class="badge res-badge" id="stripBadge"><img id="stripImg" src="img/res/wood.webp" alt=""></span>
       <span class="a"><span class="ns">Next villager to <span id="sr">wood</span><span id="sv" hidden>7</span></span><span class="ss" id="sstart"></span></span>
       <span class="k" id="sk" hidden></span>
       <span class="b"><span id="sa"></span><span id="sb">Feudal at 4:20</span></span>
@@ -300,8 +296,9 @@ function render(m){
   $('vnum').textContent = $('sv').textContent = m.villagers + 1;
   $('wordTxt').textContent = NAME[r];
   $('sr').textContent = r;
-  $('wordIcon').setAttribute('href', '#r-' + r);
-  $('stripIcon').setAttribute('href', '#r-' + r);
+  for (const [img, badge] of [['wordImg', 'wordBadge'], ['stripImg', 'stripBadge']]) {
+    if (!$(img).src.endsWith(`/${r}.webp`)) { $(img).src = `img/res/${r}.webp`; const b = $(badge); b.classList.remove('swap'); void b.offsetWidth; b.classList.add('swap'); }
+  }
   if (lastWord !== r) { const w = $('word'); w.classList.remove('bump'); void w.offsetWidth; w.classList.add('bump'); lastWord = r; }
   $('then').innerHTML = m.next.then ? `Then <b>${m.next.then}</b>` : '';
 
@@ -314,7 +311,7 @@ function render(m){
     const pips = Array.from({length:n}, (_, i) => `<i class="${i < h ? 'f' : ''}"></i>`).join('');
     const short = m.short ? m.short[k] : h < w;
     return `<div class="res ${short ? 'short' : ''}" style="color:var(--${k})">
-      <div class="n">${NAME[k]}</div>
+      <div class="n"><img class="ri" src="img/res/${k}.webp" alt="">${NAME[k]}</div>
       <div class="v" style="color:var(--ink)">${h}<small> / ${w}</small></div>
       <div class="pips">${pips}</div></div>`;
   }).join('');
