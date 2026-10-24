@@ -39,6 +39,8 @@ jobs:
 
       - name: Python tests
         shell: bash
+        env:
+          PYTHONIOENCODING: utf-8      # what the app sets when it starts the core
         run: |
           pip install -r requirements.txt
           fail=0
