@@ -4,7 +4,9 @@ import pathlib
 import shutil
 import tempfile
 
-from gamelog import GameLog, civ_from_race
+from gamelog import GameLog, civ_from_race, safe_console
+
+safe_console()
 
 LOGS = pathlib.Path(__file__).parent / "tests" / "logs"
 fails = 0

@@ -33,6 +33,15 @@ import sys
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+
+def safe_console() -> None:
+    """Player names can be Chinese, Japanese, ♠... A Windows console that can't show them must not crash us."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
 # the game's race names -> the civ ids the rest of the app (and aoe4world) uses
 RACE_TO_CIV = {
     "abbasid": "abbasid_dynasty", "abbasid_ha_01": "ayyubids",
@@ -517,71 +526,82 @@ def watch(state, cfg: dict, stop, every: float = 0.5) -> None:
     next_look = 0.0
     alerts: List[tuple] = []
     state.set(log_status=_status(gl, None))
+    safe_console()
     while not stop.is_set():
-        now = time.time()
-        if (not gl.path or not gl.path.exists()) and now >= next_look:
-            next_look = now + 30                          # the game may not have been launched yet
-            p = pathlib.Path(cfg["game_log_path"]) if cfg.get("game_log_path") else default_log_path()
-            if p and p.exists():
-                gl = GameLog(p)
         try:
-            events = gl.poll()
-        except Exception as e:
+            gl, db, intel_for, next_look, alerts = _watch_step(state, cfg, gl, db, intel_for, next_look, alerts)
+        except Exception as e:                      # one bad line must never stop the reader
             print(f"  [gamelog] {type(e).__name__}: {e}")
-            events = []
-        want = state.get("log_path_request")
-        if want:
-            state.set(log_path_request=None)
-            gl = GameLog(want)
-            events = gl.poll()
-        g = gl.current()
-        if g and g.phase in ("loading", "playing") and is_stale(gl, now):
-            g = None
-        pid = int(cfg.get("aoe4world_profile_id") or 0) or gl.my_id
-        me = g.me(pid, gl.my_name) if g else None
-        changed = bool(events) or state.get("log_game") is not g
-        for ev in events:
-            if ev.kind == "player_out" and ev.game is g and me and ev.data["player"] != me.name:
-                side = "Ally" if ev.data["team"] == me.team else "Enemy"
-                from aoe4world import civ_name
-                text = f"{side} {ev.data['player']} ({civ_name(ev.data['civ'])}) is out"
-                if g and not g.ended_at:
-                    mine = len([p for p in g.players if p.team == me.team and not p.out])
-                    theirs = len([p for p in g.players if p.team != me.team and not p.out])
-                    text += f": {mine}v{theirs} now"
-                alerts.append((now, text))
-                print(f"  [gamelog] {text}")
-            elif ev.kind == "clock_start" and g and ev.game is g:
-                state.set(log_new_game=g.session_id or g.loading_at)
-            elif ev.kind == "results" and ev.game:
-                res = _result(ev.game, ev.game.me(pid, gl.my_name))
-                state.set(log_result=res)
-                print(f"  [gamelog] result: {res.get('result')}")
-            elif ev.kind == "left":
-                state.set(log_left=ev.t)
-            elif ev.kind in ("game_start", "players") and g:
-                print(f"  [gamelog] {ev.kind}: {ev.data}")
-        alerts = [(t, a) for t, a in alerts if now - t < 45]
-        if changed:
-            state.set(log_game=g, log_me=me, log_match=to_match(g, me) if g and me else None,
-                      log_status=_status(gl, g))
-            sig = (g.session_id if g else None, me.civ if me else None, tuple(p.civ for p in g.players) if g else ())
-            if g and me and sig != intel_for:
-                intel_for = sig
-                try:
-                    from units import UnitDB
-                    db = db or UnitDB()
-                    state.set(intel=enemy_intel(g, me, db))
-                except Exception as e:
-                    print(f"  [gamelog] intel: {type(e).__name__}: {e}")
-            elif not g:
-                intel_for = None
-                state.set(intel=None)
-            wake = state.get("log_wake")
-            if wake:
-                wake.set()
-        state.set(log_alerts=[a for _, a in alerts])
         stop.wait(every)
+
+
+def _watch_step(state, cfg, gl, db, intel_for, next_look, alerts):
+    """One look at the log: read what's new and update the app's state."""
+    import time
+    now = time.time()
+    if (not gl.path or not gl.path.exists()) and now >= next_look:
+        next_look = now + 30                          # the game may not have been launched yet
+        p = pathlib.Path(cfg["game_log_path"]) if cfg.get("game_log_path") else default_log_path()
+        if p and p.exists():
+            gl = GameLog(p)
+    try:
+        events = gl.poll()
+    except Exception as e:
+        print(f"  [gamelog] {type(e).__name__}: {e}")
+        events = []
+    want = state.get("log_path_request")
+    if want:
+        state.set(log_path_request=None)
+        gl = GameLog(want)
+        events = gl.poll()
+    g = gl.current()
+    if g and g.phase in ("loading", "playing") and is_stale(gl, now):
+        g = None
+    pid = int(cfg.get("aoe4world_profile_id") or 0) or gl.my_id
+    me = g.me(pid, gl.my_name) if g else None
+    changed = bool(events) or state.get("log_game") is not g
+    for ev in events:
+        if ev.kind == "player_out" and ev.game is g and me and ev.data["player"] != me.name:
+            side = "Ally" if ev.data["team"] == me.team else "Enemy"
+            from aoe4world import civ_name
+            text = f"{side} {ev.data['player']} ({civ_name(ev.data['civ'])}) is out"
+            if g and not g.ended_at:
+                mine = len([p for p in g.players if p.team == me.team and not p.out])
+                theirs = len([p for p in g.players if p.team != me.team and not p.out])
+                text += f": {mine}v{theirs} now"
+            alerts.append((now, text))
+            print(f"  [gamelog] {text}")
+        elif ev.kind == "clock_start" and g and ev.game is g:
+            state.set(log_new_game=g.session_id or g.loading_at)
+        elif ev.kind == "results" and ev.game:
+            res = _result(ev.game, ev.game.me(pid, gl.my_name))
+            state.set(log_result=res)
+            print(f"  [gamelog] result: {res.get('result')}")
+        elif ev.kind == "left":
+            state.set(log_left=ev.t)
+        elif ev.kind in ("game_start", "players") and g:
+            print(f"  [gamelog] {ev.kind}: {ev.data}")
+    alerts = [(t, a) for t, a in alerts if now - t < 45]
+    if changed:
+        state.set(log_game=g, log_me=me, log_match=to_match(g, me) if g and me else None,
+                  log_status=_status(gl, g))
+        sig = (g.session_id if g else None, me.civ if me else None, tuple(p.civ for p in g.players) if g else ())
+        if g and me and sig != intel_for:
+            intel_for = sig
+            try:
+                from units import UnitDB
+                db = db or UnitDB()
+                state.set(intel=enemy_intel(g, me, db))
+            except Exception as e:
+                print(f"  [gamelog] intel: {type(e).__name__}: {e}")
+        elif not g:
+            intel_for = None
+            state.set(intel=None)
+        wake = state.get("log_wake")
+        if wake:
+            wake.set()
+    state.set(log_alerts=[a for _, a in alerts])
+    return gl, db, intel_for, next_look, alerts
 
 
 def _status(gl: GameLog, g: Optional[LogGame]) -> dict:
@@ -626,6 +646,7 @@ def describe(g: LogGame, my_id=None, my_name=None) -> List[str]:
 
 
 if __name__ == "__main__":
+    safe_console()
     path = sys.argv[1] if len(sys.argv) > 1 else default_log_path()
     gl = GameLog(path)
     games = []

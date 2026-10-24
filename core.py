@@ -441,6 +441,8 @@ def run_core(cfg: dict, replay=None, stdin=None, stdout=None, publish_every: flo
     out = stdout or sys.stdout
     if stdout is None:
         sys.stdout = sys.stderr                        # prints become logs; stdout is for messages
+    from gamelog import safe_console
+    safe_console()
     emit = Emitter(out)
     stop = stop or threading.Event()
 

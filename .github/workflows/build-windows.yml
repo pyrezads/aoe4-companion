@@ -38,17 +38,21 @@ jobs:
           python-version: "3.12"
 
       - name: Python tests
+        shell: bash
         run: |
           pip install -r requirements.txt
-          python test_coach.py
-          python test_core.py
-          python test_review.py
-          python test_history.py
-          python test_sizes.py
-          python test_builds.py
-          python test_production_math.py
-          python test_gamelog.py
-          python test_gamelog_core.py
+          fail=0
+          for t in test_coach.py test_core.py test_review.py test_history.py test_sizes.py test_builds.py \
+                   test_production_math.py test_gamelog.py test_gamelog_core.py; do
+            if python "$t" > test_out.txt 2>&1; then echo "ok $t"; else
+              fail=1
+              # the failing output as an annotation, readable with the API (gh run view) even when logs aren't
+              msg=$(tail -n 30 test_out.txt | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')
+              echo "::error title=$t failed::$msg"
+              cat test_out.txt
+            fi
+          done
+          exit $fail
 
       - name: Pack the screen reader (aoe4-core.exe)
         run: |

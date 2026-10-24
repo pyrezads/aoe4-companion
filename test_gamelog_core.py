@@ -11,6 +11,9 @@ import time
 
 import main
 from core import run_core
+from gamelog import safe_console
+
+safe_console()
 
 LOGS = pathlib.Path(__file__).parent / "tests" / "logs"
 ok = True
