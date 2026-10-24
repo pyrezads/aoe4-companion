@@ -163,3 +163,14 @@ svg{display:block}
 @keyframes agepulse{50%{filter:drop-shadow(0 0 10px rgba(255,255,255,.55)) drop-shadow(0 4px 8px rgba(0,0,0,.5));transform:scale(1.08)}}
 .age-shield.pop{animation:gipop .6s cubic-bezier(.2,1.5,.4,1) both}
 @media (prefers-reduced-motion:reduce){.gi.pop,.gi.pop::after,.age-shield.soon,.age-shield.pop{animation:none}}
+
+/* ── dark native controls: dropdown lists and scrollbars match the app ── */
+:root{color-scheme:dark}
+select option,select optgroup{background:#171b1f;color:#fff}
+select option:checked{background:#1c8aa5;color:#fff}
+*{scrollbar-width:thin;scrollbar-color:#2c3438 transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2c3438;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#3d4a50;background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
