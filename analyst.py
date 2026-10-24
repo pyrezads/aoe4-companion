@@ -61,6 +61,9 @@ class Analyst:
 
     # ── who am I ──────────────────────────────────────────────────────
     def my_civ(self) -> Optional[str]:
+        lme = self.state.get("log_me")              # the game's own log: exact
+        if lme:
+            return lme.civ
         m = self.state.get("match")
         if m:
             me = next((p for p in m.players if p.profile_id == int(self.cfg.get("aoe4world_profile_id", 0))), None)
@@ -74,6 +77,9 @@ class Analyst:
         return t.get("age") or 2
 
     def enemy_civs(self) -> List[str]:
+        g, lme = self.state.get("log_game"), self.state.get("log_me")
+        if g and lme:
+            return [p.civ for p in g.players if p.team != lme.team]
         m = self.state.get("match")
         if m:
             return [p.civ for p in m.enemies()]
@@ -85,8 +91,35 @@ class Analyst:
         return max(ages) if ages else self.my_age()
 
     # ── per frame ─────────────────────────────────────────────────────
+    def team_view(self) -> dict:
+        """Teams for everything that shows or saves them: the log's players, ages from the screen."""
+        from gamelog import team_summary
+        return team_summary(self.state.get("log_game"), self.state.get("log_me"), self.teams.summary()) or self.teams.summary()
+
+    def _log_signals(self) -> None:
+        """The log says exactly when a game starts, ends and how it went."""
+        ng = self.state.get("log_new_game")
+        if ng is not None and ng != getattr(self, "_log_game_id", None):
+            first = getattr(self, "_log_game_id", None) is None and not self.recorder.samples
+            self._log_game_id = ng
+            if not first:
+                if self.recorder.samples:
+                    self.recorder.finish()
+                self.new_game()
+        res = self.state.get("log_result")
+        if res and res is not getattr(self, "_log_res", None):
+            self._log_res = res
+            self.recorder.meta["result"] = res.get("result")
+            self.recorder.meta["players"] = res.get("players")
+        left = self.state.get("log_left")
+        if left and left != getattr(self, "_log_left", None):
+            self._log_left = left
+            if self.recorder.samples:
+                self.recorder.finish()               # you're back in the menu: save the game now
+
     def on_frame(self, frame, now: Optional[float] = None) -> None:
         now = now or time.time()
+        self._log_signals()
         h = self.hud.read(frame)
         snap = self.eco.update(h, now)
         if snap.live and self.last_seconds is not None and snap.seconds is not None and snap.seconds + 30 < self.last_seconds:
@@ -103,9 +136,10 @@ class Analyst:
                 print(f"  [{snap.clock}] {ev}")
             summary = self.teams.summary()
             self._log_teams(sb, summary, frame, snap.clock)
-            self.state.set(teams=summary)
+            self.state.set(teams=self.team_view())
         self.team_events = [(t, e) for t, e in self.team_events if now - t < 45]
         alerts += [("warn", e) for _, e in self.team_events if e.startswith("Enemy")][:3]
+        alerts += [("warn", a) for a in (self.state.get("log_alerts") or [])][:3]
 
         # enemy units: a selection that isn't your Ctrl+C army
         if snap.live and h.selection_total and now - self.last_army_key > 2.5:
@@ -130,7 +164,7 @@ class Analyst:
                 age = (self.teams.summary().get("me") or {}).get("age")
                 self.state.set(coach=self.coach.update(snap.seconds, snap.villagers, snap.idle, age))
         self.recorder.update(snap, now, coach=self.state.get("coach") if snap.live else None,
-                             teams=self.teams.summary(), build=self.state.get("build"), match=self.state.get("match"))
+                             teams=self.team_view(), build=self.state.get("build"), match=self.state.get("match"))
 
     def _log_teams(self, sb, summary, frame, clock) -> None:
         """What the player list read, in core.log when it changes, and one picture of it per game

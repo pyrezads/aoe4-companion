@@ -208,6 +208,34 @@ body.widget.collapsed .wbtns{top:50%;transform:translateY(-50%)}
 .cb-clock{font:600 16px var(--display);color:var(--muted);margin-left:auto}
 body.widget.callout .cbar .act{border-color:rgba(211,181,70,.6);background:rgba(211,181,70,.16)}
 body.widget.waiting.collapsed .cbar{display:none}
+
+/* ── who you're facing: enemy civs, their key units and your answers (from the game's log) ── */
+.intel{margin:0 12px 12px;padding:12px 14px 12px;border-radius:18px;position:relative;
+  background:var(--glass-sheen),linear-gradient(150deg,rgba(200,110,214,.2),rgba(200,110,214,.06) 60%,rgba(28,138,165,.08));
+  border:1px solid rgba(200,110,214,.38);box-shadow:inset 0 1px 0 rgba(255,255,255,.18);animation:startin .6s cubic-bezier(.2,1.3,.4,1) both}
+.intel[hidden]{display:none}
+.intel .ih{display:flex;align-items:baseline;gap:8px;padding-right:34px;margin-bottom:6px}
+.intel .ih b{font:700 15px var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--pink)}
+.intel .ih span{color:var(--muted);font-size:12.5px}
+.intel .ix{position:absolute;top:9px;right:9px;width:26px;height:26px;border-radius:9px;border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.07);color:var(--ink);font:700 16px/1 var(--display);cursor:pointer;display:grid;place-items:center;padding:0 0 1px}
+.intel .ix:hover{background:rgba(255,255,255,.18)}
+.ie{padding:7px 0 6px;border-top:1px solid rgba(255,255,255,.07)}
+.ie:first-of-type{border-top:0;padding-top:2px}
+.ie .ic{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px}
+.ie .ic img.fl{width:24px;height:16px;border-radius:3px;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+.ie .ic small{color:var(--muted);font-weight:500;font-size:12px;display:flex;flex-wrap:wrap;gap:4px 8px;min-width:0}
+.ie .pw{max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ie .rk{font-style:normal;margin-left:5px;padding:0 6px;border-radius:7px;background:rgba(211,181,70,.16);border:1px solid rgba(211,181,70,.35);color:var(--yellow);font-weight:700;font-size:11px}
+.ie .note{font-size:12px;color:var(--orange);margin:2px 0 0 32px}
+.iu{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:5px 0 0 32px;font-size:13px}
+.iu .un{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.iu .ar{color:var(--muted);font-size:12px;margin:0 2px}
+.iu .ct{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 3px;border-radius:10px;background:rgba(131,193,94,.13);
+  border:1px solid rgba(131,193,94,.32);color:var(--ink);font-weight:600;font-size:12.5px}
+.intel.many .iu .un .gi{display:none}
+body.widget.collapsed .intel{display:none}
+@media (prefers-reduced-motion:reduce){.intel{animation:none}}
 </style>
 </head>
 <body>
@@ -232,6 +260,7 @@ body.widget.waiting.collapsed .cbar{display:none}
       <div><div class="t" id="title">Zhuge Nu-Timing-Attack(10-14)</div><div class="c" id="civ">Zhu Xi's Legacy</div></div>
       <div><div class="clock" id="clock">0:00</div><div class="pace on" id="pace">On pace</div></div>
     </header>
+    <div class="intel" id="intel" hidden aria-live="polite"></div>
     <div class="waiting" id="waiting">
       <div class="wt" id="waitTitle">Waiting for the game</div>
       <p id="waitText">Start a match in Borderless Windowed. The coach starts as soon as it can read your villagers.</p>
@@ -448,6 +477,34 @@ function render(m){
   a.textContent = m.idle ? `${m.idle} idle villager${m.idle > 1 ? 's' : ''}. Send ${m.idle > 1 ? 'them' : 'it'} to ${sendTo}.` : '';
 }
 
+
+// ── Who you're facing: shown when a match loads (the game's log names every player), until you close it
+let intelData = null, intelClosed = null;
+const flag = civ => `<img class="fl" src="img/flags/${esc(civ)}.png" alt="" onerror="this.remove()">`;
+const unitIcon = n => GameIcons.html(GameIcons.byName(n), 'xs');
+function renderIntel(){
+  const el = $('intel'), d = intelData;
+  if (!d || !d.enemies || !d.enemies.length || String(d.session) === intelClosed) { el.hidden = true; return; }
+  const many = d.enemies.length > 2;                 // team games: one key unit per civ keeps it short
+  const rows = d.enemies.map(e => {
+    const units = (many ? e.units.slice(0, 1) : e.units).map(u =>
+      `<div class="iu"><span class="un">${unitIcon(u.name)}${esc(u.name)}</span><span class="ar">beat it with</span>${
+        u.counters.map(c => `<span class="ct">${unitIcon(c)}${esc(c)}</span>`).join('')}</div>`).join('');
+    const who = (e.who && e.who.length ? e.who : (e.players || []).map(n => ({name: n}))).map(w =>
+      `<span class="pw">${esc(w.name)}${w.rank || w.rating ? `<i class="rk">${esc(w.rank || '')}${w.rank && w.rating ? ' · ' : ''}${w.rating ? esc(w.rating) : ''}</i>` : ''}</span>`).join('');
+    return `<div class="ie"><div class="ic">${flag(e.civ)}${esc(e.civ_name)}<small>${who}</small></div>${
+      e.note ? `<div class="note">${esc(e.note)}</div>` : ''}${units}</div>`;
+  }).join('');
+  const vs = d.enemies.length === 1 ? 'your opponent' : `${d.enemies.reduce((n, e) => n + (e.players || []).length, 0)} enemies`;
+  el.className = 'intel' + (many ? ' many' : '');
+  el.innerHTML = `<div class="ih"><b>Facing</b><span>${esc(vs)}${d.map ? ' · ' + esc(d.map) : ''} · counters for ${esc(d.me.civ_name)}</span></div>
+    <button class="ix" id="intelX" title="Close" aria-label="Close who you're facing">×</button>${rows}`;
+  el.hidden = false;
+  $('intelX').onclick = () => { intelClosed = String(d.session); el.hidden = true; requestAnimationFrame(applyWidget); };
+  requestAnimationFrame(applyWidget);
+}
+GameIcons.ready.then(renderIntel);
+
 const CIVS = {ABB:"Abbasid Dynasty",AYY:"Ayyubids",BYZ:"Byzantines",CHI:"Chinese",DEL:"Delhi Sultanate",ENG:"English",
   FRE:"French",GOH:"Golden Horde",HRE:"Holy Roman Empire",HOL:"House of Lancaster",JAP:"Japanese",JIN:"Jin Dynasty",
   JDA:"Jeanne d'Arc",KTE:"Knights Templar",MAC:"Macedonian Dynasty",MAL:"Malians",MON:"Mongols",DRA:"Order of the Dragon",
@@ -478,6 +535,8 @@ if (inElectron) {
     if (type === 'status') live = !!(data && data.live);
     else if (type === 'build') build = data;
     else if (type === 'coach') coach = data;
+    else if (type === 'intel') { intelData = data; renderIntel(); }
+    else if (type === 'gamelog' && data && (data.phase === 'menu' || data.phase === 'left')) { intelData = null; renderIntel(); }
     update();
   });
   update();
@@ -527,6 +586,10 @@ if (inElectron) {
     if (clock >= 300) { clock = 0; vils = 6; have = {food:6,wood:0,gold:0,stone:0}; }
   }
   tick(); setInterval(tick, 600);
+  intelData = {session: 'preview', map: 'Black Forest', me: {civ: 'ottomans', civ_name: 'Ottomans'}, enemies: [
+    {civ: 'english', civ_name: 'English', players: ['Fioul'], who: [{name: 'Fioul', rank: 'Diamond 1', rating: 1490}], note: 'Often goes for early pressure',
+     units: [{name: 'Longbowman', counters: ['Sipahi', 'Lancer']}, {name: 'Vanguard Man-at-Arms', counters: ['Crossbowman', 'Lancer']}]}]};
+  renderIntel();
 }
 </script>
 </body>

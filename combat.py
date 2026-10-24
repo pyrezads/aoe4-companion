@@ -134,6 +134,27 @@ def best_counters(db: UnitDB, civ: str, age: int, enemy: Army, top: int = 3,
     return out[:top]
 
 
+def counters_for_unit(db: UnitDB, civ: str, age: int, enemy_v: dict, top: int = 2) -> List[str]:
+    """Names of your best answers to one enemy unit: the trade math, with units that do bonus
+    damage to it (spears vs cavalry, crossbows vs armour) ranked first."""
+    cands = best_counters(db, civ, age, [(enemy_v, 10)], top=8)
+    toks = tokens(enemy_v)
+
+    def has_bonus(v):
+        w = primary_weapon(v) or {}
+        return any(m.get("value", 0) > 0 and _class_match(m["classes"], toks) for m in w.get("mods", []))
+    ranked = sorted(cands, key=lambda t: -(t[2] * (1.6 if has_bonus(t[0]) else 1.0)))
+    same = db.base_name(enemy_v.get("base") or "", civ)
+    out: List[str] = []
+    for v, uid, _ in ranked:
+        n = db.base_name(uid, civ)
+        if n != same and n not in out:
+            out.append(n)
+        if len(out) >= top:
+            break
+    return out
+
+
 def needed_to_win(db: UnitDB, mine: Army, theirs: Army, add: dict, target_ratio: float = 1.3,
                   max_n: int = 200) -> Optional[int]:
     """How many of unit `add` to add so the fight estimate reaches target_ratio."""

@@ -13,7 +13,10 @@ analyst.py  Analyst.on_frame / on_army_key / on_pin ── publishes to AppState
    ├ scoreboard.py   player list: civ flags, crossed swords = enemy, age numerals → TeamTracker
    ├ units.py        unit DB + selection-card icon recognition
    └ combat.py       fight estimate (DPS vs armour, bonus damage, Lanchester), counters, upgrade advice
-main.py match_loop (every 8 s)
+gamelog.py  the game's own warnings.log, read live (found via the Documents known folder, OneDrive too):
+            players, civs, teams, profile ids, map, 0:00, who's out, game over, results → log_* in AppState.
+            Exact, so it wins over the player-list reading; scoreboard.py stays as the backup (and for ages).
+main.py match_loop (every 8 s, or at once when the log changes)
    ├ aoe4world.py    current ranked match, civ/map win rates, opponent scouting, head-to-head
    └ buildorder.py   aoe4guides builds: automatic pick (civ, map, game size, enemy civs) + live follower
  analyst.py → coach.py  build coach: next villager's resource by villager count, pace, idle, age-up (F10 = skip a step)
@@ -37,6 +40,8 @@ Threads: reader_loop (screen), match_loop (network), Tk main thread (UI). They o
   and scouting (aoe4world responses are fixtures).
 - `python test_builds.py` checks the build ranking against a saved sample of Zhu Xi builds.
 - `python test_production_math.py` checks the production/gather-rate math.
+- `python test_gamelog.py` reads real (trimmed) game logs in tests/logs: a 1v1, a 4v4, a skirmish, a log growing mid-line.
+- `python test_gamelog_core.py` runs the core on a log being written: teams, the enemy bar, results.
 - `python test_coach.py` checks the build coach on scripted games (builders, misreads, idle, pace).
 - `python main.py --test calib/s02.png` shows what it reads from one screenshot.
 

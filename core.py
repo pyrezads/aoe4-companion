@@ -13,6 +13,11 @@ Out, as {"type": ..., "data": {...}}. The live ones are only sent when they chan
     coach           coach.py's message: next villager, step, pace, age-up (null before a build/game)
     build           title, civ, why, locked, pick, count, steps [{at, text, villagers, age}]
     teams, match, scout, army, advice
+    gamelog         the game's own log: found, path, my_name, my_id, phase (menu/loading/playing/over),
+                    kind, map, players [{name, civ, team, ai, out}], my_team, session
+    intel           at game start: me {civ}, enemies [{civ, civ_name, players, note, units [{name, counters}]}]
+    result          after a game: result (win/loss), seconds, players [{name, civ, team, result, units, kills, apm...}]
+    gamelog_path    reply to find_log / set_log_path: path, ok, my_name, my_id, last {kind, map, players}
     builds          reply to list_builds: civ, builds [{id, title, strategy, season, views, map, why}]
     reading_check   reply to reading_check: confidence, missed, clock, villagers, resources, width, height
     error           cmd, message
@@ -29,6 +34,8 @@ In:
     {"cmd": "set_monitor", "width": 2560, "height": 1440, "x": 0, "y": 0}
     {"cmd": "reading_check"}
     {"cmd": "pin"}                        same as F9: the selected units are enemy units
+    {"cmd": "find_log"}                   look for the game's warnings.log
+    {"cmd": "set_log_path", "path": "..."}  read this warnings.log (or the folder it's in)
     {"cmd": "quit"}
 """
 
@@ -110,6 +117,45 @@ def _build_summary(state) -> Optional[dict]:
     }
 
 
+def _ranked(row: dict, ranks: dict) -> dict:
+    r = ranks.get(row.get("profile_id")) if row.get("profile_id") else None
+    return {**row, "rank": r.get("rank"), "rating": r.get("rating"), "level": r.get("level")} if r else row
+
+
+def _teams(state):
+    """During loading the HUD can't be read yet, but the log already knows the teams. Ranks from aoe4world."""
+    t = state.get("teams")
+    if state.get("log_game") and state.get("log_me") and not (t and t.get("source") == "log"):
+        from gamelog import team_summary
+        t = team_summary(state.get("log_game"), state.get("log_me"), t)
+    ranks = state.get("player_ranks") or {}
+    if t and ranks and t.get("me"):
+        t = {**t, "me": _ranked(t["me"], ranks), "allies": [_ranked(r, ranks) for r in t.get("allies", [])],
+             "enemies": [_ranked(r, ranks) for r in t.get("enemies", [])]}
+    return t
+
+
+def _intel(state):
+    it = state.get("intel")
+    ranks = state.get("player_ranks") or {}
+    if not it or not ranks:
+        return it
+    return {**it, "enemies": [{**e, "who": [_ranked(w, ranks) for w in e.get("who", [])]} for e in it["enemies"]]}
+
+
+def _gamelog(state) -> dict:
+    st = dict(state.get("log_status") or {"found": False})
+    g = state.get("log_game")
+    if g:
+        st["clock"] = None                     # the HUD clock is shown; this only says the game is on
+        st["players"] = [{"name": p.name, "civ": p.civ, "team": p.team, "ai": p.ai, "out": p.out}
+                         for p in sorted(g.players, key=lambda p: (p.team, p.slot))]
+        me = state.get("log_me")
+        st["my_team"] = me.team if me else None
+        st["session"] = g.session_id
+    return st
+
+
 def _payloads(state) -> dict:
     snap = state.get("snapshot")
     live = bool(snap and snap.live)
@@ -126,7 +172,10 @@ def _payloads(state) -> dict:
         "hud": dataclasses.asdict(snap) if snap else None,
         "coach": state.get("coach"),
         "build": _build_summary(state),
-        "teams": state.get("teams"),
+        "teams": _teams(state),
+        "gamelog": _gamelog(state),
+        "intel": _intel(state),
+        "result": state.get("log_result"),
         "match": {"lines": state.get("briefing_lines")},
         "scout": state.get("scout"),
         "army": {"lines": state.get("army_lines")},
@@ -323,6 +372,30 @@ class Commands:
         best = min(same, key=lambda m: abs(m["left"] - x) + abs(m["top"] - y))
         self.state.set(game_monitor=best)
 
+    def do_set_log_path(self, msg):
+        """Settings > Game log > Choose: the warnings.log to read, if it isn't in the usual place."""
+        import pathlib
+        p = pathlib.Path(str(msg.get("path") or ""))
+        if p.is_dir():
+            p = p / "warnings.log"
+        if not p.is_file():
+            raise ValueError(f"no game log at {p}")
+        self.cfg["game_log_path"] = str(p)
+        self.state.set(log_path_request=str(p))
+        self.emit.send("gamelog_path", data={"path": str(p), "ok": True})
+
+    def do_find_log(self, msg):
+        from gamelog import default_log_path, GameLog
+        p = default_log_path()
+        info = {"path": str(p) if p else None, "ok": bool(p)}
+        if p:
+            gl = GameLog(p)
+            gl.poll()
+            g = gl.game or gl.last_game
+            info.update(my_name=gl.my_name, my_id=gl.my_id,
+                        last=None if not g else {"kind": g.kind, "map": g.map, "players": len(g.players)})
+        self.emit.send("gamelog_path", data=info)
+
     def do_pin(self, msg):
         """Same as F9: treat the units selected in game as enemy units."""
         req = self.state.get("pin_request")
@@ -372,7 +445,7 @@ def run_core(cfg: dict, replay=None, stdin=None, stdout=None, publish_every: flo
     stop = stop or threading.Event()
 
     state = AppState()
-    state.set(army_request=threading.Event(), pin_request=threading.Event(), emit=emit)
+    state.set(army_request=threading.Event(), pin_request=threading.Event(), emit=emit, log_wake=threading.Event())
     commands = Commands(state, cfg, emit, stop)
     commands.library()
 
@@ -388,6 +461,9 @@ def run_core(cfg: dict, replay=None, stdin=None, stdout=None, publish_every: flo
     state.set(game_monitor=monitor)
 
     threading.Thread(target=reader_loop, args=(state, cfg, monitor, stop, make_screen), daemon=True).start()
+    if str(cfg.get("game_log_path") or "").lower() != "off":
+        from gamelog import watch
+        threading.Thread(target=watch, args=(state, cfg, stop), daemon=True).start()
     if network:
         threading.Thread(target=match_loop, args=(state, cfg, stop), daemon=True).start()
     threading.Thread(target=_read_commands, args=(stdin or sys.stdin, commands, stop), daemon=True).start()

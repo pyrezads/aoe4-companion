@@ -1,0 +1,62 @@
+RelicCardinal started at 2026-10-24 09:21 [Eastern Daylight Time UTC -05:00]
+(I) [09:21:55.027] [000004576]: GAME -- Current Steam name is [NarkyNarc]
+(I) [09:21:55.027] [000004576]: GAME -- steam returned language 'english'
+(I) [09:21:55.032] [000004576]: GAME -- [Age of Empires IV] set to language [en]
+(I) [09:22:39.056] [000004576]: GetPartyStatsByID found 1 teams for user ID 19013757
+(I) [09:24:24.352] [000009380]: WebSocketConnection::ProcessMessages: message=[0,"Automatch2GameMessage",19013757,["3381880","257198481","scen_black_forest_small"]
+(I) [09:24:57.002] [000004576]: [Match Flow] MatchSetup::StartMatch() - m_matchStatus = ST_STARTING [match type: 20, session id 257198481]
+(I) [09:25:02.168] [000004576]: GAME -- Scenario: 
+(I) [09:25:02.168] [000004576]: GAME -- Win Condition Qualified Name: 00000000000000000000000000000000:149419911
+(I) [09:25:02.168] [000004576]: GAME -- Win Condition Name: standard_mode
+(I) [09:25:02.168] [000004576]: GAME -- Human Player: 0 Fioul 3381880 0 english
+(I) [09:25:02.168] [000004576]: GAME -- Human Player: 1 NarkyNarc 19013757 1 ottoman
+(I) [09:25:32.990] [000020144]: MapGen -- Generating with biome subtropical_eastern
+(I) [09:25:32.990] [000020144]: MapGen -- Generating with layout black_forest
+(I) [09:25:32.990] [000020144]: MapGen -- Generating with size map_size_512
+(I) [09:25:32.990] [000020144]: MapGen -- Generating with seed 252405327 (0x0F0B664F)
+(I) [09:25:32.990] [000020144]: MapGen -- Generating with player count 2
+(I) [09:25:32.990] [000020144]: MapGen -- Generating with players locations: Fixed (Teams Together)
+(I) [09:25:37.074] [000020144]: GAME -- Recording game
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:39.126] [000020144]: Player [] killed on game tick [0] due to [unused player]
+(I) [09:25:44.517] [000004576]: GAME -- Starting mission: 
+(I) [09:25:44.548] [000004576]: Local user framerate is [0.000000]
+(I) [09:25:44.548] [000004576]: Local user MinDelay=[-1ms], MaxDelay=[0ms], AvgDelay=[0ms], minRTT[4294967295ms], maxRTT[0ms], avgRTT[0ms]
+(I) [09:26:05.000] [000004576]: Local user framerate is [153.169373]
+(I) [09:26:05.000] [000004576]: Local user MinDelay=[61ms], MaxDelay=[123ms], AvgDelay=[99ms], minRTT[53ms], maxRTT[791ms], avgRTT[131ms]
+(I) [09:26:26.007] [000004576]: Local user framerate is [152.350006]
+(I) [09:26:26.007] [000004576]: Local user MinDelay=[61ms], MaxDelay=[124ms], AvgDelay=[98ms], minRTT[53ms], maxRTT[791ms], avgRTT[129ms]
+(I) [09:26:36.091] [000004576]: World_KillPlayer - Player [N] killed on game tick [405] due to [7]
+(I) [09:26:36.091] [000004576]: Player [NarkyNarc] killed on game tick [405] due to [loss]
+(I) [09:26:46.005] [000004576]: MOD -- Game Over at frame 484
+(I) [09:26:46.037] [000004576]: Report sent for profileID[3381880] -> race=[106553], result=[1], XP Gain=[203]
+(I) [09:26:46.037] [000004576]: Report sent for profileID[19013757] -> race=[2039321], result=[0], XP Gain=[3]
+(I) [09:26:47.737] [000009380]: WebSocketConnection::ProcessMessages: message=[0,"GameResultNotificationMessage",19013757,[[[3381880,20,106553,0,[0],731330,[["unitprod",2],["vvetrank",0],["cabil",0],["dmgdone",0],["plost",0],["svetrank",0],["reqmax",0],["cpearn",0],["reqspnt",0],["powearn",0],["blost",0],["elitekill",0],["edeaths",0],["structdmg",0],["pcap",0],["inactperiod",13],["lowintperiod",0],["precap",0],["sqkill",0],["popmax",0],["powspnt",0],["sqprod",2],["bprod",2],["svetxp",0],["vabnd",0],["addonkill",0],["totalcmds",127],["gammaspnt",0],["vkill",0],["objdmh",0],["abil",0],["sqlost",0],["vcap",0],["vlost",0],["gt",60],["upg",0],["vvetxp",0],["reqearn",0],["vp1",0],["vp0",0],["erein",0],["cflags",0],["wpnpu",0],["ekills",0],["powmax",0],["vprod",0]],0,203,[],null,[],[],[],[],[],[]],[19013757,20,2039321,1,[0],7498615,[["unitprod",1],["vvetrank",0],["cabil",0],["dmgdone",0],["plost",0],["svetrank",0],["reqmax",0],["cpearn",0],["reqspnt",0],["powearn",0],["blost",0],["elitekill",0],["edeaths",0],["structdmg",0],["pcap",0],["inactperiod",24],["lowintperiod",0],["precap",0],["sqkill",0],["popmax",0],["powspnt",0],["sqprod",1],["bprod",2],["svetxp",0],["vabnd",0],["addonkill",0],["totalcmds",21],["gammaspnt",0],["vkill",0],["objdmh",0],["abil",0],["sqlost",0],["vcap",0],["vlost",0],["gt",60],["upg",0],["vvetxp",0],["reqearn",0],["vp1",0],["vp0",0],["erein",0],["cflags",0],["wpnpu",0],["ekills",0],["powmax",0],["vprod",0]],0,3,[],null,[],[],[],[],[],[]]],[[731330,17,1851,1848,4,0,43,25190,67911,8792,24740,4,1071,1792848406,445,5,1246,22281,54618],[7498615,17,4,5,-3,0,0,-1,-1,-1,-1,-1,983,1792848406,0,0,0,-1,-1]],[[1,3381880,4913,"",1792834893],[1,19013757,579,"",1792721007]],257198481,"",[[160,[],[]],[161,[],[]],[162,[],[]],[163,[],[]]]]]
+(I) [09:27:19.370] [000004576]: MatchSetupManager::RequestLeaveGameMatch - RequestGameEnd()
+(I) [09:27:20.376] [000004576]: GameObj::ShutdownGameObj
+(I) [09:27:28.085] [000004576]: GetPartyStatsByID found 1 teams for user ID 19013757
+(I) [09:32:30.924] [000004576]: GetPartyStatsByID found 1 teams for user ID 19013757
+(I) [09:33:09.689] [000004576]: [Match Flow] MatchSetup::StartMatch() - m_matchStatus = ST_STARTING [match type: 23, session id 257199960]
+(I) [09:33:12.114] [000004576]: GAME -- Scenario: 
+(I) [09:33:12.114] [000004576]: GAME -- Win Condition Qualified Name: 00000000000000000000000000000000:149419911
+(I) [09:33:12.114] [000004576]: GAME -- Win Condition Name: standard_mode
+(I) [09:33:12.114] [000004576]: GAME -- Human Player: 0 NarkyNarc 19013757 0 ottoman
+(I) [09:33:12.114] [000004576]: GAME -- Human Player: 1 abdasdemir 26273177 0 ottoman
+(I) [09:33:12.114] [000004576]: GAME -- Human Player: 2 Rock 23472814 0 mongol_ha_gol
+(I) [09:33:12.114] [000004576]: GAME -- Human Player: 3 不愿意透露姓名的网友 23961531 0 byzantine_ha_mac
+(I) [09:33:12.114] [000004576]: GAME -- Human Player: 4 Spade ♠ 26229781 1 hre_ha_01
+(I) [09:33:12.114] [000004576]: GAME -- Human Player: 5 硅基生命体 3893656 1 chinese
+(I) [09:33:12.114] [000004576]: GAME -- Human Player: 6 行电子静坐_修赛博佛陀 10289485 1 french
+(I) [09:33:12.114] [000004576]: GAME -- Human Player: 7 アヤベは一番星 16892282 1 english

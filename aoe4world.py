@@ -128,6 +128,20 @@ class Aoe4WorldClient:
         self.profile = self._get(f"/players/{self.profile_id}", ttl=1800) or {}
         return self.profile
 
+    def fill_player(self, p: "Player", kind: str) -> None:
+        """Ratings and stats for a player the game's log named (the log has no ratings)."""
+        if not p.profile_id:
+            return
+        data = self._get(f"/players/{p.profile_id}", ttl=1800) or {}
+        p.modes = data.get("modes") or {}
+        p.country = p.country or data.get("country")
+        if p.rating is None:
+            for k in _mode_keys(kind):
+                r = (p.modes.get(k) or {}).get("rating")
+                if r:
+                    p.rating = r
+                    break
+
     def mode_stats(self, mode: str) -> dict:
         return (self.profile.get("modes") or {}).get(mode) or {}
 
@@ -277,6 +291,19 @@ def _rank(level: Optional[str]) -> str:
         return ""
     name, _, n = level.partition("_")
     return f"{RANK_NAMES.get(name, name.title())} {n}".strip()
+
+
+def rank_info(modes: Optional[dict], kind: str) -> Optional[dict]:
+    """What to show next to a player's name: their ranked rank (Gold II...) and rating for this kind of game."""
+    modes = modes or {}
+    size = (kind.split("_")[1] if "_" in kind else "1v1")
+    ranked = ["rm_solo", "rm_team"] if size == "1v1" else ["rm_team", "rm_solo"]
+    rk = next((modes[k] for k in ranked if (modes.get(k) or {}).get("rank_level") not in (None, "unranked")), {})
+    here = next((modes[k] for k in _mode_keys(kind) + ranked if (modes.get(k) or {}).get("rating")), {})
+    if not rk and not here:
+        return None
+    return {"rank": _rank(rk.get("rank_level")) or None, "level": rk.get("rank_level"),
+            "rating": here.get("rating"), "win_rate": here.get("win_rate"), "games": here.get("games_count")}
 
 
 def _mode_keys(kind: str) -> List[str]:

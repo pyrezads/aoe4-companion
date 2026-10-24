@@ -24,6 +24,9 @@ contextBridge.exposeInMainWorld('app', {
   installUpdate: () => ipcRenderer.invoke('app:install-update'),
   openLogs: () => ipcRenderer.invoke('app:open-logs'),
   openUrl: (url) => ipcRenderer.invoke('app:open-url', url),
+  // the game's log (Documents\My Games\Age of Empires IV\warnings.log)
+  browseGameLog: () => ipcRenderer.invoke('gamelog:browse'),
+  autoGameLog: () => ipcRenderer.invoke('gamelog:auto'),
   // settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),

@@ -270,6 +270,21 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .setup-card img{display:block;margin-bottom:22px}
 .setup-card h2{font:600 24px/1.2 var(--display);margin:0 0 8px}
 .setup-card .sub{margin:0 0 20px}
+/* the game's log found on this PC: who you are, without pasting anything */
+.found{display:flex;gap:12px;align-items:center;margin:0 0 18px;padding:12px 14px;border-radius:16px;
+  background:linear-gradient(140deg,rgba(131,193,94,.2),rgba(131,193,94,.06));border:1px solid rgba(131,193,94,.4);animation:foundin .5s cubic-bezier(.2,1.3,.4,1) both}
+.found[hidden]{display:none}
+.found .ok{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--green);color:#10200a;font:800 18px var(--display);flex:none}
+.found b{display:block;font-size:15px}
+.found span{color:var(--muted);font-size:13px}
+@keyframes foundin{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+.logline{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}
+.logline .ldot{display:inline-block;width:10px!important;height:10px!important;min-width:0;max-width:10px;padding:0;border-radius:50%;margin-top:6px;flex:none;background:var(--muted)}
+.logline .ldot.on{background:var(--green);box-shadow:0 0 12px -2px var(--green)}
+.logline .ldot.live{background:var(--pink);box-shadow:0 0 12px -2px var(--pink);animation:livepulse 1.4s ease-in-out infinite}
+@keyframes livepulse{50%{opacity:.45}}
+.logline code{font-size:12px;color:var(--muted);word-break:break-all}
+@media (prefers-reduced-motion:reduce){.found,.logline .ldot.live{animation:none}}
 .setup-card section[hidden]{display:none}
 .setup-actions{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
 .setup-mons{display:grid;gap:10px}
@@ -607,7 +622,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
     <img src="img/logo.png" alt="AoE4 Coach" width="180">
     <section data-step="1">
       <h2 id="setupTitle">Welcome. Two quick questions.</h2>
-      <p class="sub">Your profile brings in your match history, ratings and replays, and lets the coach scout ranked opponents. Paste your Steam profile link (on Steam: your name, then Profile, then copy the page link) or your aoe4world.com profile.</p>
+      <div class="found" id="setupFound" hidden><span class="ok">✓</span><div><b id="setupFoundName"></b><span id="setupFoundText"></span></div></div>
+      <p class="sub" id="setupSub">Your profile brings in your match history, ratings and replays, and lets the coach scout ranked opponents. Paste your Steam profile link (on Steam: your name, then Profile, then copy the page link) or your aoe4world.com profile.</p>
       <div class="field"><label for="setupPid">Steam or aoe4world profile</label><input class="inp" id="setupPid" placeholder="https://steamcommunity.com/profiles/7656…" autocomplete="off"><span class="hint" id="setupPidHint"></span></div>
       <div class="setup-actions"><button class="btn quiet" id="setupSkip">Skip for now</button><button class="btn primary" id="setupNext">Next</button></div>
     </section>
@@ -846,7 +862,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
     <!-- ════════ OPPONENT SCOUT ════════ -->
     <section class="view" id="v-scout" aria-label="Opponent scout">
       <div class="top">
-        <div><h1>Opponent scout</h1><p class="sub">Ranked opponents from aoe4world.com, 20–40 seconds after the game starts.</p></div>
+        <div><h1>Opponent scout</h1><p class="sub">Everyone in your game as soon as it starts loading, with ratings and records from aoe4world.com.</p></div>
       </div>
       <div class="panel" style="margin-bottom:18px"><h3 class="ph3" id="scMatchTitle">Match</h3><ul class="lines" id="scMatch"></ul></div>
       <div class="panel"><h3 class="ph3">Opponents</h3><p class="team-sum" id="scSum" hidden></p><div id="scEnemies" class="scouts"></div>
@@ -927,6 +943,13 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
             <div class="field"><label for="steam">Steam profile</label><div style="display:flex;gap:10px"><input class="inp" id="steam" placeholder="https://steamcommunity.com/profiles/7656…" autocomplete="off"><button class="btn quiet" id="steamFind">Find me</button></div>
               <span class="hint" id="steamHint">On Steam: your name, then Profile. Copy the page link. It needs the number, so a custom /id/ link won't work.</span></div>
             <div class="field" style="margin:0"><label for="pid">Or your aoe4world.com profile</label><div style="display:flex;gap:10px"><input class="inp" id="pid" placeholder="https://aoe4world.com/players/…"><button class="btn quiet" id="pidSave">Save</button></div><span class="hint" id="pidHint">Paste your profile link or your player ID.</span></div>
+          </div>
+        </div>
+        <div class="set">
+          <div><h3>Game log</h3><p class="why">Age of Empires IV writes a log while it runs. The coach reads it for exact civs, teams, map, game start and end, and results, with no screen reading. It's found on its own.</p></div>
+          <div>
+            <div class="logline"><span class="ldot" id="logDot"></span><div><b id="logState">Looking for the game's log…</b><br><code id="logPath"></code></div></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn quiet" id="logChoose">Pick it myself…</button><button class="btn quiet" id="logAuto" style="display:none">Find it automatically</button></div>
           </div>
         </div>
         <div class="set">
@@ -1439,13 +1462,14 @@ function renderAnalyst(){
   document.getElementById('anAlerts').innerHTML = live ? li((s.alerts || []).map(a => [a.text, a.level]), 'All good.')
     : li([], 'Waiting for the game. Start a match in Borderless Windowed.');
   const t = T.teams;
-  const civ = p => `<span class="civ${p.row != null ? ' fix' : ''}" ${p.row != null ? `data-row="${p.row}" data-civ="${esc(p.civ || '')}" title="Wrong civ? Click to correct it"` : ''}>${p.civ ? `<img class="fl xs" src="img/flags/${esc(p.civ)}.png" alt="" onerror="this.remove()">` : ''}<span class="age">${AGE[p.age] || '?'}</span>${esc(p.civ ? civName(p.civ) : 'Unknown')}</span>`;
+  const civ = p => `<span class="civ${p.row != null ? ' fix' : ''}" ${p.row != null ? `data-row="${p.row}" data-civ="${esc(p.civ || '')}" title="Wrong civ? Click to correct it"` : (p.name ? `title="${esc(p.name)}"` : '')} ${p.out ? 'style="opacity:.45"' : ''}>${p.civ ? `<img class="fl xs" src="img/flags/${esc(p.civ)}.png" alt="" onerror="this.remove()">` : ''}<span class="age">${AGE[p.age] || '?'}</span>${esc(p.civ ? civName(p.civ) : 'Unknown')}${p.name ? ` <small style="color:var(--muted);font-weight:500">${esc(p.name)}${p.rank || p.rating ? ` · <b style="color:var(--ink)">${esc(p.rank || '')}${p.rank && p.rating ? ' ' : ''}${p.rating ? esc(p.rating) : ''}</b>` : ''}${p.out ? ' · out' : ''}</small>` : ''}</span>`;
   document.getElementById('anTeams').innerHTML = t && t.me ? `
     <div class="team"><span class="who">You</span>${civ(t.me)}</div>
     ${t.allies.length ? `<div class="team"><span class="who">Allies</span>${t.allies.map(civ).join('')}</div>` : ''}
     <div class="team enemies"><span class="who">Enemies</span>${t.enemies.map(civ).join('') || '<span class="hint">not read yet</span>'}</div>`
-    : '<p class="hint" style="margin:0;color:var(--muted)">Read from the player list at the top right once a game starts.</p>';
-  if (t && t.me) document.getElementById('anTeams').insertAdjacentHTML('beforeend', '<p class="hint" style="margin:10px 0 0;color:var(--muted);font-size:12.5px">Wrong civ? Click it to correct it. The coach, counters and army reading use the corrected one.</p>');
+    : '<p class="hint" style="margin:0;color:var(--muted)">From the game\'s log as soon as a match loads (or the player list at the top right).</p>';
+  if (t && t.me && t.source === 'log') document.getElementById('anTeams').insertAdjacentHTML('beforeend', '<p class="hint" style="margin:10px 0 0;color:var(--muted);font-size:12.5px">From the game\'s own log: exact civs and teams. Ages come from the player list on screen.</p>');
+  else if (t && t.me) document.getElementById('anTeams').insertAdjacentHTML('beforeend', '<p class="hint" style="margin:10px 0 0;color:var(--muted);font-size:12.5px">Wrong civ? Click it to correct it. The coach, counters and army reading use the corrected one.</p>');
   const st = T.status;
   document.getElementById('anRead').textContent = st && st.read_quality != null
     ? `Reading ${Math.round(st.read_quality * 100)}% of the HUD` + (st.missed && st.missed.length && st.live ? ` (missed: ${st.missed.slice(0, 3).join(', ')})` : '') : '';
@@ -1468,7 +1492,7 @@ function renderScout(){
   };
   document.getElementById('scEnemies').innerHTML = sc && sc.enemies && sc.enemies.length
     ? sc.enemies.map((l, i) => card(l, i, true)).join('')
-    : `<p style="color:var(--muted);margin:0">${st && /profile in Settings/.test(st.match_note || '') ? 'Add your aoe4world profile in Settings to scout ranked opponents.' : 'Appears 20–40 s after a ranked game starts, once aoe4world shows it.'}</p>`;
+    : `<p style="color:var(--muted);margin:0">${st && /profile in Settings/.test(st.match_note || '') ? 'Add your aoe4world profile in Settings to scout ranked opponents.' : 'Appears when your next online game starts loading.'}</p>`;
   document.getElementById('scAllies').innerHTML = sc && sc.allies && sc.allies.length
     ? sc.allies.map((l, i) => card(l, i, false)).join('') : '<p style="color:var(--muted);margin:0">None in this game.</p>';
 }
@@ -2280,7 +2304,7 @@ document.getElementById('setupMons').addEventListener('click', e => {
 });
 document.getElementById('setupNext').addEventListener('click', async () => {
   const v = document.getElementById('setupPid').value, hint = document.getElementById('setupPidHint'), btn = document.getElementById('setupNext');
-  if (!v.trim()) { setupPid = null; return setupStep(2); }
+  if (!v.trim()) { setupPid = logFoundId; return setupStep(2); }
   btn.disabled = true;
   try {
     if (STEAM_RE.test(v) || /steamcommunity\.com/i.test(v)) {        // looked up now, so a wrong link is caught here
@@ -2318,8 +2342,48 @@ document.getElementById('setupDone').addEventListener('click', async () => {
   if (s.auto === false) autoPick.checked = false;
   if (s.armyKey) showArmyKey(s.armyKey);
   if (s.build && s.build.civ) civSel.value = s.build.civ;
-  if (!s.setupDone) { await loadDisplays(); setup.hidden = false; setupStep(1); document.getElementById('setupPid').focus(); }
+  if (!s.setupDone) { await loadDisplays(); setup.hidden = false; setupStep(1); document.getElementById('setupPid').focus(); if (inApp) window.app.send({cmd: 'find_log'}); }
+  renderLog(s.gameLogPath ? {found: true, path: s.gameLogPath} : null, !!s.gameLogPath);
 })();
+
+// ── The game's log: found on its own (Documents, even when OneDrive moved it), or chosen once
+let logFoundId = null, logInfo = null, logChosen = false;
+const KIND = k => !k ? '' : k.startsWith('custom') ? 'custom ' + k.slice(7) : (k.startsWith('qm') ? 'quick match ' : 'ranked ') + k.split('_')[1];
+function renderLog(info, chosen){
+  if (info) logInfo = {...logInfo, ...info};
+  if (chosen != null) logChosen = chosen;
+  const i = logInfo || {}, dot = document.getElementById('logDot');
+  const playing = i.phase === 'loading' || i.phase === 'playing';
+  dot.className = 'ldot' + (playing ? ' live' : i.found || i.ok ? ' on' : '');
+  document.getElementById('logState').textContent = playing ? `Reading your ${KIND(i.kind)} live${i.map ? ' on ' + i.map : ''}`
+    : i.found || i.ok ? `Found on its own${i.my_name ? `. You're ${i.my_name}` : ''}` : "Not found yet. Start Age of Empires IV once and it shows up here by itself.";
+  document.getElementById('logPath').textContent = i.path || '';
+  document.getElementById('logAuto').style.display = logChosen ? '' : 'none';
+}
+document.getElementById('logChoose').addEventListener('click', async () => {
+  if (!inApp) return;
+  const p = await window.app.browseGameLog();
+  if (p) renderLog({path: p, found: true}, true);
+});
+document.getElementById('logAuto').addEventListener('click', async () => {
+  if (!inApp) return;
+  await window.app.autoGameLog();
+  renderLog({path: '', found: false}, false);
+});
+if (window.app) window.app.onMessage((type, d) => {
+  if (type === 'gamelog' && d) renderLog(d);
+  else if (type === 'gamelog_path' && d) {
+    renderLog({path: d.path, found: d.ok, my_name: d.my_name || (logInfo || {}).my_name});
+    if (d.my_id && !setup.hidden) {                // first run: we already know who you are
+      logFoundId = +d.my_id;
+      document.getElementById('setupTitle').textContent = d.my_name ? `Welcome, ${d.my_name}.` : 'Welcome.';
+      document.getElementById('setupFoundName').textContent = 'Found your game on this PC';
+      document.getElementById('setupFoundText').textContent = `You're ${d.my_name || 'player ' + d.my_id}. Your profile comes from the game, so there's nothing to paste.`;
+      document.getElementById('setupFound').hidden = false;
+      document.getElementById('setupSub').textContent = 'Not you, or want a different profile? Paste a Steam or aoe4world link. Otherwise just press Next.';
+    }
+  }
+});
 
 function calm(){ document.body.classList.toggle('calm', document.hidden || !document.hasFocus() || !!(status && status.live)); }
 addEventListener('focus', calm); addEventListener('blur', calm); document.addEventListener('visibilitychange', calm);

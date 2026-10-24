@@ -47,6 +47,8 @@ jobs:
           python test_sizes.py
           python test_builds.py
           python test_production_math.py
+          python test_gamelog.py
+          python test_gamelog_core.py
 
       - name: Pack the screen reader (aoe4-core.exe)
         run: |

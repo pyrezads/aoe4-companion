@@ -230,22 +230,68 @@ def match_loop(state: AppState, cfg: dict, stop: threading.Event):
         state.set(**fields)
         bo = fields["build"]
         print(f"  Build picked: {bo.title} — {fields['build_why']}")
+    wake = state.get("log_wake") or threading.Event()
+    scouted_ratings = None
     while not stop.is_set():
         try:
+            # the game's log knows who you are even when Settings doesn't
+            log_id = (state.get("log_status") or {}).get("my_id")
+            if not client.profile_id and log_id:
+                client.profile_id = int(log_id)
+                prof = client.load_profile()
+                if prof:
+                    print(f"  Profile from the game's log: {prof.get('name')} ({log_id})")
             m = client.current_match() if client.profile_id else None
-            if m and m.game_id != current_id:
+            # The log names the players as soon as a match loads, for every kind of game; aoe4world
+            # adds ratings 20-40 s later for online games. The log is the truth for who's in it.
+            lm = state.get("log_match")
+            log_on = (state.get("log_status") or {}).get("found")
+            if lm:
+                if m and str(m.game_id) == str(lm.game_id):
+                    civs = {p.profile_id: p for p in lm.players}
+                    for p in m.players:
+                        if p.profile_id in civs:
+                            p.civ, p.team = civs[p.profile_id].civ, civs[p.profile_id].team
+                    m.my_team = lm.my_team
+                    m.kind = m.kind if m.kind and m.kind != "?" else lm.kind
+                else:
+                    m = lm
+                    if not m.kind.startswith("custom"):
+                        for p in m.players:              # ratings for the scout, from each profile
+                            client.fill_player(p, m.kind)
+            elif log_on and m and (state.get("log_status") or {}).get("phase") in ("menu", "left"):
+                m = None                                 # aoe4world still says "ongoing" after you left
+            if m:                                        # ranks for every screen that lists players
+                from aoe4world import rank_info
+                ranks = {p.profile_id: rank_info(p.modes, m.kind) for p in m.players if p.profile_id}
+                state.set(player_ranks={k: v for k, v in ranks.items() if v})
+            rated = tuple(p.rating for p in m.players) if m else None
+            if m and (m.game_id != current_id or (rated != scouted_ratings and any(rated or ()))):
+                scouted_ratings = rated
+                new = m.game_id != current_id
                 current_id = m.game_id
-                b = client.briefing(m)
-                state.set(briefing_lines=b.lines, match=m)
-                print("  Match detected:", " | ".join(b.lines))
-                from aoe4world import scouting_report
-                rep = scouting_report(client, m)
-                state.set(scout=rep)
-                for line in rep["summary"] + rep["enemies"]:
-                    print("   ", line)
+                if m.kind.startswith("custom"):          # skirmish or a custom lobby: no ladder stats
+                    from aoe4world import civ_name as _cn
+                    me = next((p for p in m.players if p.team == m.my_team and p.profile_id == client.profile_id), None)
+                    lines = [f"{m.kind.replace('custom_', 'Custom ').upper()} on {m.map}",
+                             "Enemies: " + ", ".join(f"{p.name} ({_cn(p.civ)})" for p in m.enemies())]
+                    state.set(briefing_lines=lines, match=m, scout=None)
+                else:
+                    b = client.briefing(m) if client.profile_id else None
+                    state.set(briefing_lines=b.lines if b else None, match=m)
+                    if new:
+                        print("  Match detected:", " | ".join(b.lines) if b else m.game_id)
+                    from aoe4world import scouting_report
+                    rep = scouting_report(client, m)
+                    state.set(scout=rep)
+                    for line in rep["summary"] + rep["enemies"]:
+                        print("   ", line)
+            elif m and m.game_id == current_id:
+                state.set(match=m)
             elif not m and current_id is not None:
                 current_id = None
-                state.set(briefing_lines=None, match=None, scout=None,
+                scouted_ratings = None
+                state.set(briefing_lines=None, match=None, scout=None, player_ranks=None,
                           match_note="Match over. Waiting for the next one…")
 
             teams = state.get("teams")
@@ -298,7 +344,8 @@ def match_loop(state: AppState, cfg: dict, stop: threading.Event):
                           build_note=f"No build set for {civ_name(my_civ)} yet — add a link in config.json")
         except Exception as e:
             print(f"  [match] {type(e).__name__}: {e}")
-        stop.wait(8)
+        wake.wait(8)                                     # the log watcher wakes this at once
+        wake.clear()
 
 
 def start_hotkey(key: str, callback):

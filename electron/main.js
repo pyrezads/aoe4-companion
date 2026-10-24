@@ -74,6 +74,7 @@ function writeCoreConfig() {
   cfg.aoe4world_profile_id = settings.profileId || 0;
   cfg.cache_dir = path.join(userDir(), 'cache');
   cfg.coach_follow_by = settings.followBy || 'villagers';
+  cfg.game_log_path = settings.gameLogPath || '';            // empty: find it in Documents\My Games
   cfg.army_key = /^[a-z0-9+ ,.;'/\[\]-]{1,40}$/.test(settings.armyKey || '') ? settings.armyKey : 'ctrl+c';
   fs.mkdirSync(userDir(), { recursive: true });
   fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
@@ -106,7 +107,7 @@ function tellCoreMonitor() {
 }
 
 // ── messages ──────────────────────────────────────────────────────────
-const toOverlay = new Set(['build', 'status', 'coach']);   // build first: it resets the overlay's coach view
+const toOverlay = new Set(['build', 'status', 'coach', 'intel', 'gamelog']);   // build first: it resets the overlay's coach view
 // every coach window: the panel, the floating strip, and the strip pinned to the game
 const coachWindows = () => [panel, strip, pinned].filter((w) => w && !w.isDestroyed());
 function broadcast(type, data) {
@@ -134,7 +135,14 @@ function startCore() {
         if (b?.url) core.send({ cmd: 'use_build', url: b.url });
         else if (b?.id) core.send({ cmd: 'use_build', id: b.id, civ: b.civ });
       }
-      if (!['builds', 'build_detail', 'reading_check', 'error', 'games', 'game_detail', 'game_saved', 'matches', 'match_detail', 'replay_saved', 'steam_profile'].includes(type)) latest[type] = data;
+      if (!['builds', 'build_detail', 'reading_check', 'error', 'games', 'game_detail', 'game_saved', 'matches', 'match_detail', 'replay_saved', 'steam_profile', 'gamelog_path'].includes(type)) latest[type] = data;
+      // the game's log says who you are: fill in your profile so nobody has to paste a Steam link
+      if (type === 'gamelog' && data?.my_id && !settings.profileId) {
+        settings.profileId = Number(data.my_id);
+        settings.profileFromLog = true;
+        saveSettings();
+        log.info(`[gamelog] profile ${data.my_id} (${data.my_name}) from the game's log`);
+      }
       if (type === 'status' && data?.game_window) ensurePinned(data.game_window);
       broadcast(type, data);
     },
@@ -401,6 +409,28 @@ ipcMain.handle('app:open-url', (_e, url) => {
   } catch {}
 });
 ipcMain.handle('app:open-logs', () => require('electron').shell.openPath(userDir()));
+// Settings > Game log > Choose…: only if it wasn't found on its own (Documents moved somewhere unusual)
+ipcMain.handle('gamelog:browse', async () => {
+  const { dialog } = require('electron');
+  const docs = app.getPath('documents');
+  const r = await dialog.showOpenDialog(home && !home.isDestroyed() ? home : undefined, {
+    title: 'Find the Age of Empires IV log (warnings.log)',
+    defaultPath: path.join(docs, 'My Games', 'Age of Empires IV'),
+    filters: [{ name: 'Game log', extensions: ['log'] }],
+    properties: ['openFile'],
+  });
+  if (r.canceled || !r.filePaths[0]) return null;
+  settings.gameLogPath = r.filePaths[0];
+  saveSettings();
+  core?.send({ cmd: 'set_log_path', path: settings.gameLogPath });
+  return settings.gameLogPath;
+});
+ipcMain.handle('gamelog:auto', () => {
+  delete settings.gameLogPath;
+  saveSettings();
+  if (core) { writeCoreConfig(); core.restart(); }
+  return true;
+});
 ipcMain.handle('core:send', (_e, cmd) => {
   if (cmd?.cmd === 'use_build') {             // remember it for next time
     settings.build = { id: cmd.id || null, url: cmd.url || null, civ: cmd.civ || null };

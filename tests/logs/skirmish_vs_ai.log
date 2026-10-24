@@ -1,0 +1,14 @@
+RelicCardinal started at 2026-10-23 23:30 [Eastern Daylight Time UTC -05:00]
+(I) [23:30:39.590] [000023980]: GAME -- Current Steam name is [NarkyNarc]
+(I) [23:31:22.262] [000023980]: GetPartyStatsByID found 1 teams for user ID 19013757
+(I) [23:31:34.008] [000023980]: [Match Flow] MatchSetup::StartMatch() - m_matchStatus = ST_STARTING [match type: 52, session id -2]
+(I) [23:31:34.435] [000023980]: GAME -- Scenario: 
+(I) [23:31:34.435] [000023980]: GAME -- Win Condition Name: standard_mode
+(I) [23:31:34.435] [000023980]: GAME -- Human Player: 0 NarkyNarc 19013757 0 ottoman
+(I) [23:31:34.435] [000023980]: GAME -- AI Player: 1 2 A.I. Intermediate -1 1 french
+(I) [23:32:00.963] [000022308]: MapGen -- Generating with biome forest_eastern
+(I) [23:32:00.963] [000022308]: MapGen -- Generating with layout ancient_spires
+(I) [23:32:00.963] [000022308]: MapGen -- Generating with size map_size_416
+(I) [23:32:05.039] [000022308]: Player [] killed on game tick [0] due to [unused player]
+(I) [23:32:12.758] [000023980]: GAME -- Starting mission: 
+(I) [23:39:25.010] [000023980]: Local user framerate is [150.0]
