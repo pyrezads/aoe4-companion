@@ -502,6 +502,10 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .lv-start{padding:10px 12px;border-radius:14px;background:linear-gradient(140deg,rgba(131,193,94,.3),rgba(131,193,94,.08));border:1px solid rgba(131,193,94,.45);font-size:14px;animation:rise .5s cubic-bezier(.2,1.3,.4,1) both}
 .lv-start[hidden]{display:none}
 .lv-start b{display:block;font:700 18px var(--display);color:var(--green)}
+.sc-row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.sc{display:inline-flex;align-items:center;gap:4px;padding:3px 10px 3px 5px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);font-size:13.5px}
+.sc b{display:inline;font:700 16px var(--display);color:var(--ink)}
+.sc-t{display:block;color:rgba(255,255,255,.85)}
 .lv-next{display:flex;align-items:center;gap:14px}
 .lv-badge{width:58px;height:58px}
 .ri.big{width:26px;height:26px;vertical-align:-7px}
@@ -554,6 +558,14 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .vclose:hover{background:rgba(255,255,255,.14)}
 .vframe{aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 .vframe iframe{width:100%;height:100%;border:0;display:block}
+
+.keycap{font:600 13px var(--body);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-bottom-width:2px;border-radius:8px;padding:3px 11px;color:var(--ink);cursor:pointer}
+.keycap:hover{background:rgba(255,255,255,.14)}
+.keycap.listening{border-color:var(--teal-hi);color:var(--teal-hi);animation:livedot 1.2s ease-in-out infinite}
+/* correct a civ the player list misread */
+.civ.fix{cursor:pointer}
+.civ.fix:hover{border-color:rgba(255,255,255,.3)!important}
+.civ select{background:transparent;border:0;color:var(--ink);font:600 13.5px var(--body);padding:0 2px;max-width:170px}
 </style>
 </head>
 <body>
@@ -659,7 +671,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
           </div>
           <div class="live" id="live" aria-live="polite" aria-label="Live coach">
             <div class="lv-top"><span class="lv-tag" id="lvTag">Preview</span><span class="lv-clock" id="lvClock">3:42</span><span class="pace on" id="lvPace">On pace</span></div>
-            <div class="lv-start" id="lvStart" hidden><b>Game on</b><span id="lvStartX"></span></div>
+            <div class="lv-start" id="lvStart" hidden></div>
             <div class="lv-next" id="lvNext"><span class="lv-badge res-badge" id="lvBadge"><img id="lvImg" src="img/res/wood.webp" alt=""></span>
               <div><small>Next villager to</small><b id="lvWord">Wood</b></div><span class="lv-then" id="lvThen"></span></div>
             <div class="lv-alert" id="lvAlert" hidden></div>
@@ -844,7 +856,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
     <!-- ════════ ARMY AND COUNTERS ════════ -->
     <section class="view" id="v-army" aria-label="Army and counters">
       <div class="top">
-        <div><h1>Army and counters</h1><p class="sub">Press your "select all military" key (Ctrl+C) in game to read your army.</p></div>
+        <div><h1>Army and counters</h1><p class="sub">Press your "select all military" key (<span class="armyKeyName">Ctrl + C</span>) in game to read your army.</p></div>
       </div>
       <div class="two-even">
         <div class="panel"><h3 class="ph3">Your army</h3><ul class="lines" id="arArmy"></ul></div>
@@ -901,8 +913,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
           <div>
             <div class="row2">
               <div class="field"><span class="lab">On the game screen</span>
-                <div class="sel"><select id="stripPos"><option value="top">Small strip, top centre</option><option value="left">Small strip, top left</option><option value="off">Off</option></select></div>
-                <span class="hint">It sticks to the game window and hides when you Alt-Tab away.</span></div>
+                <div class="sel"><select id="stripPos"><option value="widget">Coach widget (drag it, − to collapse)</option><option value="top">Small bar, top centre</option><option value="left">Small bar, top left</option><option value="off">Off</option></select></div>
+                <span class="hint">It sticks to the game window and hides when you Alt-Tab away. Clicks go through to the game except on the widget.</span></div>
               <div class="field"><span class="lab">On the second monitor</span>
                 <div class="sel"><select id="panelMode"><option value="off">Off (the coach is on the Home tab)</option><option value="on">Floating coach panel</option></select></div></div>
             </div>
@@ -925,7 +937,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
         <div class="set">
           <div><h3>Hotkeys</h3><p class="why">The game still receives these keys. The companion only listens.</p></div>
           <div class="keys">
-            <div class="key">Read my army (your "select all military" key)<kbd>Ctrl + C</kbd></div>
+            <div class="key">Read my army: your game's "select all military" key<button class="keycap" id="armyKey" title="Click, then press the key you use in the game">Ctrl + C</button></div>
             <div class="key">Mark the selected units as enemy<kbd>F9</kbd></div>
             <div class="key">Skip to the next build step<kbd>F10</kbd></div>
           </div>
@@ -936,6 +948,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 </div>
 
 <script>
+let armyKeyLabel = 'Ctrl + C';        // your game's "select all military" key (Settings > Hotkeys)
 const views = {home:'v-home', coach:'v-coach', analyst:'v-analyst', scout:'v-scout', army:'v-army', review:'v-review', history:'v-history', settings:'v-settings'};
 function go(name){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === views[name]));
@@ -1329,8 +1342,8 @@ function renderLive(c, preview){
   if (preview) { lv.startSeen = false; lv.secs = null; }
   if (secs != null && lv.secs != null && secs + 30 < lv.secs) lv.startSeen = false;
   if (secs != null && !preview) lv.secs = secs;
-  if (!preview && secs != null && secs <= 25 && !lv.startSeen) { lv.startSeen = true; lv.startUntil = 25; $('lvStartX').textContent = `Your first ${c.villagers} villagers: ${startLine(c)}.`; }
-  $('lvStart').hidden = preview || !(secs != null && secs <= lv.startUntil);
+  if (!preview && secs != null && secs <= 60 && !lv.startSeen) { lv.startSeen = true; lv.startVils = c.villagers; lv.startUntil = secs + 120; $('lvStart').innerHTML = startCard(c); }
+  $('lvStart').hidden = preview || !(lv.startSeen && secs != null && secs <= lv.startUntil && c.villagers <= lv.startVils);
   const al = $('lvAlert');
   al.hidden = !c.idle;
   al.textContent = c.idle ? `${c.idle} idle villager${c.idle > 1 ? 's' : ''}: send ${c.idle > 1 ? 'them' : 'it'} to ${[...new Set(c.idle_to && c.idle_to.length ? c.idle_to : [r])].join(' and ')}` : '';
@@ -1426,12 +1439,13 @@ function renderAnalyst(){
   document.getElementById('anAlerts').innerHTML = live ? li((s.alerts || []).map(a => [a.text, a.level]), 'All good.')
     : li([], 'Waiting for the game. Start a match in Borderless Windowed.');
   const t = T.teams;
-  const civ = p => `<span class="civ">${p.civ ? `<img class="fl xs" src="img/flags/${esc(p.civ)}.png" alt="" onerror="this.remove()">` : ''}<span class="age">${AGE[p.age] || '?'}</span>${esc(p.civ ? civName(p.civ) : 'Unknown')}</span>`;
+  const civ = p => `<span class="civ${p.row != null ? ' fix' : ''}" ${p.row != null ? `data-row="${p.row}" data-civ="${esc(p.civ || '')}" title="Wrong civ? Click to correct it"` : ''}>${p.civ ? `<img class="fl xs" src="img/flags/${esc(p.civ)}.png" alt="" onerror="this.remove()">` : ''}<span class="age">${AGE[p.age] || '?'}</span>${esc(p.civ ? civName(p.civ) : 'Unknown')}</span>`;
   document.getElementById('anTeams').innerHTML = t && t.me ? `
     <div class="team"><span class="who">You</span>${civ(t.me)}</div>
     ${t.allies.length ? `<div class="team"><span class="who">Allies</span>${t.allies.map(civ).join('')}</div>` : ''}
     <div class="team enemies"><span class="who">Enemies</span>${t.enemies.map(civ).join('') || '<span class="hint">not read yet</span>'}</div>`
     : '<p class="hint" style="margin:0;color:var(--muted)">Read from the player list at the top right once a game starts.</p>';
+  if (t && t.me) document.getElementById('anTeams').insertAdjacentHTML('beforeend', '<p class="hint" style="margin:10px 0 0;color:var(--muted);font-size:12.5px">Wrong civ? Click it to correct it. The coach, counters and army reading use the corrected one.</p>');
   const st = T.status;
   document.getElementById('anRead').textContent = st && st.read_quality != null
     ? `Reading ${Math.round(st.read_quality * 100)}% of the HUD` + (st.missed && st.missed.length && st.live ? ` (missed: ${st.missed.slice(0, 3).join(', ')})` : '') : '';
@@ -1462,7 +1476,7 @@ function renderArmy(){
   const a = T.army && T.army.lines, ad = T.advice || {};
   setPop(document.getElementById('arArmy'), a && a.length
     ? a.map((t, i) => i === 1 && unitChips(t) ? `<li class="chips-row">${unitChips(t)}</li>` : liIcons([[t, i < 2 ? (i ? '' : 'head') : t.startsWith('Lost') ? 'bad' : 'muted']])).join('')
-    : li([], 'Press Ctrl+C (select all military) in game to read your army.'));
+    : li([], `Press ${armyKeyLabel} (select all military) in game to read your army.`));
   setPop(document.getElementById('arEnemy'), (ad.enemy || []).length ? ad.enemy.map(t => {
       const seen = /^Seen: (.*)$/.exec(t), its = seen ? seen[1].split(/,\s*/).map(n => [n, GameIcons.byName(n) || GameIcons.find(n, 1)[0]]) : null;
       return its && its.every(x => x[1]) ? `<li class="chips-row"><span class="chips-lab">Seen</span>${its.map(([n, it]) => `<span class="uchip enemy">${GameIcons.html(it, 'md')}<span><b>${esc(n)}</b></span></span>`).join('')}</li>` : liIcons([[t, 'head']]);
@@ -1474,6 +1488,17 @@ function renderArmy(){
     }).join('') : li([], 'Shown after your first Ctrl+C.'));
 }
 document.getElementById('openLogs').addEventListener('click', () => inApp && window.app.openLogs());
+// correct a civ the player list misread: the chip turns into a list of civs
+document.getElementById('anTeams').addEventListener('click', e => {
+  const chip = e.target.closest('.civ.fix');
+  if (!chip || chip.querySelector('select')) return;
+  const opts = [...document.querySelectorAll('#civ option')].map(o => `<option value="${o.value}" ${o.value === chip.dataset.civ ? 'selected' : ''}>${esc(o.textContent)}</option>`).join('');
+  chip.innerHTML = `<select aria-label="Correct this civ">${chip.dataset.civ ? '' : '<option value="">Pick a civ</option>'}${opts}</select>`;
+  const sel = chip.querySelector('select');
+  sel.focus();
+  sel.addEventListener('change', () => { if (sel.value && inApp) window.app.send({cmd: 'set_civ', row: +chip.dataset.row, civ: sel.value}); });
+  sel.addEventListener('blur', () => setTimeout(renderAnalyst, 150));
+});
 document.getElementById('pinBtn').addEventListener('click', () => inApp && window.app.send({cmd: 'pin'}));
 
 if (!inApp) {      // browser preview: a sample game so the pages aren't empty
@@ -1493,6 +1518,27 @@ if (!inApp) {      // browser preview: a sample game so the pages aren't empty
     advice: [['even', 'Your army vs an equal-size army of those: close fight, slight edge to you'], ['info', 'Best counters for you: Spearman, Crossbowman'], ['info', 'Add ~10 Spearman to be safe. Two buildings non-stop need about 6 on food, 3 on wood.']],
     upgrades: ['Bloomery (Blacksmith, Feudal) · helps 30 units', 'Fitted Leatherwork (Blacksmith, Feudal) · helps 12 units']});
 }
+
+// ── The army key: whatever the player uses in game for "select all military"
+const keyLabel = k => k.split('+').map(p => p.length === 1 ? p.toUpperCase() : p[0].toUpperCase() + p.slice(1)).join(' + ');
+function showArmyKey(k){ armyKeyLabel = keyLabel(k); document.getElementById('armyKey').textContent = armyKeyLabel; document.querySelectorAll('.armyKeyName').forEach(e => e.textContent = armyKeyLabel); }
+const armyBtn = document.getElementById('armyKey');
+armyBtn.addEventListener('click', () => { armyBtn.classList.add('listening'); armyBtn.textContent = 'Press your key…'; armyBtn.focus(); });
+armyBtn.addEventListener('blur', () => { if (armyBtn.classList.contains('listening')) { armyBtn.classList.remove('listening'); showArmyKey(armyKeyLabel.toLowerCase().replace(/ \+ /g, '+')); } });
+armyBtn.addEventListener('keydown', e => {
+  if (!armyBtn.classList.contains('listening')) return;
+  e.preventDefault();
+  if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;          // wait for the real key
+  if (e.key === 'Escape') return armyBtn.blur();
+  const named = {' ': 'space', ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Enter: 'enter', Tab: 'tab'};
+  const key = (named[e.key] || (/^F\d+$/.test(e.key) ? e.key : e.key.length === 1 ? e.key : null) || '').toLowerCase();
+  if (!key) return;
+  const combo = [e.ctrlKey && 'ctrl', e.altKey && 'alt', e.shiftKey && 'shift', key].filter(Boolean).join('+');
+  armyBtn.classList.remove('listening');
+  showArmyKey(combo);
+  if (inApp) window.app.setSettings({armyKey: combo});
+  armyBtn.blur();
+});
 
 // ── Overlay settings
 const stripPos = document.getElementById('stripPos'), panelMode = document.getElementById('panelMode'), opIn = document.getElementById('op');
@@ -1559,13 +1605,24 @@ function startLine(c){
   const split = Object.entries(c.want || {}).filter(([, n]) => n > 0).map(([r, n]) => `${n} on ${RES_WORD[r]}`).join(', ');
   return t || (split ? `Put ${split}` : 'Send them to food');
 }
-// which recorded opening fits the build's first step
-function startClip(c){
+// the opening: where the starting villagers go, from the build's first step
+// the build's own first step ("6 on sheep"), not the step after it that the coach is working toward
+const startSplit = c => { const t = (c.step && c.step.targets) || c.want || {}; return ['food', 'wood', 'gold', 'stone'].filter(r => t[r] > 0).map(r => ({r, n: t[r]})); };
+function startHint(c){
   const t = ((c.step && c.step.text) || '') + ' ' + ((c.step && c.step.icons) || []).map(i => i.title + ' ' + i.src).join(' ');
-  if (/sheep/i.test(t)) return 'start_sheep';
-  if (/berr/i.test(t)) return 'start_berries';
-  const top = Object.entries(c.want || {}).sort((a, b) => b[1] - a[1])[0];
-  return top && top[1] > 0 ? 'start_' + top[0] : 'start';
+  return /sheep/i.test(t) ? 'sheep' : /berr/i.test(t) ? 'berries' : null;
+}
+function startClips(c){
+  const split = startSplit(c), hint = startHint(c);
+  if (split.length > 1) return ['start', 'start_split'];
+  if (split.length === 1 && split[0].r === 'food' && hint) return ['start_' + hint];
+  return [split.length ? 'start_' + split[0].r : 'start'];
+}
+// "6 → Food (sheep) · 0 → Wood": the card that stays up until your first new villager
+function startCard(c){
+  const hint = startHint(c);
+  const chips = startSplit(c).map(({r, n}) => `<span class="sc"><img class="ri" src="img/res/${r}.webp" alt=""><b>${n}</b> to ${RES_WORD[r]}${r === 'food' && hint ? ` (${hint})` : ''}</span>`).join('');
+  return `<b>Let's begin</b><div class="sc-row">${chips || ''}</div><span class="sc-t">${esc(startLine(c))}${/scout/i.test(startLine(c)) || !hint ? '' : '. Send your scout to find more sheep'}.</span>`;
 }
 function voiceCoach(c){
   if (!c) return;
@@ -1573,9 +1630,10 @@ function voiceCoach(c){
   if (secs != null && v.lastSecs != null && secs + 30 < v.lastSecs) Object.assign(v, {startSaid: false, step: null, next: null, ageSaid: {}, done: false});
   if (secs != null) v.lastSecs = secs;
   // game start: one clear opening, then quiet for a few seconds
-  if (secs != null && secs <= 25 && !v.startSaid) {
-    v.startSaid = true; v.startAt = now; v.next = c.next.resource;
-    speak(startClip(c), 4, {ttl: 20});
+  if (secs != null && secs <= 60 && !v.startSaid) {
+    v.startSaid = true; v.startAt = now; v.next = c.next.resource; v.step = c.step && c.step.index;
+    startClips(c).forEach((clip, i) => speak(clip, 4 - i * 0.1, {ttl: 25}));
+    for (const a of GameIcons.actions(c.step)) speak('do/' + a.it.id, 3, {ttl: 25, key: 'do_' + a.it.id});   // what the first step builds
   }
   const settling = now - v.startAt < 9000;
   // a new build step: what it asks you to build, research or train
@@ -2255,9 +2313,10 @@ document.getElementById('setupDone').addEventListener('click', async () => {
   acct.profileId = s.profileId || null; acct.steam = s.steam || null;
   if (s.steam) document.getElementById('steam').value = `https://steamcommunity.com/profiles/${s.steam}`;
   if (s.followBy) document.getElementById('followBy').value = s.followBy;
-  if (s.overlay) { stripPos.value = s.overlay.strip || 'top'; panelMode.value = s.overlay.panel || 'off'; opIn.value = s.overlay.opacity || 88; }
+  if (s.overlay) { stripPos.value = s.overlay.strip || 'widget'; panelMode.value = s.overlay.panel || 'off'; opIn.value = s.overlay.opacity || 88; }
   if (s.voice) { Object.assign(voice, {on: !!s.voice.on, volume: s.voice.volume || 80, readSteps: !!s.voice.readSteps}); vOn.checked = voice.on; vSteps.checked = voice.readSteps; vVol.value = voice.volume; }
   if (s.auto === false) autoPick.checked = false;
+  if (s.armyKey) showArmyKey(s.armyKey);
   if (s.build && s.build.civ) civSel.value = s.build.civ;
   if (!s.setupDone) { await loadDisplays(); setup.hidden = false; setupStep(1); document.getElementById('setupPid').focus(); }
 })();

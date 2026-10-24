@@ -284,6 +284,11 @@ class TeamTracker:
                     self.pending.pop(r.index, None)
         return events
 
+    def set_civ(self, i: int, civ: str) -> None:
+        """You corrected a row's civ in the app: it wins over what the flag reads."""
+        self.votes.setdefault(i, {})
+        self.votes[i][civ] = self.votes[i].get(civ, 0) + 100000
+
     def civ(self, i: int) -> Optional[str]:
         v = self.votes.get(i)
         return max(v, key=v.get) if v else None
@@ -297,7 +302,7 @@ class TeamTracker:
         me = self.me
         return {
             "mode": {2: "rm_1v1", 4: "rm_2v2", 6: "rm_3v3", 8: "rm_4v4"}.get(self.n_rows),
-            "me": {"civ": self.civ(me), "age": self.ages.get(me)} if me is not None else None,
-            "allies": [{"civ": self.civ(i), "age": self.ages.get(i)} for i in rows if i != me and not self.is_enemy(i)],
-            "enemies": [{"civ": self.civ(i), "age": self.ages.get(i)} for i in rows if self.is_enemy(i)],
+            "me": {"civ": self.civ(me), "age": self.ages.get(me), "row": me} if me is not None else None,
+            "allies": [{"civ": self.civ(i), "age": self.ages.get(i), "row": i} for i in rows if i != me and not self.is_enemy(i)],
+            "enemies": [{"civ": self.civ(i), "age": self.ages.get(i), "row": i} for i in rows if self.is_enemy(i)],
         }

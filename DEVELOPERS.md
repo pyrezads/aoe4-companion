@@ -87,6 +87,16 @@ core.py            core mode: no window; messages and commands are documented at
 - Every coach window gets every live message (`coachWindows()` in main.js: panel, floating strip and the
   pinned strip). The whole-app test checks the pinned strip shows a live call on Windows.
 - The live coach is on the Home tab (`renderLive` in home.html); the floating panel is optional (off by default).
+- Over the game (setting "Coach widget", default): the pinned window shows the whole coach panel (`body.widget`
+  in overlay.html), scaled to the game's height, draggable by its header, collapsible to one line (−/+).
+  The window lets clicks through except on the widget: the page reports pointer enter/leave
+  (`overlay:mouse`), main toggles `setIgnoreMouseEvents(!inside, {forward: true})`, and the window is not
+  focusable so clicks never take the keyboard from the game. Position/collapsed: `settings.overlay.widget`.
+- Game start (first minute): "Let's begin" card with the build's first step split (`step.targets`), spoken
+  opening + the first step's actions; stays up until your first new villager.
+- Player list: core.log logs each row's civ, flag score and side when it changes, and one crop per game is
+  saved to calibration/players-*.png. A misread civ can be corrected on Live analyst (`set_civ`).
+- Army key: Settings > Hotkeys records the player's own "select all military" key (`armyKey` -> `army_key`).
 - Steps become actions with `GameIcons.actions(step)`: "Build a Mining Camp · 1 villager", "Research
   Wheelbarrow", "Train a Scout" (verb from the item's kind). A new step with an action is called out for 8 s.
 - Spoken calls, all recorded ahead of time in one voice (`tools/make_voice.py`, Kokoro-82M, Apache 2.0,

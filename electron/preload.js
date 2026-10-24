@@ -42,4 +42,7 @@ contextBridge.exposeInMainWorld('coach', {
   demo,
   onMessage: onMsg,
   onSettings: (cb) => ipcRenderer.on('overlay:settings', (_e, s) => cb(s)),
+  // the widget over the game: it takes the mouse only while the pointer is on it
+  mouse: (inside) => ipcRenderer.send('overlay:mouse', !!inside),
+  saveWidget: (w) => ipcRenderer.send('overlay:widget', w),
 });

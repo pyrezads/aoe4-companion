@@ -97,10 +97,13 @@ class Analyst:
 
         if snap.live and now - self.last_sb >= 3:
             self.last_sb = now
-            for ev in self.teams.update(self.sbr.read(frame), snap.clock):
+            sb = self.sbr.read(frame)
+            for ev in self.teams.update(sb, snap.clock):
                 self.team_events.append((now, ev))
                 print(f"  [{snap.clock}] {ev}")
-            self.state.set(teams=self.teams.summary())
+            summary = self.teams.summary()
+            self._log_teams(sb, summary, frame, snap.clock)
+            self.state.set(teams=summary)
         self.team_events = [(t, e) for t, e in self.team_events if now - t < 45]
         alerts += [("warn", e) for _, e in self.team_events if e.startswith("Enemy")][:3]
 
@@ -129,6 +132,31 @@ class Analyst:
         self.recorder.update(snap, now, coach=self.state.get("coach") if snap.live else None,
                              teams=self.teams.summary(), build=self.state.get("build"), match=self.state.get("match"))
 
+    def _log_teams(self, sb, summary, frame, clock) -> None:
+        """What the player list read, in core.log when it changes, and one picture of it per game
+        (calibration/players-*.png), so a wrong civ or side can be tracked down."""
+        key = (summary.get("me") or {}).get("civ"), tuple(e.get("civ") for e in summary.get("enemies", [])), tuple(
+            a.get("civ") for a in summary.get("allies", []))
+        if key == getattr(self, "_teams_key", None) or not sb.rows:
+            return
+        self._teams_key = key
+        rows = "; ".join(f"row {r.index}: {r.civ or '?'} ({r.civ_score:.2f}){' swords' if r.enemy else ''}" for r in sb.rows)
+        print(f"  [{clock}] player list: {rows} | you: row {sb.me} -> me {key[0]}, enemies {list(key[1])}, allies {list(key[2])}")
+        if not getattr(self, "_teams_pic", False):
+            self._teams_pic = True
+            try:
+                import pathlib
+                from PIL import Image
+                import numpy as np
+                h, w = frame.shape[:2]
+                k = h / 1440
+                crop = frame[int(380 * k):int(820 * k), max(0, w - int(640 * k)):w]
+                base = pathlib.Path(self.games_dir).parent / "calibration"
+                base.mkdir(parents=True, exist_ok=True)
+                Image.fromarray(np.clip(crop, 0, 255).astype("uint8")).save(base / f"players-{w}x{h}-{int(time.time())}.png")
+            except Exception as e:
+                print(f"  [teams] couldn't save the player list picture: {e}")
+
     def _game_saved(self, row: dict) -> None:
         emit = self.state.get("emit")
         if emit:
@@ -140,6 +168,7 @@ class Analyst:
         self.my_army = []
         self.enemy_seen.clear()
         self.team_events.clear()
+        self._teams_key, self._teams_pic = None, False
         if self.coach:
             self.coach.reset()
         self.state.set(coach=None, army_lines=None, enemy_lines=None, advice_lines=None, upgrade_lines=None, teams=None)
@@ -154,6 +183,11 @@ class Analyst:
         self.last_army_key = time.time()
         h = self.hud.read(frame)
         if h.confidence < 0.6 or not h.selection_total:
+            why = (f"couldn't read the screen ({h.confidence:.0%} of the HUD)" if h.confidence < 0.6
+                   else "no selection showing at the bottom of the screen")
+            print(f"  [army] key pressed, {why}")
+            self.state.set(army_lines=[f"{h.clock or '--:--'}  Army key pressed, but {why}.",
+                                       "Is your game's \"select all military\" key the one set in Settings > Hotkeys?"])
             return
         civ = self.my_civ()
         age = self.my_age()

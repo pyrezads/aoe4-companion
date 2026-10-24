@@ -49,8 +49,8 @@ const latest = {};            // last message of each type from the core, for wi
 // ── settings (kept in the app's own folder, e.g. %APPDATA%/AoE4 Coach) ──
 const userDir = () => app.getPath('userData');
 const settingsPath = () => path.join(userDir(), 'settings.json');
-let settings = { v: 2, setupDone: false, profileId: null, gameDisplayId: null, build: null, auto: true, followBy: 'villagers',
-  overlay: { strip: 'top', panel: 'off', opacity: 88 }, voice: { on: false, volume: 80, readSteps: false } };
+let settings = { v: 3, setupDone: false, profileId: null, gameDisplayId: null, build: null, auto: true, followBy: 'villagers',
+  overlay: { strip: 'widget', panel: 'off', opacity: 92, widget: { x: 0.012, y: 0.13, collapsed: false } }, voice: { on: false, volume: 80, readSteps: false } };
 
 function loadSettings() {
   try {
@@ -58,6 +58,8 @@ function loadSettings() {
     settings = { ...settings, ...saved, overlay: { ...settings.overlay, ...saved.overlay }, voice: { ...settings.voice, ...saved.voice } };
     // 0.1.2: the live coach moved onto the Home tab, so the floating panel starts off (it's still in Settings)
     if (!saved.v || saved.v < 2) { settings.overlay.panel = 'off'; settings.v = 2; saveSettings(); }
+    // 0.1.3: the full coach widget goes over the game instead of the small bar
+    if (settings.v < 3) { if (settings.overlay.strip === 'top') settings.overlay.strip = 'widget'; settings.v = 3; saveSettings(); }
   } catch {}
 }
 function saveSettings() {
@@ -72,6 +74,7 @@ function writeCoreConfig() {
   cfg.aoe4world_profile_id = settings.profileId || 0;
   cfg.cache_dir = path.join(userDir(), 'cache');
   cfg.coach_follow_by = settings.followBy || 'villagers';
+  cfg.army_key = /^[a-z0-9+ ,.;'/\[\]-]{1,40}$/.test(settings.armyKey || '') ? settings.armyKey : 'ctrl+c';
   fs.mkdirSync(userDir(), { recursive: true });
   fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
   return p;
@@ -281,7 +284,12 @@ if (process.platform === 'win32') {
 function ensurePinned(gameWindow) {
   if (!OverlayController || pinned || !gameWindow?.title) return;
   pinned = new BrowserWindow({ ...OVERLAY_OPTS, title: 'AoE4 Coach strip', webPreferences: webPreferences(coreState().demo) });
-  pinned.setIgnoreMouseEvents(true);
+  pinned.setFocusable(false);                      // clicking the widget never takes the keyboard from the game
+  pinned.setIgnoreMouseEvents(true, { forward: true });
+  // the add-on turns mouse pass-through back on when the game gets focus; keep the pointer moves coming
+  const passThrough = () => setTimeout(() => pinned && !pinned.isDestroyed() && pinned.setIgnoreMouseEvents(true, { forward: true }), 0);
+  OverlayController.events.on('focus', passThrough);
+  OverlayController.events.on('attach', passThrough);
   pinned.loadFile(page('overlay.html'), { query: { mode: 'strip', pinned: '1' } });
   pinned.webContents.on('did-finish-load', () => {
     for (const t of toOverlay) if (latest[t] !== undefined) pinned.webContents.send('core:msg', t, latest[t]);
@@ -304,7 +312,8 @@ function ensurePinned(gameWindow) {
 
 let coachOpen = false;
 function overlaySettingsFor() {
-  return { active: coachOpen && settings.overlay.strip !== 'off', position: settings.overlay.strip, opacity: settings.overlay.opacity };
+  return { active: coachOpen && settings.overlay.strip !== 'off', position: settings.overlay.strip, opacity: settings.overlay.opacity,
+    widget: settings.overlay.widget };
 }
 function sendOverlaySettings() {
   const o = overlaySettingsFor();
@@ -371,6 +380,17 @@ ipcMain.handle('coach:toggle', () => {
   return coachOpen;
 });
 ipcMain.handle('core:state', () => coreState());
+// the widget over the game: take the mouse while the pointer is on it, otherwise let clicks through to the game
+ipcMain.on('overlay:mouse', (e, inside) => {
+  const w = BrowserWindow.fromWebContents(e.sender);
+  if (w && w === pinned && !w.isDestroyed()) w.setIgnoreMouseEvents(!inside, { forward: true });
+});
+ipcMain.on('overlay:widget', (_e, w) => {
+  if (!w || typeof w !== 'object') return;
+  const n = (v, lo, hi) => Math.min(hi, Math.max(lo, Number(v) || 0));
+  settings.overlay.widget = { x: n(w.x, 0, 0.95), y: n(w.y, 0, 0.95), collapsed: !!w.collapsed };
+  saveSettings();
+});
 ipcMain.handle('app:version', () => app.getVersion());
 // Links from build details open in the normal browser (only these sites).
 ipcMain.handle('app:open-url', (_e, url) => {
@@ -395,7 +415,7 @@ ipcMain.handle('core:send', (_e, cmd) => {
 });
 ipcMain.handle('settings:get', () => ({ ...settings }));
 ipcMain.handle('settings:set', (_e, patch) => {
-  const before = [settings.profileId, settings.followBy];
+  const before = [settings.profileId, settings.followBy, settings.armyKey];
   settings = { ...settings, ...patch,
     overlay: { ...settings.overlay, ...(patch.overlay || {}) }, voice: { ...settings.voice, ...(patch.voice || {}) } };
   saveSettings();
@@ -406,7 +426,7 @@ ipcMain.handle('settings:set', (_e, patch) => {
     else sendOverlaySettings();
   }
   if (patch.openAtLogin !== undefined && app.isPackaged) app.setLoginItemSettings({ openAtLogin: !!patch.openAtLogin });
-  if (core && (settings.profileId !== before[0] || settings.followBy !== before[1])) {   // restart the core with them
+  if (core && (settings.profileId !== before[0] || settings.followBy !== before[1] || settings.armyKey !== before[2])) {   // restart the core with them
     writeCoreConfig();
     for (const k of Object.keys(latest)) delete latest[k];
     core.restart();

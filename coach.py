@@ -186,7 +186,7 @@ class Coach:
             "next": {"resource": nxt, "then": then},
             "short": short,
             "step": {"text": step.text, "at": _clock(step.seconds), "villagers": step.villagers, "index": step.index,
-                     "icons": step.icons or [], "builders": step.builders or 0},
+                     "icons": step.icons or [], "builders": step.builders or 0, "targets": dict(step.targets)},
             "upcoming": ({"text": upcoming.text, "at": _clock(upcoming.seconds), "villagers": upcoming.villagers,
                           "icons": upcoming.icons or []}
                          if upcoming else None),

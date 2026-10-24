@@ -110,8 +110,14 @@ app.whenReady().then(async () => {
         check(pinned, 'strip pinned to the game window');
         check(await until(() => !BrowserWindow.getAllWindows().some((w) => /mode=strip$/.test(w.webContents.getURL())), 15000), 'floating strip replaced by the pinned one');
         const shown = pinned && await until(() => pinned.webContents.executeJavaScript(
-          "!document.body.classList.contains('waiting') && getComputedStyle(document.getElementById('strip')).visibility === 'visible' && /^\\d+$/.test(document.getElementById('sv').textContent) && document.getElementById('sv').textContent !== '7'"), 15000);
-        check(shown, 'pinned strip shows the live villager call');
+          "document.body.classList.contains('widget') && !document.body.classList.contains('waiting') && getComputedStyle(document.getElementById('pvPanel')).display !== 'none' && /^\\d+$/.test(document.getElementById('sv').textContent) && document.getElementById('sv').textContent !== '7'"), 15000);
+        check(shown, 'coach widget over the game shows the live villager call');
+        await pinned.webContents.executeJavaScript("document.getElementById('wMin').click()");
+        check(await until(() => pinned.webContents.executeJavaScript("document.body.classList.contains('collapsed') && getComputedStyle(document.getElementById('cbar')).display === 'flex'")), 'widget collapses to one line');
+        await wait(400);
+        const saved = JSON.parse(fs.readFileSync(path.join(ud, 'settings.json'), 'utf8'));
+        check(saved.overlay.widget && saved.overlay.widget.collapsed === true, 'collapsed state remembered');
+        await pinned.webContents.executeJavaScript("document.getElementById('wMin').click()");
       } finally { game.kill(); }
     }
 
@@ -148,6 +154,12 @@ app.whenReady().then(async () => {
     check(await js("document.querySelectorAll('#hxList .hx-row').length === 1"), 'match history: filters');
     await js("document.querySelector('.nav[data-go=settings]').click(); document.getElementById('steam').value = 'https://steamcommunity.com/id/someone'; document.getElementById('steamFind').click()");
     check(await until(() => js("document.getElementById('steamHint').textContent.includes('custom Steam link')")), 'settings: custom Steam links explained');
+    // your game's "select all military" key: click, press it, saved and passed to the screen reader
+    await js("document.getElementById('armyKey').click(); document.getElementById('armyKey').dispatchEvent(new KeyboardEvent('keydown', {key: 'm', ctrlKey: true, bubbles: true}))");
+    await wait(500);
+    const s2 = JSON.parse(fs.readFileSync(path.join(ud, 'settings.json'), 'utf8'));
+    const cfg2 = JSON.parse(fs.readFileSync(path.join(ud, 'config.json'), 'utf8'));
+    check(s2.armyKey === 'ctrl+m' && cfg2.army_key === 'ctrl+m' && await js("document.getElementById('armyKey').textContent === 'Ctrl + M'"), 'army key set from Settings');
   } catch (e) {
     check(false, 'crashed: ' + (e && e.stack || e));
   }

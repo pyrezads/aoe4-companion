@@ -329,6 +329,14 @@ class Commands:
         if req:
             req.set()
 
+    def do_set_civ(self, msg):
+        """Correct a player's civ (the row in the player list) when the flag was misread."""
+        an = self.state.get("analyst")
+        if an and msg.get("civ"):
+            an.teams.set_civ(int(msg.get("row", -1)), str(msg["civ"]))
+            self.state.set(teams=an.teams.summary())
+            print(f"  [teams] row {msg.get('row')} corrected to {msg['civ']}")
+
     def do_reading_check(self, msg):
         self.state.set(check_request=True)          # the reader thread answers on its next frame
 

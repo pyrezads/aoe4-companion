@@ -30,14 +30,14 @@ body:not(.preview) .gameshot{display:contents}
 body:not(.preview) .gameshot::after{display:none}
 body:not(.preview) .gameshot .strip{position:static;transform:none}
 body.mode-panel{padding:10px}
-body.mode-panel .pv:last-child{display:none}
+body.mode-panel #pvStrip{display:none}
 body.mode-strip{display:flex;justify-content:center;padding-top:4px;overflow:hidden}
 /* pinned over the game window: the page is as big as the game */
 body.pinned{padding-top:max(6px, 0.6vh)}
 body.mode-strip.pos-left{justify-content:flex-start;padding-left:16px}
 body.inactive .strip{display:none}
 .strip{opacity:var(--strip-opacity,.88)}
-body.mode-strip .pv:first-child{display:none}
+body.mode-strip #pvPanel{display:none}
 .ph{-webkit-app-region:drag}   /* drag the panel by its header */
 
 /* ── panel (second monitor) ──────────────────────────── */
@@ -47,7 +47,7 @@ body.mode-strip .panel{display:none}
 .ph .t{font-weight:700;font-size:14px;max-width:26ch}
 .ph .c{color:var(--muted);font-size:13px}
 .clock{font:600 32px/1 var(--display);text-align:right}
-.pace{display:inline-block;font-size:12px;font-weight:700;margin-top:6px;padding:2px 10px;border-radius:999px;color:#111}
+.pace{display:inline-block;white-space:nowrap;font-size:12px;font-weight:700;margin-top:6px;padding:2px 10px;border-radius:999px;color:#111}
 .pace.behind{background:var(--orange)} .pace.ahead{background:var(--green)} .pace.on{background:var(--card-2);color:var(--muted)}
 .ph>div:last-child{text-align:right}
 
@@ -173,11 +173,41 @@ body.callout .strip .k .gi{width:34px;height:34px;animation:gipop .5s cubic-bezi
 .start[hidden]{display:none}
 .start .st-t{font:700 22px/1.1 var(--display);color:var(--green)}
 .start .st-x{font-size:15px;margin-top:4px}
+.sc-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.sc{display:inline-flex;align-items:center;gap:5px;padding:4px 11px 4px 5px;border-radius:11px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);font-size:14px}
+.sc b{font:700 18px var(--display)}
 @keyframes startin{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:none}}
 .strip .ss{display:none}
 body.starting .strip .ns{display:none}
 body.starting .strip .ss{display:inline-block;vertical-align:bottom;max-width:46ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--green)}
 @media (prefers-reduced-motion:reduce){.start{animation:none}}
+
+/* ── the coach widget over the game (pinned window, "Coach widget" setting) ── */
+.wbtns,.cbar{display:none}
+body.widget{padding:0!important;display:block!important;overflow:hidden}
+body.widget #pvStrip{display:none!important}
+body.widget #pvPanel{display:block!important;position:fixed;left:var(--wx,1.2vw);top:var(--wy,13vh);transform:scale(var(--wk,1));transform-origin:top left}
+body.widget .panel{display:block!important;width:420px;opacity:var(--strip-opacity,.94)}
+body.widget .ph{-webkit-app-region:no-drag;cursor:grab;padding-right:54px}
+body.widget.dragging .ph,body.widget.dragging .cbar{cursor:grabbing}
+body.widget .wbtns{display:flex;position:absolute;top:12px;right:12px;z-index:3}
+.wb{width:30px;height:30px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:var(--ink);
+  font:700 20px/1 var(--display);cursor:pointer;display:grid;place-items:center;padding:0 0 2px;box-shadow:inset 0 1px 0 rgba(255,255,255,.15);transition:background .15s}
+.wb:hover{background:rgba(255,255,255,.18)}
+body.widget.inactive #pvPanel{display:none!important}
+/* collapsed: one line */
+body.widget.collapsed .panel{width:auto;min-width:360px;border-radius:20px}
+body.widget.collapsed .panel > :not(.cbar):not(.wbtns){display:none!important}
+body.widget.collapsed .cbar{display:flex;align-items:center;gap:12px;padding:10px 54px 10px 10px;cursor:grab}
+body.widget.collapsed .wbtns{top:50%;transform:translateY(-50%)}
+.cbar .badge{width:44px;height:44px}
+.cb-t small{display:block;font-size:11.5px;color:var(--muted);font-weight:600}
+.cb-t b{display:block;font:700 24px/1 var(--display);color:var(--tone)}
+.cb-a .act{font-size:13px}
+.cb-a:empty{display:none}
+.cb-clock{font:600 16px var(--display);color:var(--muted);margin-left:auto}
+body.widget.callout .cbar .act{border-color:rgba(211,181,70,.6);background:rgba(211,181,70,.16)}
+body.widget.waiting.collapsed .cbar{display:none}
 </style>
 </head>
 <body>
@@ -188,9 +218,16 @@ body.starting .strip .ss{display:inline-block;vertical-align:bottom;max-width:46
   <symbol id="r-stone" viewBox="0 0 24 24"><path d="M4 17.5 7 9l5-3.5 5.5 2.5 3 9.5-7.5 2.5z"/><path d="M7 9l5 3 5.5-4M12 12l1 8.5"/></symbol>
 </defs></svg>
 
-<div class="pv">
+<div class="pv" id="pvPanel">
   <div class="cap">Second monitor: coach panel</div>
   <section class="panel" aria-live="polite">
+    <div class="wbtns"><button class="wb" id="wMin" title="Collapse" aria-label="Collapse the coach">−</button></div>
+    <div class="cbar" id="cbar">
+      <span class="badge res-badge" id="cbBadge"><img id="cbImg" src="img/res/wood.webp" alt=""></span>
+      <div class="cb-t"><small>Next villager to</small><b id="cbWord">Wood</b></div>
+      <div class="cb-a" id="cbAct"></div>
+      <span class="cb-clock" id="cbClock">0:00</span>
+    </div>
     <header class="ph">
       <div><div class="t" id="title">Zhuge Nu-Timing-Attack(10-14)</div><div class="c" id="civ">Zhu Xi's Legacy</div></div>
       <div><div class="clock" id="clock">0:00</div><div class="pace on" id="pace">On pace</div></div>
@@ -199,7 +236,7 @@ body.starting .strip .ss{display:inline-block;vertical-align:bottom;max-width:46
       <div class="wt" id="waitTitle">Waiting for the game</div>
       <p id="waitText">Start a match in Borderless Windowed. The coach starts as soon as it can read your villagers.</p>
     </div>
-    <div class="start" id="start" hidden><div class="st-t">Game on</div><div class="st-x" id="startX"></div></div>
+    <div class="start" id="start" hidden></div>
     <div class="hero">
       <div class="lead">Next villager <span id="vnum" hidden>7</span>goes to</div>
       <div class="word" id="word"><span class="badge res-badge" id="wordBadge"><img id="wordImg" src="img/res/wood.webp" alt=""></span><span class="big" id="wordTxt">Wood</span></div>
@@ -218,7 +255,7 @@ body.starting .strip .ss{display:inline-block;vertical-align:bottom;max-width:46
   </section>
 </div>
 
-<div class="pv">
+<div class="pv" id="pvStrip">
   <div class="cap">Game screen: small strip, top centre, clicks pass through it</div>
   <div class="gameshot">
     <div class="strip" id="strip">
@@ -246,12 +283,55 @@ const mode = new URLSearchParams(location.search).get('mode');
 const inElectron = !!window.coach && !window.coach.demo;   // live data from the app; demo mode simulates
 if (mode) document.body.classList.add('mode-' + mode);
 if (new URLSearchParams(location.search).has('pinned')) document.body.classList.add('pinned', 'inactive');
+const pinnedMode = new URLSearchParams(location.search).has('pinned');
+let wState = {x: 0.012, y: 0.13, collapsed: false}, drag = null, overWidget = false;
+// position and size of the widget over the game: scaled to the game's height, kept on screen
+function applyWidget(){
+  const k = Math.min(1.15, Math.max(0.7, innerHeight / 1440 * 0.95));
+  const box = document.querySelector('.panel').getBoundingClientRect();
+  const w = box.width || 420 * k, h = box.height || 300 * k;
+  const x = Math.min(Math.max(0, wState.x * innerWidth), Math.max(0, innerWidth - w));
+  const y = Math.min(Math.max(0, wState.y * innerHeight), Math.max(0, innerHeight - Math.min(h, 120)));
+  const r = document.documentElement.style;
+  r.setProperty('--wk', k); r.setProperty('--wx', x + 'px'); r.setProperty('--wy', y + 'px');
+  document.body.classList.toggle('collapsed', !!wState.collapsed);
+  const b = document.getElementById('wMin');
+  b.textContent = wState.collapsed ? '+' : '−';
+  b.title = wState.collapsed ? 'Show the whole coach' : 'Collapse';
+}
+const saveWidget = () => window.coach && window.coach.saveWidget && window.coach.saveWidget(wState);
 if (window.coach && window.coach.onSettings) window.coach.onSettings(s => {
   if (mode !== 'strip') return;
   document.body.classList.toggle('inactive', !s.active);
   document.body.classList.toggle('pos-left', s.position === 'left');
-  document.documentElement.style.setProperty('--strip-opacity', (s.opacity || 88) / 100);
+  document.body.classList.toggle('widget', pinnedMode && s.position === 'widget');
+  document.documentElement.style.setProperty('--strip-opacity', (s.opacity || 92) / 100);
+  if (s.widget && !drag) wState = {...wState, ...s.widget};
+  applyWidget();
 });
+document.getElementById('wMin').addEventListener('click', () => { wState.collapsed = !wState.collapsed; applyWidget(); saveWidget(); });
+// The pinned window covers the whole game but lets clicks through, except on the widget.
+addEventListener('mousemove', e => {
+  if (drag) {
+    wState.x = (e.clientX - drag.dx) / innerWidth; wState.y = (e.clientY - drag.dy) / innerHeight;
+    applyWidget();
+    return;
+  }
+  if (!document.body.classList.contains('widget')) return;
+  const inside = !!e.target.closest('.panel');
+  if (inside !== overWidget) { overWidget = inside; window.coach && window.coach.mouse && window.coach.mouse(inside); }
+});
+addEventListener('mousedown', e => {
+  if (!document.body.classList.contains('widget') || e.button !== 0 || e.target.closest('.wb, button')) return;
+  if (!e.target.closest('.ph, .cbar')) return;
+  const p = document.getElementById('pvPanel').getBoundingClientRect();
+  drag = {dx: e.clientX - p.left, dy: e.clientY - p.top};
+  document.body.classList.add('dragging');
+  e.preventDefault();
+});
+addEventListener('mouseup', () => { if (drag) { drag = null; document.body.classList.remove('dragging'); saveWidget(); } });
+addEventListener('mouseleave', () => { if (overWidget && !drag) { overWidget = false; window.coach && window.coach.mouse && window.coach.mouse(false); } });
+addEventListener('resize', applyWidget);
 if (!mode) document.body.classList.add('preview');
 
 let lastWord = null, lastStep = null, lastAge = null;
@@ -262,12 +342,23 @@ function pops(el, list){ el.innerHTML = list.join(''); el.querySelectorAll('.gi'
 // ── Game start: what to do with your first villagers, said once at the start of each game
 const clockSecs = c => { const m = String(c || '').match(/(\d+):(\d{2})$/); return m ? +m[1] * 60 + +m[2] : null; };
 const RES_WORD = {food: 'food', wood: 'wood', gold: 'gold', stone: 'stone'};
+// the build's own first step ("6 on sheep"), not the step after it that the coach is working toward
+const startSplit = c => { const t = (c.step && c.step.targets) || c.want || {}; return ['food', 'wood', 'gold', 'stone'].filter(r => t[r] > 0).map(r => ({r, n: t[r]})); };
+function startHint(c){
+  const t = ((c.step && c.step.text) || '') + ' ' + ((c.step && c.step.icons) || []).map(i => i.title + ' ' + i.src).join(' ');
+  return /sheep/i.test(t) ? 'sheep' : /berr/i.test(t) ? 'berries' : null;
+}
+function startCard(c){
+  const hint = startHint(c);
+  const chips = startSplit(c).map(({r, n}) => `<span class="sc"><img class="ri" src="img/res/${r}.webp" alt=""><b>${n}</b> to ${RES_WORD[r]}${r === 'food' && hint ? ` (${hint})` : ''}</span>`).join('');
+  return `<div class="st-t">Let's begin</div><div class="sc-row">${chips}</div><div class="st-x">${esc(startLine(c))}${/scout/i.test(startLine(c)) || !hint ? '' : '. Send your scout to find more sheep'}.</div>`;
+}
 function startLine(c){
   const t = c.step && c.step.text ? c.step.text.trim().replace(/\.$/, '') : '';
   const split = Object.entries(c.want || {}).filter(([, n]) => n > 0).map(([r, n]) => `${n} on ${RES_WORD[r]}`).join(', ');
   return t || (split ? `Put ${split}` : 'Send them to food');
 }
-let startSeen = false, lastSecs = null, startUntil = -1, calloutTimer = null;
+let startSeen = false, lastSecs = null, startUntil = -1, startVils = 0, calloutTimer = null;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 // "[icon] Build a Mining Camp · 1 villager"
 function actionChip(a){
@@ -285,16 +376,19 @@ function render(m){
   const secs = clockSecs(m.clock);
   if (secs != null && lastSecs != null && secs + 30 < lastSecs) startSeen = false;
   if (secs != null) lastSecs = secs;
-  if (secs != null && secs <= 25 && !startSeen) { startSeen = true; startUntil = 25; $('startX').textContent = `Your first ${m.villagers} villagers: ${startLine(m)}.`; }
-  const starting = secs != null && secs <= startUntil;
+  if (secs != null && secs <= 60 && !startSeen) { startSeen = true; startVils = m.villagers; startUntil = secs + 120; $('start').innerHTML = startCard(m); }
+  const starting = startSeen && secs != null && secs <= startUntil && m.villagers <= startVils;
   $('start').hidden = !starting;
   document.body.classList.toggle('starting', starting);
-  if (starting) $('sstart').textContent = `Game on: ${startLine(m)}`;
+  if (starting) $('sstart').textContent = `Let's begin: ${startSplit(m).map(({r, n}) => n + ' to ' + r).join(', ') || startLine(m)}`;
   const r = m.next.resource;
   document.documentElement.style.setProperty('--tone', `var(--${r})`);
   $('clock').textContent = m.clock;
   $('vnum').textContent = $('sv').textContent = m.villagers + 1;
   $('wordTxt').textContent = NAME[r];
+  $('cbWord').textContent = NAME[r];
+  $('cbClock').textContent = m.clock;
+  if (!$('cbImg').src.endsWith(`/${r}.webp`)) { $('cbImg').src = `img/res/${r}.webp`; const b = $('cbBadge'); b.classList.remove('swap'); void b.offsetWidth; b.classList.add('swap'); }
   $('sr').textContent = r;
   for (const [img, badge] of [['wordImg', 'wordBadge'], ['stripImg', 'stripBadge']]) {
     if (!$(img).src.endsWith(`/${r}.webp`)) { $(img).src = `img/res/${r}.webp`; const b = $(badge); b.classList.remove('swap'); void b.offsetWidth; b.classList.add('swap'); }
@@ -323,6 +417,7 @@ function render(m){
     lastStep = stepKey;
     const acts = GameIcons.actions(m.step), nxt = GameIcons.actions(m.upcoming);
     pops($('nowA'), acts.map(actionChip));
+    $('cbAct').innerHTML = acts[0] ? actionChip(acts[0]) : '';
     pops($('nowK'), acts[0] ? [GameIcons.html(acts[0].it, 'lg', 'glow')] : []);
     $('nextA').innerHTML = nxt.map(actionChip).join('');
     const sk = $('sk');
@@ -425,7 +520,7 @@ if (inElectron) {
       clock: secs(clock), villagers: vils, have:{...have}, want: goal.t,
       idle: clock >= 96 && clock < 112 ? 2 : 0,
       next:{resource:r1, then:r2},
-      step:{text:step.text}, upcoming: up ? {text:up.text, at:up.at} : null,
+      step:{text:step.text, targets:step.t}, upcoming: up ? {text:up.text, at:up.at} : null,
       pace_seconds: Math.round(pace / 2),
       age:{target:'Feudal', at:'4:20', progress: clock / 260},
     });
