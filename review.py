@@ -251,7 +251,7 @@ def listing(data: dict) -> dict:
             "build": (data.get("build") or {}).get("title"), "length": s.get("length"),
             "villagers_10": ((s.get("villagers_at") or {}).get("10:00") or {}).get("you"),
             "feudal": ((s.get("ages") or {}).get("Feudal") or {}).get("you"),
-            "tip": (s.get("tips") or [None])[0]}
+            "tip": (s.get("tips") or [None])[0], "result": data.get("result")}
 
 
 def list_games(out_dir: Optional[str], limit: int = 50) -> List[dict]:

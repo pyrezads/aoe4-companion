@@ -369,8 +369,8 @@ class GameLog:
         elif (m := _REPORT.search(line)) and self.game:
             pid, _race, res = m.groups()
             p = next((q for q in self.game.players if q.profile_id == int(pid)), None)
-            if p:
-                p.result = "win" if res == "1" else "loss"
+            if p:                                   # 1 win, 0 loss; 3 = you left before it was decided
+                p.result = {"1": "win", "0": "loss"}.get(res)
         elif '"GameResultNotificationMessage"' in line and self.game:
             self._read_results(line)
             out.append(Event("results", t, {"players": [(p.name, p.result, p.stats) for p in self.game.players]}))

@@ -54,6 +54,23 @@ def pick_monitors(game_size=(2560, 1440), game_index: Optional[int] = None):
     return game, (others[0] if others else None)
 
 
+def monitor_for_window(win: Optional[dict], mons: Optional[list] = None) -> Optional[dict]:
+    """The monitor the game window is on (its picture's centre). The game window is the truth:
+    no guessing by size, so a bigger second screen (an ultrawide) is never read by mistake."""
+    if not win:
+        return None
+    c = win.get("client") or win
+    cx, cy = c["left"] + c["width"] / 2, c["top"] + c["height"] / 2
+    try:
+        mons = mons if mons is not None else list_monitors()
+    except Exception:
+        return None
+    for m in mons:
+        if m["left"] <= cx < m["left"] + m["width"] and m["top"] <= cy < m["top"] + m["height"]:
+            return m
+    return None
+
+
 class GameScreen:
     def __init__(self, monitor: dict):
         import mss

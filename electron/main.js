@@ -85,6 +85,16 @@ function writeCoreConfig() {
 const pixels = (d) => d.size.width * d.size.height * d.scaleFactor ** 2;
 function gameDisplay() {
   const all = screen.getAllDisplays();
+  // where the game window really is wins over the setting and over "the biggest screen"
+  const c = latest.status?.game_window?.client;
+  if (c && c.width > 0) {
+    try {
+      let pt = { x: Math.round(c.left + c.width / 2), y: Math.round(c.top + c.height / 2) };
+      if (process.platform === 'win32') pt = screen.screenToDipPoint(pt);   // the core reports real pixels
+      const d = screen.getDisplayNearestPoint(pt);
+      if (d) return d;
+    } catch {}
+  }
   return all.find((d) => d.id === settings.gameDisplayId) || all.slice().sort((a, b) => pixels(b) - pixels(a))[0];
 }
 function coachDisplay() {

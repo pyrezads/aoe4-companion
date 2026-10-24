@@ -489,7 +489,14 @@ def _publish_loop(state, emit, stop, publish_every):
     while not stop.is_set() and not emit.closed:
         if time.time() >= next_window_check:           # the game's window, for pinning the strip to it
             next_window_check = time.time() + 5
-            state.set(game_window=find_game_window())
+            gw = find_game_window()
+            state.set(game_window=gw)
+            if gw:                                     # and the monitor it's really on
+                from screen import monitor_for_window
+                mon = monitor_for_window(gw)
+                if mon and mon != state.get("game_monitor"):
+                    print(f"  The game is on the {mon['width']}x{mon['height']} monitor at {mon['left']},{mon['top']}")
+                    state.set(game_monitor=mon)
         for k, v in _payloads(state).items():
             text = json.dumps(v, default=_jsonable, sort_keys=True)
             if sent.get(k) != text:

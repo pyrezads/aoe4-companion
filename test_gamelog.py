@@ -87,6 +87,22 @@ def test_live_growth():
         shutil.rmtree(tmp.parent, ignore_errors=True)
 
 
+def test_4v4_left_early():
+    """A full 4v4: an ally drops, I'm defeated, another ally falls, I leave before the end."""
+    print("4v4, left before the end")
+    gl = GameLog(LOGS / "quickmatch_4v4_left_early.log")
+    events = gl.poll()
+    g = gl.last_game
+    check("map from the generator", g.map, "Ponds")
+    outs = [e.data["player"] for e in events if e.kind == "player_out"]
+    check("three of my team out, in order", outs, ["不愿意透露姓名的网友", "NarkyNarc", "abdasdemir"])
+    check("no game over: I left first", g.ended_at, None)
+    check("left", g.phase, "left")
+    check("results undecided when you leave early", {p.result for p in g.players}, {None})
+    check("lasted ~27 min until I left", int((g.left_at - g.started_at) // 60), 27)
+    check("not current after leaving", gl.current(), None)
+
+
 def test_civs():
     print("civ names")
     check("sultanate", civ_from_race("sultanate_ha_tug"), "tughlaq_dynasty")
@@ -97,6 +113,7 @@ if __name__ == "__main__":
     test_quickmatches()
     test_skirmish()
     test_live_growth()
+    test_4v4_left_early()
     test_civs()
     print("\nall passed" if not fails else f"\n{fails} FAILED")
     raise SystemExit(1 if fails else 0)
