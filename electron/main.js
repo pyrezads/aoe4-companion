@@ -415,7 +415,24 @@ ipcMain.handle('settings:set', (_e, patch) => {
 });
 ipcMain.handle('core:restart', () => { if (core) { writeCoreConfig(); core.restart(); } else startCore(); });
 
+// Build videos play inside the app. YouTube's player refuses to start without a Referer, and a page
+// loaded from a file has none, so give the player's requests one. Links from inside a video
+// (YouTube logo, "watch on YouTube") open in the normal browser instead of a new app window.
+function setupVideo() {
+  const { session, shell } = require('electron');
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ['https://www.youtube-nocookie.com/*', 'https://www.youtube.com/*', 'https://*.googlevideo.com/*', 'https://*.ytimg.com/*'] },
+    (d, cb) => { d.requestHeaders.Referer = d.requestHeaders.Referer || 'https://github.com/pyrezads/aoe4-companion'; cb({ requestHeaders: d.requestHeaders }); });
+  app.on('web-contents-created', (_e, wc) => {
+    wc.setWindowOpenHandler(({ url }) => {
+      try { if (new URL(url).protocol === 'https:') shell.openExternal(url); } catch {}
+      return { action: 'deny' };
+    });
+  });
+}
+
 app.whenReady().then(() => {
+  setupVideo();
   loadSettings();
   openSplash();
   startCore();

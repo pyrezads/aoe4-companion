@@ -176,6 +176,15 @@ svg{display:block}
 .ri{width:20px;height:20px;object-fit:contain;vertical-align:-5px;margin-right:5px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
 @media (prefers-reduced-motion:reduce){.res-badge.swap img{animation:none}}
 
+/* tooltip for game icons (icons.js) */
+.gtip{position:fixed;z-index:50;pointer-events:none;display:flex;align-items:center;gap:8px;padding:6px 11px 6px 7px;border-radius:12px;
+  background:rgba(23,27,31,.88);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 12px 28px -12px rgba(0,0,0,.8);font:600 13.5px var(--body);color:var(--ink);
+  opacity:0;transform:translateY(4px) scale(.97);transition:opacity .09s,transform .09s;white-space:nowrap}
+.gtip.on{opacity:1;transform:none}
+.gtip .k{font:700 10.5px var(--display);letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--muted)}
+.gtip .k.u{color:var(--teal-hi)} .gtip .k.t,.gtip .k.g{color:var(--yellow)} .gtip .k.b{color:var(--sky)}
+
 /* ── dark native controls: dropdown lists and scrollbars match the app ── */
 :root{color-scheme:dark}
 select option,select optgroup{background:#171b1f;color:#fff}

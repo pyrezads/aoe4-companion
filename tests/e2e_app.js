@@ -77,6 +77,11 @@ app.whenReady().then(async () => {
     await js("document.querySelector('[data-more=\"test-1\"]').click()");
     check(await until(() => js("document.getElementById('bd-test-1').innerText.includes('Every step')")), 'build details load');
     check(await js("document.getElementById('bd-test-1').innerText.includes('Watch the video')"), 'build details: video button');
+    await js("document.querySelector('[data-video]').click()");
+    check(await until(() => js("!document.getElementById('vmodal').hidden && /youtube-nocookie\\.com\\/embed\\/abcdefgh/.test(document.querySelector('#vFrame iframe').src)")), 'build video plays in the app');
+    await js("document.getElementById('vClose').click()");
+    await js("document.getElementById('sort').value = 'uploaded'; document.getElementById('sort').dispatchEvent(new Event('change'))");
+    check(await js("document.querySelectorAll('#builds .t').length === 2"), 'sort by upload date');
     await js("document.querySelector('[data-use=\"test-1\"]').click()");
     check(await until(() => js("document.getElementById('pickedTitle').textContent === 'Test timing attack'")), 'build chosen from details');
 

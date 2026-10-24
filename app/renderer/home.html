@@ -131,13 +131,13 @@ h1{font:600 32px/1.1 var(--display);margin:0;letter-spacing:-.2px}
 .bd-actions .btn{padding:8px 14px;font-size:13.5px}
 .bd h4{font:600 15px var(--display);margin:0 0 6px}
 .bd-plan{margin:0;padding-left:18px;color:var(--ink);font-size:14px;display:grid;gap:4px}
-.age-h{font:600 13px var(--display);color:var(--teal-hi);margin:10px 0 4px}
-.st-row{display:grid;grid-template-columns:44px 190px 1fr;gap:10px;align-items:start;padding:7px 0;border-top:1px solid var(--edge);font-size:13.5px}
-.st-row .tm{color:var(--muted);font:600 13px var(--display)}
+.age-h{font:600 15px var(--display);color:var(--teal-hi);margin:14px 0 6px}
+.st-row{display:grid;grid-template-columns:52px 200px 1fr;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--edge);font-size:15.5px}
+.st-row .tm{color:var(--muted);font:600 15px var(--display)}
 .split{display:flex;flex-wrap:wrap;gap:4px}
-.split span{font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 6px;background:var(--card-2)}
-.st-txt{line-height:1.7}
-.st-txt img{width:22px;height:22px;vertical-align:-6px;border-radius:4px;margin:0 2px;background:var(--card-2)}
+.split span{font-size:12.5px;font-weight:700;border-radius:7px;padding:2px 8px;background:rgba(255,255,255,.07)}
+.st-txt{line-height:2}
+.st-txt img{width:32px;height:32px;vertical-align:-10px;border-radius:8px;margin:0 3px;background:rgba(255,255,255,.06)}
 .loading-row{color:var(--muted);font-size:13.5px}
 
 .or{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:13px;margin:18px 0 12px}
@@ -476,7 +476,8 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 .lines.tl li{display:grid;grid-template-columns:44px 22px 1fr;gap:8px;align-items:center}
 .lines.tl .t{color:var(--muted);font-variant-numeric:tabular-nums}
 .dotx{width:6px;height:6px;border-radius:50%;background:var(--dim);justify-self:center}
-.st-txt .gi{vertical-align:-6px}
+.st-txt .gi{vertical-align:-10px}
+.st-txt .gi.xs{width:32px;height:32px;border-radius:9px;margin:0 3px}
 .lines li.chips-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:6px 0}
 .chips-lab{font-weight:700;color:var(--muted);font-size:13px;margin-right:2px}
 .uchip{display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:16px;background:rgba(255,255,255,.05);
@@ -542,6 +543,17 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 @media (max-width:1200px){.hero{grid-template-columns:1fr}}
 @media (max-width:900px){.coach{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.live.on .lv-tag::before,.lv-start,.lv-next.bump{animation:none}}
+
+/* build video player */
+.vmodal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:28px;background:rgba(3,6,7,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fadein .2s ease both}
+.vmodal[hidden]{display:none}
+.vbox{width:min(1100px,100%);padding:14px;border-radius:24px;animation:rise .35s cubic-bezier(.2,.8,.2,1) both}
+.vhead{display:flex;align-items:center;gap:12px;margin:2px 4px 12px}
+.vhead b{font:600 17px var(--display);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vclose{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+.vclose:hover{background:rgba(255,255,255,.14)}
+.vframe{aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.vframe iframe{width:100%;height:100%;border:0;display:block}
 </style>
 </head>
 <body>
@@ -572,6 +584,12 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
 </svg>
 
 <div class="dragbar"></div>
+<div class="vmodal" id="vmodal" hidden role="dialog" aria-modal="true" aria-labelledby="vTitle">
+  <div class="vbox glass">
+    <div class="vhead"><b id="vTitle">Build video</b><button class="gbtn" id="vExt">Open on YouTube</button><button class="vclose" id="vClose" aria-label="Close">×</button></div>
+    <div class="vframe" id="vFrame"></div>
+  </div>
+</div>
 <div class="setup" id="setup" hidden>
   <div class="setup-card" role="dialog" aria-modal="true" aria-labelledby="setupTitle">
     <img src="img/logo.png" alt="AoE4 Coach" width="180">
@@ -752,7 +770,7 @@ kbd{font:600 13px var(--body);background:var(--card-2);border:1px solid #2c3438;
             </div>
             <div class="field">
               <label for="sort">Sort by</label>
-              <div class="sel"><select id="sort"><option value="best">Best for this game</option><option value="views">Most viewed</option><option value="new">Newest season</option></select></div>
+              <div class="sel"><select id="sort"><option value="best">Best for this game</option><option value="uploaded">Newest upload</option><option value="updated">Recently updated</option><option value="season">Newest season</option><option value="views">Most viewed</option><option value="liked">Most liked</option><option value="oldest">Oldest upload</option></select></div>
             </div>
           </div>
           <div class="filters" role="group" aria-label="Strategy">
@@ -1058,12 +1076,18 @@ const note = t => document.getElementById('buildsNote').textContent = t || '';
 function renderBuilds(){
   const newest = Math.max(0, ...builds.map(b => b.season || 0));
   let list = builds.filter(b => filter === 'all' || b.strategy === filter);
-  if (sortSel.value === 'views') list = [...list].sort((a, b) => b.views - a.views);
-  else if (sortSel.value === 'new') list = [...list].sort((a, b) => (b.season - a.season) || (b.views - a.views));
+  const day = d => d ? Date.parse(d) || 0 : 0, sv = sortSel.value;
+  if (sv === 'views') list = [...list].sort((a, b) => (b.views || 0) - (a.views || 0));
+  else if (sv === 'season') list = [...list].sort((a, b) => (b.season - a.season) || (b.views - a.views));
+  else if (sv === 'uploaded') list = [...list].sort((a, b) => day(b.created) - day(a.created) || (b.views - a.views));
+  else if (sv === 'oldest') list = [...list].sort((a, b) => (day(a.created) || Infinity) - (day(b.created) || Infinity));
+  else if (sv === 'updated') list = [...list].sort((a, b) => day(b.updated || b.created) - day(a.updated || a.created));
+  else if (sv === 'liked') list = [...list].sort((a, b) => ((b.likes || 0) + (b.upvotes || 0)) - ((a.likes || 0) + (a.upvotes || 0)) || (b.views - a.views));
   else if (!inApp) list = [...list].sort((a, b) => (b.season - a.season) || (b.views - a.views));
   document.getElementById('builds').innerHTML = list.length ? list.map(b => {
     const meta = [
       b.author ? 'by ' + esc(b.author) : null,
+      sortSel.value === 'updated' && b.updated ? 'updated ' + esc(niceDate(b.updated)) : b.created ? 'uploaded ' + esc(niceDate(b.created)) : null,
       b.season ? 'Season ' + b.season + (b.season === newest ? ' (current)' : '') : null,
       b.feudal ? 'Feudal ' + esc(b.feudal) : null,
       (b.views || 0).toLocaleString() + ' views',
@@ -1082,6 +1106,36 @@ function renderBuilds(){
     : `<p style="color:var(--muted);margin:6px 2px">${filter === 'all' ? 'No builds for this civ yet.' : 'None of this kind. Try another filter.'}</p>`;
 }
 
+// ── Build videos play in the app (YouTube); anything else opens in the browser
+function videoEmbed(url){
+  try {
+    const u = new URL(url);
+    let id = null;
+    if (/(^|\.)youtu\.be$/.test(u.hostname)) id = u.pathname.slice(1);
+    else if (/(^|\.)youtube(-nocookie)?\.com$/.test(u.hostname))
+      id = u.searchParams.get('v') || (u.pathname.match(/\/(embed|shorts|live|v)\/([\w-]{6,})/) || [])[2];
+    if (!id || !/^[\w-]{6,}$/.test(id)) return null;
+    const t = u.searchParams.get('t') || u.searchParams.get('start');
+    const start = t ? parseInt(String(t).replace(/s$/, ''), 10) || 0 : 0;
+    return {embed: `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1${start ? '&start=' + start : ''}`, watch: `https://www.youtube.com/watch?v=${id}`};
+  } catch { return null; }
+}
+let vWatch = null;
+function playVideo(url, title){
+  const v = videoEmbed(url);
+  if (!v) return inApp ? window.app.openUrl(url) : window.open(url, '_blank');
+  vWatch = v.watch;
+  document.getElementById('vTitle').textContent = title || 'Build video';
+  document.getElementById('vFrame').innerHTML = `<iframe src="${esc(v.embed)}" title="${esc(title || 'Build video')}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  document.getElementById('vmodal').hidden = false;
+}
+function closeVideo(){ document.getElementById('vmodal').hidden = true; document.getElementById('vFrame').innerHTML = ''; }
+document.getElementById('vClose').addEventListener('click', closeVideo);
+document.getElementById('vmodal').addEventListener('click', e => { if (e.target.id === 'vmodal') closeVideo(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('vmodal').hidden) closeVideo(); });
+document.getElementById('vExt').addEventListener('click', () => vWatch && (inApp ? window.app.openUrl(vWatch) : window.open(vWatch, '_blank')));
+const niceDate = d => { const t = Date.parse(d); if (!t) return d; const days = Math.floor((Date.now() - t) / 864e5);
+  return days < 1 ? 'today' : days === 1 ? 'yesterday' : days < 30 ? `${days} days ago` : new Date(t).toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'}); };
 // ── Build details: everything aoe4guides has on a build
 const details = {}, expanded = new Set();
 const RCOL = {food: 'var(--food)', wood: 'var(--wood)', gold: 'var(--gold)', stone: 'var(--stone)'};
@@ -1117,7 +1171,7 @@ function detailHtml(d){
     ${d.description ? `<p class="bd-desc" id="desc-${esc(d.id)}">${esc(d.description)}</p>${d.description.length > 320 ? `<button class="bd-desc-more" data-desc="${esc(d.id)}">Show all</button>` : ''}` : ''}
     <div class="bd-actions">
       <button class="btn primary" data-use="${esc(d.id)}">Use this build</button>
-      ${d.video ? `<button class="btn quiet" data-url="${esc(d.video)}">Watch the video</button>` : ''}
+      ${d.video ? `<button class="btn quiet" data-video="${esc(d.video)}" data-title="${esc(d.title || '')}"><svg class="i" style="width:16px;height:16px;fill:currentColor;stroke:none"><use href="#i-play"/></svg>Watch the video</button>` : ''}
       ${d.url ? `<button class="btn quiet" data-url="${esc(d.url)}">Open on aoe4guides</button>` : ''}
     </div>
     ${d.gameplans && d.gameplans.length ? `<div><h4>Game plan</h4><ul class="bd-plan">${d.gameplans.map(g => `<li>${parts(g.parts) || esc(g.text)}</li>`).join('')}</ul></div>` : ''}
@@ -1137,6 +1191,8 @@ document.getElementById('builds').addEventListener('click', e => {
     }
     return renderBuilds();
   }
+  const vid = e.target.closest('[data-video]');
+  if (vid) return playVideo(vid.dataset.video, vid.dataset.title);
   const url = e.target.closest('[data-url]');
   if (url) return inApp ? window.app.openUrl(url.dataset.url) : window.open(url.dataset.url, '_blank');
   const use = e.target.closest('[data-use]');

@@ -146,6 +146,7 @@ def _build_row(choice) -> dict:
         "score": round(choice.score, 2), "why": choice.reasons[:2],
         "likes": b.get("likes"), "upvotes": b.get("upvotes"), "downvotes": b.get("downvotes"),
         "video": bool(b.get("video")), "feudal": _feudal(b), "updated": _date(b.get("timeUpdated")),
+        "created": _date(b.get("timeCreated")),
         "english": round(_english(b), 2),
     }
 

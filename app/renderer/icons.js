@@ -85,5 +85,39 @@ const GameIcons = (() => {
     if (b && st.builders) b.builders = st.builders;
     return out.slice(0, max);
   }
+  // One quick tooltip for every icon: the name and what kind of thing it is, in the app's style.
+  // (The browser's own tooltip takes a second to appear and is grey on white.)
+  const KIND = {u: 'Unit', t: 'Technology', g: 'Upgrade', b: 'Building'};
+  function tooltips(){
+    if (typeof document === 'undefined' || document.querySelector('.gtip')) return;
+    const tip = document.createElement('div');
+    tip.className = 'gtip';
+    document.body.appendChild(tip);
+    let cur = null;
+    const place = e => {
+      const r = tip.getBoundingClientRect();
+      tip.style.left = Math.max(8, Math.min(innerWidth - r.width - 8, e.clientX - r.width / 2)) + 'px';
+      tip.style.top = (e.clientY - r.height - 14 < 8 ? e.clientY + 18 : e.clientY - r.height - 14) + 'px';
+    };
+    document.addEventListener('mouseover', e => {
+      const el = e.target.closest('.gi, .st-txt img, [data-tip]');
+      if (!el || el === cur) return;
+      cur = el;
+      if (el.title) { el.dataset.tip = el.title; el.removeAttribute('title'); }
+      const img = el.querySelector('img');
+      if (img && img.title) img.removeAttribute('title');
+      const name = el.dataset.tip || el.getAttribute('alt') || (img && img.alt) || '';
+      if (!name) return;
+      const kind = (el.className.match(/k-([utgb])/) || [])[1] || (byName(name) || {}).k;
+      tip.innerHTML = (KIND[kind] ? `<span class="k ${kind}">${KIND[kind]}</span>` : '') + esc(name);
+      tip.classList.add('on');
+      place(e);
+    });
+    document.addEventListener('mousemove', e => { if (cur) place(e); });
+    document.addEventListener('mouseout', e => {
+      if (cur && !cur.contains(e.relatedTarget)) { cur = null; tip.classList.remove('on'); }
+    });
+  }
+  if (typeof document !== 'undefined') document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', tooltips) : tooltips();
   return {ready, byName, fromGuides, find, html, step, key: key_of, age, landmarks, item, actions};
 })();
